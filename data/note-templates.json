@@ -1,0 +1,52 @@
+[
+    {
+        "key": "fever",
+        "label": "🤒 Fever / Cold",
+        "text": "• Drink plenty of warm fluids and rest.\n• Take paracetamol if temperature exceeds 100°F.\n• Avoid cold water and chilled foods.\n• Monitor temperature twice daily.\n• Return immediately if fever exceeds 103°F or lasts more than 3 days."
+    },
+    {
+        "key": "arthritis",
+        "label": "🦴 Arthritis / Joint Pain",
+        "text": "• Rest the affected joint. Avoid heavy lifting.\n• Apply warm/cold compress as comfortable.\n• Gentle range-of-motion exercises daily.\n• Avoid strenuous physical activity.\n• Follow-up after 2 weeks or sooner if pain worsens."
+    },
+    {
+        "key": "diabetes",
+        "label": "🩸 Diabetes Management",
+        "text": "• Test blood sugar levels before meals and at bedtime.\n• Maintain a low-sugar, low-carbohydrate diet.\n• Take medicines as prescribed — do not skip doses.\n• Exercise for at least 30 minutes daily.\n• Follow-up after 1 month with HbA1c report."
+    },
+    {
+        "key": "hypertension",
+        "label": "❤️ Hypertension",
+        "text": "• Check blood pressure daily and record readings.\n• Maintain a low-salt diet. Avoid processed foods.\n• Do not skip BP medication.\n• Avoid stress and heavy physical exertion.\n• Follow-up after 2 weeks with BP log."
+    },
+    {
+        "key": "ayurveda",
+        "label": "🌿 Ayurveda General",
+        "text": "• Take medicine on an empty stomach with warm water.\n• Avoid sour, spicy, and heavy foods.\n• Practice daily yoga and pranayama.\n• Maintain regular sleep schedule (10 PM – 6 AM).\n• Follow-up after 1 month."
+    },
+    {
+        "key": "homeopathy",
+        "label": "🌸 Homeopathy General",
+        "text": "• Avoid coffee, mint, onion, garlic, and camphor during treatment.\n• Take medicine 15 minutes before or after food.\n• Do not touch tablets — dissolve directly under tongue.\n• Avoid strong perfumes and aromatic substances.\n• Follow-up after 4 weeks."
+    },
+    {
+        "key": "postop",
+        "label": "🏥 Post-operative Care",
+        "text": "• Keep wound/area clean and dry.\n• Change dressing as instructed.\n• Avoid strenuous activity for 4 weeks.\n• Take prescribed antibiotics for the full course.\n• Return immediately if redness, swelling, or discharge occurs."
+    },
+    {
+        "key": "pediatric",
+        "label": "👶 Pediatric",
+        "text": "• Give medicine with food to avoid stomach upset.\n• Maintain hydration — offer fluids frequently.\n• Monitor temperature every 4–6 hours.\n• Do not give adult medications.\n• Return if child becomes lethargic, refuses food, or fever persists."
+    },
+    {
+        "key": "respiratory",
+        "label": "🫁 Respiratory / Asthma",
+        "text": "• Use inhaler as prescribed — do not skip.\n• Avoid dust, smoke, and allergens.\n• Drink warm water. Avoid cold or iced drinks.\n• Practice deep breathing exercises twice daily.\n• Seek emergency care if breathing difficulty increases suddenly."
+    },
+    {
+        "key": "gastro",
+        "label": "🍽️ Gastroenterology",
+        "text": "• Eat small, frequent meals. Avoid spicy and oily food.\n• Do not lie down immediately after eating.\n• Avoid coffee, alcohol, and carbonated drinks.\n• Take antacids 30 minutes before meals.\n• Follow-up after 2 weeks."
+    }
+]

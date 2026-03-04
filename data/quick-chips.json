@@ -1,0 +1,127 @@
+[
+    {
+        "icon": "💧",
+        "label": "Warm fluids",
+        "text": "Drink plenty of warm fluids."
+    },
+    {
+        "icon": "🛏️",
+        "label": "Bed rest",
+        "text": "Take complete bed rest for 2–3 days."
+    },
+    {
+        "icon": "🧊",
+        "label": "Avoid cold",
+        "text": "Avoid cold water and chilled foods."
+    },
+    {
+        "icon": "🍽️",
+        "label": "After meals",
+        "text": "Take medicines after meals."
+    },
+    {
+        "icon": "🥄",
+        "label": "Before meals",
+        "text": "Take medicines before meals."
+    },
+    {
+        "icon": "🚭",
+        "label": "No alcohol/smoking",
+        "text": "Avoid alcohol and smoking."
+    },
+    {
+        "icon": "📅",
+        "label": "F/U 7 days",
+        "text": "Follow-up after 7 days."
+    },
+    {
+        "icon": "📅",
+        "label": "F/U 1 month",
+        "text": "Follow-up after 1 month."
+    },
+    {
+        "icon": "🚨",
+        "label": "Return if worse",
+        "text": "Return immediately if symptoms worsen."
+    },
+    {
+        "icon": "🏋️",
+        "label": "Avoid exertion",
+        "text": "Avoid strenuous physical activity."
+    },
+    {
+        "icon": "🧂",
+        "label": "Low-salt diet",
+        "text": "Maintain a low-salt diet."
+    },
+    {
+        "icon": "🍬",
+        "label": "Low-sugar diet",
+        "text": "Maintain a low-sugar diet."
+    },
+    {
+        "icon": "😴",
+        "label": "Sleep 7-8h",
+        "text": "Get adequate sleep (7–8 hours per night)."
+    },
+    {
+        "icon": "🩹",
+        "label": "Keep clean/dry",
+        "text": "Keep wound/area clean and dry."
+    },
+    {
+        "icon": "💊",
+        "label": "Take with water",
+        "text": "Take medicine with a full glass of water."
+    },
+    {
+        "icon": "☀️",
+        "label": "Morning dose",
+        "text": "Take morning dose before 8 AM."
+    },
+    {
+        "icon": "🌙",
+        "label": "Bedtime dose",
+        "text": "Take dose at bedtime."
+    },
+    {
+        "icon": "❄️",
+        "label": "Keep refrigerated",
+        "text": "Store medicine in refrigerator."
+    },
+    {
+        "icon": "💧",
+        "label": "Stay hydrated",
+        "text": "Drink at least 8–10 glasses of water daily."
+    },
+    {
+        "icon": "🧘",
+        "label": "Light yoga",
+        "text": "Light yoga and breathing exercises recommended."
+    },
+    {
+        "icon": "🥗",
+        "label": "Balanced diet",
+        "text": "Follow a balanced and nutritious diet."
+    },
+    {
+        "icon": "🌡️",
+        "label": "Monitor fever",
+        "text": "Monitor temperature twice daily. Visit if above 103°F."
+    },
+    {
+        "icon": "🩺",
+        "label": "BP check",
+        "text": "Check blood pressure daily and record readings."
+    },
+    {
+        "icon": "🩸",
+        "label": "Sugar check",
+        "text": "Test blood sugar levels before meals and at bedtime."
+    },
+    {
+        "icon": "🩸",
+        "label": "Refer",
+        "text": "Refer: "
+    }
+]

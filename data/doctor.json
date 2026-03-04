@@ -1,0 +1,51 @@
+[
+  {
+    "regNo": "MCI/2045",
+    "name": "Priya Mehta",
+    "qualification": "MBBS, MD (General Medicine)",
+    "specialization": "General Physician",
+    "hospital": "Apollo Clinic, Patna",
+    "phone": "+91 98765 43210",
+    "email": "dr.priya@apolloclinic.in",
+    "address": "Apollo Clinic, Gandhi Maidan, Patna - 800001",
+    "type": "allopathy",
+    "availability": [
+      { "day": "Monday",    "time": "09:00 AM – 01:00 PM" },
+      { "day": "Wednesday", "time": "09:00 AM – 01:00 PM" },
+      { "day": "Friday",    "time": "02:00 PM – 06:00 PM" }
+    ]
+  },
+  {
+    "regNo": "HCI/567",
+    "name": "Rakesh Kumar Jha",
+    "qualification": "BHMS, DHMS",
+    "specialization": "Classical Homeopath",
+    "hospital": "Jha Homeo Clinic",
+    "phone": "+91 87654 32109",
+    "email": "dr.rjha@jhahomoeo.in",
+    "address": "Jha Homeo Clinic, Boring Road, Patna - 800013",
+    "type": "homeopathy",
+    "availability": [
+      { "day": "Tuesday",  "time": "10:00 AM – 02:00 PM" },
+      { "day": "Thursday", "time": "10:00 AM – 02:00 PM" },
+      { "day": "Saturday", "time": "09:00 AM – 12:00 PM" }
+    ]
+  },
+  {
+    "regNo": "BAMS/2019",
+    "name": "Vaidya S. Tripathi",
+    "qualification": "BAMS, MD (Ayurveda)",
+    "specialization": "Ayurvedic Practitioner",
+    "hospital": "Dhanwantari Ayurveda Center",
+    "phone": "+91 76543 21098",
+    "email": "vaidya.tripathi@dhanwantari.in",
+    "address": "Dhanwantari Ayurveda Center, Kankarbagh, Patna - 800020",
+    "type": "ayurveda",
+    "availability": [
+      { "day": "Monday",    "time": "08:00 AM – 12:00 PM" },
+      { "day": "Tuesday",   "time": "08:00 AM – 12:00 PM" },
+      { "day": "Thursday",  "time": "03:00 PM – 07:00 PM" },
+      { "day": "Saturday",  "time": "08:00 AM – 11:00 AM" }
+    ]
+  }
+]
