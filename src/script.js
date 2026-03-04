@@ -301,6 +301,9 @@ function openEditModal(id) {
   updateNoteCategoryDisplay();
   const ta = document.getElementById('fNotes');
   if (ta) { updateNotesCounter(ta); setTimeout(() => autoResizeTextarea(ta), 0); }
+  // resize and count diagnosis textarea
+  const dta = document.getElementById('fDiagnosis');
+  if (dta) { setTimeout(() => { autoDiagResize(dta); updateDiagCounter(dta); }, 0); }
   const editor = document.getElementById('medicinesEditor'); editor.innerHTML = '';
   if (p.medicines && p.medicines.length) p.medicines.forEach(m => addMedicineRow(m)); else addMedicineRow();
   const diagEditor = document.getElementById('diagnosticEditor'); diagEditor.innerHTML = '';
@@ -538,6 +541,9 @@ function resetForm() {
   clearDoctorAvailPanel();
   const diagEditor = document.getElementById('diagnosticEditor');
   if (diagEditor) diagEditor.innerHTML = '';
+  // reset diagnosis textarea
+  const diagTa = document.getElementById('fDiagnosis');
+  if (diagTa) { diagTa.style.height = ''; updateDiagCounter(diagTa); }
 }
 function getVal(id) { return (document.getElementById(id)?.value || '').trim(); }
 function setVal(id, val) { const el = document.getElementById(id); if (el && val != null) el.value = val; }
@@ -694,6 +700,54 @@ function updateNoteCategoryDisplay() {
   if (!activeNoteCategories.size) { el.innerHTML = ''; return; }
   const labels = { dietary: '🥗 Dietary', lifestyle: '🏃 Lifestyle', warning: '⚠️ Warning', followup: '📅 Follow-up', medication: '💊 Medication', rest: '😴 Rest' };
   el.innerHTML = [...activeNoteCategories].map(c => `<span class="notes-cat-badge cat-${c}">${labels[c] || c}</span>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+//  DIAGNOSIS TEXTAREA HELPERS
+// ════════════════════════════════════════════════════════════
+function appendDiag(text) {
+  const ta = document.getElementById('fDiagnosis');
+  if (!ta) return;
+  const sep = ta.value && !ta.value.endsWith('\n') ? ', ' : '';
+  ta.value += sep + text;
+  updateDiagCounter(ta);
+  autoDiagResize(ta);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = ta.value.length;
+}
+
+function insertDiagText(text) {
+  const ta = document.getElementById('fDiagnosis');
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+  updateDiagCounter(ta);
+  autoDiagResize(ta);
+  ta.focus();
+}
+
+function clearDiag() {
+  const ta = document.getElementById('fDiagnosis');
+  if (!ta || !ta.value) return;
+  ta.value = '';
+  updateDiagCounter(ta);
+  ta.style.height = '';
+  ta.focus();
+}
+
+function updateDiagCounter(ta) {
+  const el = document.getElementById('diagCounter');
+  if (!el) return;
+  const text = ta.value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  el.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+  el.classList.toggle('diag-warn', words > 80);
+}
+
+function autoDiagResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
 }
 
 // ════════════════════════════════════════════════════════════

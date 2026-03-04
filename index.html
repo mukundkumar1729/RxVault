@@ -429,11 +429,80 @@
                             <input type="date" id="fValidUntil">
                         </div>
                     </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Diagnosis / Condition</label>
-                            <input type="text" id="fDiagnosis" placeholder="Primary diagnosis or condition">
+                    <!-- Diagnosis Textarea — Feature Rich -->
+                    <div class="field diag-field-full" style="margin-top:12px">
+                        <label>🔬 Diagnosis / Condition</label>
+
+                        <!-- Quick Chips -->
+                        <div class="diag-chips-bar">
+                            <span class="diag-chips-label">Quick:</span>
+                            <div class="diag-chips-scroll">
+                                <button type="button" class="diag-chip" onclick="appendDiag('Viral Fever')">🌡️ Viral
+                                    Fever</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('URTI')">🤧 URTI</button>
+                                <button type="button" class="diag-chip"
+                                    onclick="appendDiag('Type 2 Diabetes Mellitus')">🩸 Diabetes</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Hypertension')">❤️
+                                    Hypertension</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Bronchial Asthma')">🫁
+                                    Asthma</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Hypothyroidism')">🦋
+                                    Hypothyroidism</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Acute Gastritis')">🫃
+                                    Gastritis</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Migraine')">🧠
+                                    Migraine</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Rheumatoid Arthritis')">🦴
+                                    Arthritis</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Anxiety Disorder')">😰
+                                    Anxiety</button>
+                                <button type="button" class="diag-chip"
+                                    onclick="appendDiag('Iron Deficiency Anaemia')">💉 Anaemia</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Dengue Fever')">🦟
+                                    Dengue</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Typhoid Fever')">🦠
+                                    Typhoid</button>
+                                <button type="button" class="diag-chip"
+                                    onclick="appendDiag('Urinary Tract Infection')">🚱 UTI</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Eczema / Dermatitis')">🩹
+                                    Eczema</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Vata Imbalance')">🌿 Vata
+                                    Imb.</button>
+                            </div>
                         </div>
+
+                        <!-- Toolbar -->
+                        <div class="diag-toolbar">
+                            <div class="diag-toolbar-group">
+                                <button type="button" class="diag-tb-btn" title="Insert bullet point"
+                                    onclick="insertDiagText('• ')">• Bullet</button>
+                                <button type="button" class="diag-tb-btn" title="Add ICD tag"
+                                    onclick="insertDiagText('[ICD: ]')">🏷️ ICD</button>
+                                <button type="button" class="diag-tb-btn" title="Add comorbidity line"
+                                    onclick="insertDiagText('\nComorbidity: ')">➕ Comorbidity</button>
+                                <button type="button" class="diag-tb-btn" title="Add severity tag"
+                                    onclick="insertDiagText(' (Mild)')"> Severity</button>
+                                <button type="button" class="diag-tb-btn" title="Add onset note"
+                                    onclick="insertDiagText('\nOnset: ')">📅 Onset</button>
+                            </div>
+                            <button type="button" class="diag-tb-btn diag-tb-clear" title="Clear field"
+                                onclick="clearDiag()">✕ Clear</button>
+                        </div>
+
+                        <!-- Textarea -->
+                        <textarea id="fDiagnosis"
+                            placeholder="e.g. Viral Fever &amp; URTI&#10;Comorbidity: Type 2 Diabetes Mellitus&#10;Onset: 3 days ago • Severity: Moderate"
+                            rows="3" oninput="updateDiagCounter(this); autoDiagResize(this)"></textarea>
+
+                        <!-- Counter -->
+                        <div class="diag-counter-row">
+                            <span class="diag-hint">Separate multiple conditions with commas or new lines</span>
+                            <span class="diag-counter" id="diagCounter">0 words</span>
+                        </div>
+                    </div>
+
+                    <!-- Status (own row) -->
+                    <div class="form-row" style="margin-top:12px">
                         <div class="field">
                             <label>Status</label>
                             <select id="fStatus">
@@ -442,6 +511,7 @@
                                 <option value="expired">Expired</option>
                             </select>
                         </div>
+                        <div class="field"></div>
                     </div>
                 </div>
 
