@@ -9,9 +9,82 @@
         href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/clinic.css">
 </head>
 
 <body>
+
+    <!-- ─── CLINIC GATE OVERLAY ─── -->
+    <div class="clinic-gate-overlay no-print" id="clinicGate">
+        <div class="clinic-gate-panel">
+            <div class="clinic-gate-header">
+                <div class="clinic-gate-brand">
+                    <div class="clinic-gate-logo">💊</div>
+                    <div>
+                        <div class="clinic-gate-brand-name">Rx Vault</div>
+                        <div class="clinic-gate-brand-tag">Medical Record Manager</div>
+                    </div>
+                </div>
+                <button class="clinic-gate-close" id="clinicGateCloseBtn" onclick="hideClinicGate()" title="Close" style="display:none">✕</button>
+            </div>
+            <div class="clinic-gate-body">
+
+                <!-- Clinic List (shown when clinics exist) -->
+                <div id="clinicGateList" style="display:none"></div>
+
+                <!-- New / Edit Clinic Form -->
+                <div id="clinicGateForm" style="display:none">
+                    <div class="clinic-form-title" id="clinicFormTitle">🏥 Create Your First Clinic</div>
+                    <div class="clinic-form-sub" id="clinicFormSub">Set up your clinic to get started with Rx Vault.</div>
+
+                    <div class="clinic-form-grid">
+                        <div class="clinic-field full">
+                            <label>Clinic Name <span>*</span></label>
+                            <input type="text" id="cgName" placeholder="e.g. Apollo Clinic, Patna" autocomplete="off">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Medicine System</label>
+                            <select id="cgType">
+                                <option value="multispecialty">🏥 Multispecialty</option>
+                                <option value="allopathy">💉 Allopathy</option>
+                                <option value="homeopathy">🌿 Homeopathy</option>
+                                <option value="ayurveda">🌱 Ayurveda</option>
+                            </select>
+                        </div>
+                        <div class="clinic-field">
+                            <label>Clinic Logo / Icon</label>
+                            <input type="text" id="cgLogo" placeholder="e.g. 🏥 💊 🌿" maxlength="4">
+                        </div>
+                        <div class="clinic-field full">
+                            <label>Address</label>
+                            <input type="text" id="cgAddress" placeholder="Clinic address">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Phone</label>
+                            <input type="tel" id="cgPhone" placeholder="+91 XXXXX XXXXX">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Email</label>
+                            <input type="email" id="cgEmail" placeholder="clinic@email.com">
+                        </div>
+                        <div class="clinic-field full">
+                            <label>Admin PIN <span>*</span></label>
+                            <input type="password" id="cgPin" placeholder="e.g. admin1234 (default)">
+                            <div class="clinic-hint-row">
+                                ⚠️ This PIN is used to access the Admin Panel for this clinic. Default is <strong>admin1234</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="clinic-form-actions">
+                        <button class="btn-sm btn-outline-teal" onclick="cancelNewClinic()" id="cgCancelBtn">Cancel</button>
+                        <button class="btn-sm btn-teal" onclick="saveClinicForm()" id="cgSaveBtn" data-edit-id="">🏥 Save &amp; Enter</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
@@ -26,7 +99,13 @@
                 </div>
             </div>
             <div class="topbar-right">
-                <div class="topbar-stat">Total Records: <strong id="statTotal">0</strong></div>
+                <!-- Clinic Switcher -->
+                <button class="topbar-clinic-btn" onclick="openClinicSwitcher()" title="Switch clinic">
+                    <span class="topbar-clinic-icon" id="topbarClinicIcon">🏥</span>
+                    <span class="topbar-clinic-name" id="topbarClinicName">Loading…</span>
+                    <span class="topbar-clinic-caret">▾</span>
+                </button>
+                <div class="topbar-stat">Total: <strong id="statTotal">0</strong></div>
                 <div class="topbar-stat" style="background:rgba(26,111,219,0.15);border-color:rgba(26,111,219,0.25)">
                     <span style="color:#7eb8f7">Allo:</span> <strong id="statAllo">0</strong>
                 </div>
@@ -75,9 +154,6 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-section">
                 <div class="sidebar-label">Quick Actions</div>
-                <!-- <button class="nav-item" onclick="openAddModal()">
-                    <span class="nav-icon">➕</span> New Prescription
-                </button> -->
                 <button class="nav-item" onclick="openRegisterModal()">
                     <span class="nav-icon">👤</span> Register Patient
                 </button>
@@ -99,9 +175,20 @@
             </div>
             <div class="sidebar-divider"></div>
             <div class="sidebar-section">
+                <div class="sidebar-label">Patients</div>
+                <button class="nav-item" id="navPatients" onclick="showPatientsView()">
+                    <span class="nav-icon">👥</span> Patients
+                    <span class="nav-badge" id="badgePatients">0</span>
+                </button>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section">
                 <div class="sidebar-label">Administration</div>
                 <button class="nav-item" id="adminNavBtn" onclick="openAdminPanel()">
                     <span class="nav-icon">🔐</span> Admin Panel
+                </button>
+                <button class="nav-item" onclick="openClinicSwitcher()">
+                    <span class="nav-icon">🏥</span> Switch Clinic
                 </button>
             </div>
         </aside>
@@ -114,9 +201,6 @@
                     <div class="page-title" id="pageTitle">All Rx</div>
                     <div class="page-subtitle" id="pageSubtitle">Manage and track all your medical Rx records</div>
                 </div>
-                <!-- <button class="btn-add no-print" id="newPrescBtn" onclick="openAddModal()">
-                    ＋ &nbsp;New Prescription
-                </button> -->
             </div>
 
             <!-- Stats Row -->
@@ -151,10 +235,8 @@
                 </div>
             </div>
 
-            <!-- Controls Bar — Advanced Multi-Field Search -->
+            <!-- Controls Bar -->
             <div class="controls-bar no-print" id="controlsBar">
-
-                <!-- Header -->
                 <div class="search-panel-header">
                     <div class="search-panel-label">
                         🔍 Advanced Search
@@ -162,53 +244,42 @@
                     </div>
                     <div class="search-panel-actions">
                         <span style="font-size:11px;color:var(--text-muted)">
-                            Showing <strong id="resultsShowing">0</strong> of <strong id="resultsTotal">0</strong>
-                            records
+                            Showing <strong id="resultsShowing">0</strong> of <strong id="resultsTotal">0</strong> records
                         </span>
                     </div>
                 </div>
-
-                <!-- Search Inputs Grid -->
                 <div class="search-grid">
                     <div class="search-cell">
                         <span class="search-cell-icon">👤</span>
                         <span class="search-cell-label">Patient Name</span>
-                        <input type="text" class="search-input" id="srchPatient" placeholder="e.g. Aarav Sharma"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchPatient" placeholder="e.g. Aarav Sharma" oninput="applyFilters()">
                     </div>
                     <div class="search-cell">
                         <span class="search-cell-icon">🩺</span>
                         <span class="search-cell-label">Doctor Name</span>
-                        <input type="text" class="search-input" id="srchDoctor" placeholder="e.g. Dr. Priya"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchDoctor" placeholder="e.g. Dr. Priya" oninput="applyFilters()">
                     </div>
                     <div class="search-cell" style="border-right:1px solid var(--border)">
                         <span class="search-cell-icon">🔬</span>
                         <span class="search-cell-label">Diagnosis</span>
-                        <input type="text" class="search-input" id="srchDiagnosis" placeholder="e.g. Viral Fever"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchDiagnosis" placeholder="e.g. Viral Fever" oninput="applyFilters()">
                     </div>
                     <div class="search-cell">
                         <span class="search-cell-icon">📱</span>
                         <span class="search-cell-label">Mobile No.</span>
-                        <input type="text" class="search-input" id="srchPhone" placeholder="e.g. 98765 43210"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchPhone" placeholder="e.g. 98765 43210" oninput="applyFilters()">
                     </div>
                     <div class="search-cell">
                         <span class="search-cell-icon">✉️</span>
                         <span class="search-cell-label">Email</span>
-                        <input type="text" class="search-input" id="srchEmail" placeholder="e.g. patient@email.com"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchEmail" placeholder="e.g. patient@email.com" oninput="applyFilters()">
                     </div>
                     <div class="search-cell" style="border-right:none">
                         <span class="search-cell-icon">🪪</span>
                         <span class="search-cell-label">Patient / Rx ID</span>
-                        <input type="text" class="search-input" id="srchId" placeholder="e.g. rx_17… or PID"
-                            oninput="applyFilters()">
+                        <input type="text" class="search-input" id="srchId" placeholder="e.g. rx_17… or PID" oninput="applyFilters()">
                     </div>
                 </div>
-
-                <!-- Filter / Sort Row -->
                 <div class="filter-row">
                     <div class="filter-chip-group">
                         <span class="filter-chip-label">Sort:</span>
@@ -234,21 +305,20 @@
                     </div>
                     <button class="clear-all-btn" onclick="clearFilters()">✕ Clear All</button>
                 </div>
-
-                <!-- Active filter tags strip -->
                 <div class="results-strip" id="resultsStrip">
                     <div>Showing <strong id="resultsShowing2" class="results-count">0</strong> result(s)</div>
                     <div class="results-filters-active" id="activeFilterTags"></div>
                 </div>
-
             </div>
+
+            <!-- ─── AI SIMILAR CASES SEARCH ─── -->
+            <div id="aiSearchPanel" class="no-print"></div>
 
             <!-- Prescriptions List -->
             <div class="prescriptions-grid" id="prescriptionsList"></div>
 
-            <!-- ─── DOCTORS VIEW ─── -->
+            <!-- Doctors View -->
             <div id="doctorsView" style="display:none">
-                <!-- Doctor Filter Bar -->
                 <div class="doctors-filter-bar no-print">
                     <div class="doctors-search-wrap">
                         <span class="doctors-search-icon">🔍</span>
@@ -270,10 +340,23 @@
                 <div class="doctors-grid" id="doctorsGrid"></div>
             </div>
 
+            <!-- ─── PATIENTS VIEW ─── -->
+            <div id="patientsView" style="display:none">
+                <div class="doctors-filter-bar no-print">
+                    <div class="doctors-search-wrap">
+                        <span class="doctors-search-icon">🔍</span>
+                        <input type="text" id="patientFilterInput" class="doctors-search-input"
+                            placeholder="Search by name, phone, ID..." oninput="filterPatients()">
+                    </div>
+                    <button class="clear-all-btn" onclick="clearPatientFilter()">✕ Clear</button>
+                </div>
+                <div id="patientsGrid" class="prescriptions-grid"></div>
+            </div>
+
         </main>
     </div>
 
-    <!-- ─── ADD / EDIT MODAL ─── -->
+    <!-- ─── ADD / EDIT RX MODAL ─── -->
     <div class="modal-overlay no-print" id="formModal">
         <div class="modal">
             <div class="modal-header">
@@ -335,14 +418,8 @@
                                 <label>Blood Group</label>
                                 <select id="fBloodGroup">
                                     <option value="">Select blood group</option>
-                                    <option>A+</option>
-                                    <option>A-</option>
-                                    <option>B+</option>
-                                    <option>B-</option>
-                                    <option>AB+</option>
-                                    <option>AB-</option>
-                                    <option>O+</option>
-                                    <option>O-</option>
+                                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                                    <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
                                 </select>
                             </div>
                         </div>
@@ -356,7 +433,7 @@
                                 <input type="email" id="fEmail" placeholder="patient@email.com">
                             </div>
                         </div>
-                    </div><!-- /collapsible-body -->
+                    </div>
                 </div>
 
                 <!-- Doctor Info -->
@@ -366,8 +443,6 @@
                         <span class="collapse-chevron">▼</span>
                     </div>
                     <div class="collapsible-body">
-
-                        <!-- Reg No — triggers auto-populate -->
                         <div class="reg-lookup-row">
                             <div class="field" style="position:relative;flex:1">
                                 <label>Reg. Number <em class="auto-hint">— type to auto-fill doctor details</em></label>
@@ -378,11 +453,9 @@
                             <div id="doctorAutoStatus" class="doctor-auto-status hidden">
                                 <span>✅</span>
                                 <span id="doctorAutoMsg">Doctor auto-filled</span>
-                                <button type="button" onclick="clearDoctorFields()" class="auto-clear-btn">✕
-                                    Clear</button>
+                                <button type="button" onclick="clearDoctorFields()" class="auto-clear-btn">✕ Clear</button>
                             </div>
                         </div>
-
                         <div class="form-row" style="margin-top:12px">
                             <div class="field">
                                 <label>Doctor Name <span>*</span></label>
@@ -403,7 +476,7 @@
                                 <input type="text" id="fDoctorPhone" placeholder="Doctor's phone / contact">
                             </div>
                         </div>
-                    </div><!-- /collapsible-body -->
+                    </div>
                 </div>
 
                 <!-- Inline Doctor Availability Panel -->
@@ -429,79 +502,48 @@
                             <input type="date" id="fValidUntil">
                         </div>
                     </div>
-                    <!-- Diagnosis Textarea — Feature Rich -->
+                    <!-- Diagnosis Textarea -->
                     <div class="field diag-field-full" style="margin-top:12px">
                         <label>🔬 Diagnosis / Condition</label>
-
-                        <!-- Quick Chips -->
                         <div class="diag-chips-bar">
                             <span class="diag-chips-label">Quick:</span>
                             <div class="diag-chips-scroll">
-                                <button type="button" class="diag-chip" onclick="appendDiag('Viral Fever')">🌡️ Viral
-                                    Fever</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Viral Fever')">🌡️ Viral Fever</button>
                                 <button type="button" class="diag-chip" onclick="appendDiag('URTI')">🤧 URTI</button>
-                                <button type="button" class="diag-chip"
-                                    onclick="appendDiag('Type 2 Diabetes Mellitus')">🩸 Diabetes</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Hypertension')">❤️
-                                    Hypertension</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Bronchial Asthma')">🫁
-                                    Asthma</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Hypothyroidism')">🦋
-                                    Hypothyroidism</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Acute Gastritis')">🫃
-                                    Gastritis</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Migraine')">🧠
-                                    Migraine</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Rheumatoid Arthritis')">🦴
-                                    Arthritis</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Anxiety Disorder')">😰
-                                    Anxiety</button>
-                                <button type="button" class="diag-chip"
-                                    onclick="appendDiag('Iron Deficiency Anaemia')">💉 Anaemia</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Dengue Fever')">🦟
-                                    Dengue</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Typhoid Fever')">🦠
-                                    Typhoid</button>
-                                <button type="button" class="diag-chip"
-                                    onclick="appendDiag('Urinary Tract Infection')">🚱 UTI</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Eczema / Dermatitis')">🩹
-                                    Eczema</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Vata Imbalance')">🌿 Vata
-                                    Imb.</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Type 2 Diabetes Mellitus')">🩸 Diabetes</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Hypertension')">❤️ Hypertension</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Bronchial Asthma')">🫁 Asthma</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Hypothyroidism')">🦋 Hypothyroidism</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Acute Gastritis')">🫃 Gastritis</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Migraine')">🧠 Migraine</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Rheumatoid Arthritis')">🦴 Arthritis</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Anxiety Disorder')">😰 Anxiety</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Iron Deficiency Anaemia')">💉 Anaemia</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Dengue Fever')">🦟 Dengue</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Typhoid Fever')">🦠 Typhoid</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Urinary Tract Infection')">🚱 UTI</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Eczema / Dermatitis')">🩹 Eczema</button>
+                                <button type="button" class="diag-chip" onclick="appendDiag('Vata Imbalance')">🌿 Vata Imb.</button>
                             </div>
                         </div>
-
-                        <!-- Toolbar -->
                         <div class="diag-toolbar">
                             <div class="diag-toolbar-group">
-                                <button type="button" class="diag-tb-btn" title="Insert bullet point"
-                                    onclick="insertDiagText('• ')">• Bullet</button>
-                                <button type="button" class="diag-tb-btn" title="Add ICD tag"
-                                    onclick="insertDiagText('[ICD: ]')">🏷️ ICD</button>
-                                <button type="button" class="diag-tb-btn" title="Add comorbidity line"
-                                    onclick="insertDiagText('\nComorbidity: ')">➕ Comorbidity</button>
-                                <button type="button" class="diag-tb-btn" title="Add severity tag"
-                                    onclick="insertDiagText(' (Mild)')"> Severity</button>
-                                <button type="button" class="diag-tb-btn" title="Add onset note"
-                                    onclick="insertDiagText('\nOnset: ')">📅 Onset</button>
+                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('• ')">• Bullet</button>
+                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('[ICD: ]')">🏷️ ICD</button>
+                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('\nComorbidity: ')">➕ Comorbidity</button>
+                                <button type="button" class="diag-tb-btn" onclick="insertDiagText(' (Mild)')">Severity</button>
+                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('\nOnset: ')">📅 Onset</button>
                             </div>
-                            <button type="button" class="diag-tb-btn diag-tb-clear" title="Clear field"
-                                onclick="clearDiag()">✕ Clear</button>
+                            <button type="button" class="diag-tb-btn diag-tb-clear" onclick="clearDiag()">✕ Clear</button>
                         </div>
-
-                        <!-- Textarea -->
                         <textarea id="fDiagnosis"
                             placeholder="e.g. Viral Fever &amp; URTI&#10;Comorbidity: Type 2 Diabetes Mellitus&#10;Onset: 3 days ago • Severity: Moderate"
                             rows="3" oninput="updateDiagCounter(this); autoDiagResize(this)"></textarea>
-
-                        <!-- Counter -->
                         <div class="diag-counter-row">
                             <span class="diag-hint">Separate multiple conditions with commas or new lines</span>
                             <span class="diag-counter" id="diagCounter">0 words</span>
                         </div>
                     </div>
-
-                    <!-- Status (own row) -->
                     <div class="form-row" style="margin-top:12px">
                         <div class="field">
                             <label>Status</label>
@@ -519,46 +561,26 @@
                 <div class="form-section">
                     <div class="form-section-title">💊 Medicines Prescribed</div>
                     <div class="med-col-labels">
-                        <span>Medicine Name</span>
-                        <span>Dosage</span>
-                        <span>Frequency</span>
-                        <span>Duration</span>
-                        <span>Route</span>
-                        <span></span>
+                        <span>Medicine Name</span><span>Dosage</span><span>Frequency</span>
+                        <span>Duration</span><span>Route</span><span></span>
                     </div>
                     <div class="medicines-editor" id="medicinesEditor"></div>
                     <button class="btn-add-medicine" onclick="addMedicineRow()">＋ Add Medicine</button>
                 </div>
 
-                <!-- Diagnosis & Tests -->
+                <!-- Tests -->
                 <div class="form-section">
                     <div class="form-section-title">🔬 Diagnosis &amp; Tests</div>
                     <div class="diag-col-labels">
-                        <span>Test / Investigation</span>
-                        <span>Observation / Notes</span>
-                        <span></span>
+                        <span>Test / Investigation</span><span>Observation / Notes</span><span></span>
                     </div>
                     <datalist id="testNameList">
-                        <option value="CBC (Complete Blood Count)">
-                        <option value="MRI">
-                        <option value="CT Scan">
-                        <option value="X-Ray">
-                        <option value="Ultrasound">
-                        <option value="ECG">
-                        <option value="2D Echo">
-                        <option value="Blood Sugar (Fasting)">
-                        <option value="Blood Sugar (PP)">
-                        <option value="HbA1c">
-                        <option value="Thyroid (TSH, T3, T4)">
-                        <option value="Lipid Profile">
-                        <option value="LFT (Liver Function Test)">
-                        <option value="KFT (Kidney Function Test)">
-                        <option value="Urine Routine">
-                        <option value="Stool Examination">
-                        <option value="Sputum Culture">
-                        <option value="Blood Culture">
-                        <option value="DEXA Scan">
-                        <option value="PET Scan">
+                        <option value="CBC (Complete Blood Count)"><option value="MRI"><option value="CT Scan">
+                        <option value="X-Ray"><option value="Ultrasound"><option value="ECG"><option value="2D Echo">
+                        <option value="Blood Sugar (Fasting)"><option value="Blood Sugar (PP)"><option value="HbA1c">
+                        <option value="Thyroid (TSH, T3, T4)"><option value="Lipid Profile">
+                        <option value="LFT (Liver Function Test)"><option value="KFT (Kidney Function Test)">
+                        <option value="Urine Routine"><option value="Stool Examination">
                     </datalist>
                     <div class="diagnostic-editor" id="diagnosticEditor"></div>
                     <button class="btn-add-medicine" onclick="addDiagnosticRow()">＋ Add Test</button>
@@ -567,59 +589,38 @@
                 <!-- Notes -->
                 <div class="form-section notes-section" style="margin-bottom:0">
                     <div class="form-section-title">📝 Additional Notes</div>
-
-                    <!-- Note Category Tags -->
                     <div class="notes-categories">
                         <span class="notes-cat-label">Tag:</span>
-                        <button type="button" class="note-cat-chip" data-cat="dietary"
-                            onclick="toggleNoteCategory(this)">🥗 Dietary</button>
-                        <button type="button" class="note-cat-chip" data-cat="lifestyle"
-                            onclick="toggleNoteCategory(this)">🏃 Lifestyle</button>
-                        <button type="button" class="note-cat-chip" data-cat="warning"
-                            onclick="toggleNoteCategory(this)">⚠️ Warning</button>
-                        <button type="button" class="note-cat-chip" data-cat="followup"
-                            onclick="toggleNoteCategory(this)">📅 Follow-up</button>
-                        <button type="button" class="note-cat-chip" data-cat="medication"
-                            onclick="toggleNoteCategory(this)">💊 Medication</button>
-                        <button type="button" class="note-cat-chip" data-cat="rest"
-                            onclick="toggleNoteCategory(this)">😴 Rest</button>
+                        <button type="button" class="note-cat-chip" data-cat="dietary" onclick="toggleNoteCategory(this)">🥗 Dietary</button>
+                        <button type="button" class="note-cat-chip" data-cat="lifestyle" onclick="toggleNoteCategory(this)">🏃 Lifestyle</button>
+                        <button type="button" class="note-cat-chip" data-cat="warning" onclick="toggleNoteCategory(this)">⚠️ Warning</button>
+                        <button type="button" class="note-cat-chip" data-cat="followup" onclick="toggleNoteCategory(this)">📅 Follow-up</button>
+                        <button type="button" class="note-cat-chip" data-cat="medication" onclick="toggleNoteCategory(this)">💊 Medication</button>
+                        <button type="button" class="note-cat-chip" data-cat="rest" onclick="toggleNoteCategory(this)">😴 Rest</button>
                     </div>
-
-                    <!-- Template Presets -->
                     <div class="notes-toolbar">
                         <div class="notes-toolbar-group">
                             <span class="toolbar-label">Templates:</span>
-                            <select id="noteTemplate" class="note-template-select"
-                                onchange="applyNoteTemplate(this.value)">
+                            <select id="noteTemplate" class="note-template-select" onchange="applyNoteTemplate(this.value)">
                                 <option value="">— Choose a template —</option>
                             </select>
                         </div>
                         <div class="notes-toolbar-group">
                             <span class="toolbar-label">Insert:</span>
-                            <button type="button" class="toolbar-btn" title="Add bullet point"
-                                onclick="insertNoteText('• ')">• List</button>
-                            <button type="button" class="toolbar-btn" title="Add new line"
-                                onclick="insertNoteText('\n')">↵ Line</button>
-                            <button type="button" class="toolbar-btn" title="Add follow-up line"
-                                onclick="insertNoteText('Follow-up: ')">📅 F/U</button>
-                            <button type="button" class="toolbar-btn" title="Add warning note"
-                                onclick="insertNoteText('⚠️ Warning: ')">⚠️ Warn</button>
-                            <button type="button" class="toolbar-btn" title="Add dosage note"
-                                onclick="insertNoteText('Take ')">💊 Dose</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-clear" title="Clear notes"
-                                onclick="clearNotes()">✕ Clear</button>
+                            <button type="button" class="toolbar-btn" onclick="insertNoteText('• ')">• List</button>
+                            <button type="button" class="toolbar-btn" onclick="insertNoteText('\n')">↵ Line</button>
+                            <button type="button" class="toolbar-btn" onclick="insertNoteText('Follow-up: ')">📅 F/U</button>
+                            <button type="button" class="toolbar-btn" onclick="insertNoteText('⚠️ Warning: ')">⚠️ Warn</button>
+                            <button type="button" class="toolbar-btn" onclick="insertNoteText('Take ')">💊 Dose</button>
+                            <button type="button" class="toolbar-btn toolbar-btn-clear" onclick="clearNotes()">✕ Clear</button>
                         </div>
                     </div>
-
-                    <!-- Quick-Insert Chips -->
                     <div class="quick-chips-bar">
                         <span class="toolbar-label" style="flex-shrink:0">Quick:</span>
                         <input type="text" id="chipsFilterInput" class="chips-filter-input"
                             placeholder="Filter chips..." oninput="renderQuickChips(this.value)">
                         <div class="quick-chips-scroll" id="quickChipsScroll"></div>
                     </div>
-
-                    <!-- Textarea -->
                     <div class="field" style="margin-top:10px">
                         <textarea id="fNotes"
                             placeholder="Dietary advice, lifestyle instructions, warnings, follow-up date, etc."
@@ -642,7 +643,6 @@
     <!-- ─── ADMIN MODAL ─── -->
     <div class="modal-overlay no-print" id="adminModal">
         <div class="modal admin-modal">
-            <!-- PIN Gate -->
             <div id="adminPinView">
                 <div class="modal-header">
                     <div>
@@ -658,10 +658,9 @@
                         onkeydown="if(event.key==='Enter')checkAdminPin()">
                     <div id="adminPinError" class="pin-error"></div>
                     <button class="btn-sm btn-teal pin-unlock-btn" onclick="checkAdminPin()">🔓 Unlock</button>
-                    <div class="pin-hint">Default PIN: <code>admin1234</code></div>
+                    <div class="pin-hint">PIN is set per-clinic during clinic setup.</div>
                 </div>
             </div>
-            <!-- Doctor Management -->
             <div id="adminDoctorView" style="display:none">
                 <div class="modal-header">
                     <div>
@@ -676,6 +675,10 @@
                 </div>
                 <div class="modal-body" style="padding:0;max-height:60vh;overflow-y:auto">
                     <div id="adminDoctorList"></div>
+                </div>
+                <!-- Premium AI upgrade section -->
+                <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2)">
+                    <div id="adminPremiumSection"></div>
                 </div>
             </div>
         </div>
@@ -695,12 +698,8 @@
                 <div class="form-section">
                     <div class="form-section-title">🪪 Registration</div>
                     <div class="form-row">
-                        <div class="field">
-                            <label>Reg. Number <span>*</span></label>
-                            <input type="text" id="dfRegNo" placeholder="e.g. MCI/2045">
-                        </div>
-                        <div class="field">
-                            <label>Medicine System</label>
+                        <div class="field"><label>Reg. Number <span>*</span></label><input type="text" id="dfRegNo" placeholder="e.g. MCI/2045"></div>
+                        <div class="field"><label>Medicine System</label>
                             <select id="dfType">
                                 <option value="allopathy">💉 Allopathy</option>
                                 <option value="homeopathy">🌿 Homeopathy</option>
@@ -712,58 +711,37 @@
                 <div class="form-section">
                     <div class="form-section-title">👤 Doctor Details</div>
                     <div class="form-row">
-                        <div class="field">
-                            <label>Full Name <span>*</span></label>
-                            <input type="text" id="dfName" placeholder="Dr. Full Name">
-                        </div>
-                        <div class="field">
-                            <label>Qualification</label>
-                            <input type="text" id="dfQualification" placeholder="e.g. MBBS, MD">
-                        </div>
+                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="dfName" placeholder="Dr. Full Name"></div>
+                        <div class="field"><label>Qualification</label><input type="text" id="dfQualification" placeholder="e.g. MBBS, MD"></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Specialization</label>
-                            <input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist">
-                        </div>
+                        <div class="field"><label>Specialization</label><input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist"></div>
                         <div class="field">
                             <label>Hospital / Clinic</label>
-                            <input type="text" id="dfHospital" placeholder="Hospital or clinic name">
+                            <select id="dfHospital">
+                                <option value="">— Select Clinic —</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Phone</label>
-                            <input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX">
-                        </div>
-                        <div class="field">
-                            <label>Email</label>
-                            <input type="email" id="dfEmail" placeholder="doctor@hospital.com">
-                        </div>
+                        <div class="field"><label>Phone</label><input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX"></div>
+                        <div class="field"><label>Email</label><input type="email" id="dfEmail" placeholder="doctor@hospital.com"></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field" style="grid-column:1/-1">
-                            <label>Address</label>
-                            <input type="text" id="dfAddress" placeholder="Clinic / hospital address">
-                        </div>
+                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" placeholder="Clinic / hospital address"></div>
                     </div>
                 </div>
                 <div class="form-section" style="margin-bottom:0">
                     <div class="form-section-title">📅 Availability Schedule</div>
-                    <div class="avail-col-labels">
-                        <span>Day</span><span>Timing</span><span></span>
-                    </div>
+                    <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
                     <div id="availEditor"></div>
-                    <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time
-                        Slot</button>
-                    <!-- Unavailability Toggle -->
+                    <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
                     <div class="unavail-toggle-row">
                         <label class="unavail-toggle-label">
                             <input type="checkbox" id="dfUnavailable">
                             <span class="unavail-toggle-text">🔴 Mark Doctor as Currently Unavailable</span>
                         </label>
-                        <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the
-                            Doctors view.</div>
+                        <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the Doctors view.</div>
                     </div>
                 </div>
             </div>
@@ -779,8 +757,7 @@
         <div class="confirm-modal">
             <div class="confirm-icon">🗑️</div>
             <div class="confirm-title">Delete Rx?</div>
-            <div class="confirm-text">This action cannot be undone. The Rx record will be permanently removed
-                from your vault.</div>
+            <div class="confirm-text">This action cannot be undone. The Rx record will be permanently removed from your vault.</div>
             <div class="confirm-actions">
                 <button class="btn-sm btn-outline-teal" onclick="closeModal('confirmModal')">Cancel</button>
                 <button class="btn-sm btn-outline-red" id="confirmDeleteBtn">Delete</button>
@@ -799,7 +776,6 @@
                 <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
             </div>
             <div class="modal-body">
-                <!-- Patient Details -->
                 <div class="form-section">
                     <div class="form-section-title">🪪 Patient Information</div>
                     <div class="pid-display-row">
@@ -807,84 +783,36 @@
                         <span class="pid-display" id="regPid">—</span>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Patient Name <span>*</span></label>
-                            <input type="text" id="regName" placeholder="Full name">
+                        <div class="field"><label>Patient Name <span>*</span></label><input type="text" id="regName" placeholder="Full name"></div>
+                        <div class="field"><label>Age</label><input type="number" id="regAge" placeholder="Years" min="0" max="150"></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Gender</label>
+                            <select id="regGender"><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
                         </div>
-                        <div class="field">
-                            <label>Age</label>
-                            <input type="number" id="regAge" placeholder="Years" min="0" max="150">
+                        <div class="field"><label>Blood Group</label>
+                            <select id="regBloodGroup"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
                         </div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Gender</label>
-                            <select id="regGender">
-                                <option value="">Select gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>Blood Group</label>
-                            <select id="regBloodGroup">
-                                <option value="">Select blood group</option>
-                                <option>A+</option>
-                                <option>A-</option>
-                                <option>B+</option>
-                                <option>B-</option>
-                                <option>AB+</option>
-                                <option>AB-</option>
-                                <option>O+</option>
-                                <option>O-</option>
-                            </select>
-                        </div>
+                        <div class="field"><label>Phone</label><input type="tel" id="regPhone" placeholder="+91 XXXXX XXXXX"></div>
+                        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="patient@email.com"></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Phone</label>
-                            <input type="tel" id="regPhone" placeholder="+91 XXXXX XXXXX">
-                        </div>
-                        <div class="field">
-                            <label>Email</label>
-                            <input type="email" id="regEmail" placeholder="patient@email.com">
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field" style="grid-column:1/-1">
-                            <label>Address</label>
-                            <input type="text" id="regAddress" placeholder="Patient's address">
-                        </div>
+                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="regAddress" placeholder="Patient's address"></div>
                     </div>
                 </div>
-
-                <!-- Consultant & Fee -->
                 <div class="form-section" style="margin-bottom:0">
                     <div class="form-section-title">🩺 Consultant &amp; Fee Payment</div>
                     <div class="form-row">
-                        <div class="field">
-                            <label>Consultant Doctor <span>*</span></label>
-                            <select id="regDoctor">
-                                <option value="">— Select Doctor —</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label>Consultation Fee (₹) <span>*</span></label>
-                            <input type="number" id="regFee" placeholder="e.g. 500" min="0">
-                        </div>
+                        <div class="field"><label>Consultant Doctor <span>*</span></label><select id="regDoctor"><option value="">— Select Doctor —</option></select></div>
+                        <div class="field"><label>Consultation Fee (₹) <span>*</span></label><input type="number" id="regFee" placeholder="e.g. 500" min="0"></div>
                     </div>
                     <div class="fee-payment-row" style="margin-top:14px">
                         <span class="fee-payment-label">Payment Method:</span>
-                        <label class="fee-radio-label">
-                            <input type="radio" name="regPayment" value="Cash" checked> 💵 Cash
-                        </label>
-                        <label class="fee-radio-label">
-                            <input type="radio" name="regPayment" value="Card"> 💳 Card
-                        </label>
-                        <label class="fee-radio-label">
-                            <input type="radio" name="regPayment" value="UPI"> 📲 UPI
-                        </label>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Cash" checked> 💵 Cash</label>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Card"> 💳 Card</label>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="UPI"> 📲 UPI</label>
                     </div>
                     <div class="reg-date-row" style="margin-top:12px">
                         <div class="field" style="max-width:200px">
@@ -907,7 +835,12 @@
     <!-- ─── PRINT TEMPLATE ─── -->
     <div id="printArea" style="display:none"></div>
 
+    <!-- Supabase CDN — must load first -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Scripts — load order: supabase.js → clinic.js → script.js -->
+    <script src="src/supabase.js"></script>
+    <script src="src/clinic.js"></script>
+    <script src="src/ai.js"></script>
     <script src="src/script.js"></script>
 </body>
-
 </html>
