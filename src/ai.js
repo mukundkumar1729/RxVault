@@ -117,8 +117,8 @@ async function searchSemantic(query) {
 // ═══════════════════════════════════════════════════════════
 //  SIMILAR CASES UI
 // ═══════════════════════════════════════════════════════════
-let aiSearchDebounce = null;
-let lastAiQuery = '';
+var aiSearchDebounce = null;
+var lastAiQuery = '';
 
 function initAiSearchPanel() {
   renderAiSearchPanel();

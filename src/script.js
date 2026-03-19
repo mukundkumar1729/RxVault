@@ -2,16 +2,16 @@
 //  STATE & STORAGE  — clinic-namespaced
 // ════════════════════════════════════════════════════════════
 
-let prescriptions = [];
-let editingId = null;
-let activeNoteCategories = new Set();
-let currentView = 'all';
-let currentTypeFilter = 'all';
-let deleteTargetId = null;
-let doctorRegistry = [];
-let isAdminUnlocked = false;
-let editingDoctorIdx = null;
-let patientRegistry = [];
+var prescriptions = [];
+var editingId = null;
+var activeNoteCategories = new Set();
+var currentView = 'all';
+var currentTypeFilter = 'all';
+var deleteTargetId = null;
+var doctorRegistry = [];
+var isAdminUnlocked = false;
+var editingDoctorIdx = null;
+var patientRegistry = [];
 
 const TODAY_NAME = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
 
@@ -34,8 +34,8 @@ async function saveDoctorRegistryLocal() { /* individual saves handled per opera
 // ════════════════════════════════════════════════════════════
 //  QUICK CHIPS + NOTE TEMPLATES
 // ════════════════════════════════════════════════════════════
-let QUICK_CHIPS_DATA = null;
-let NOTE_TEMPLATES_DATA = null;
+var QUICK_CHIPS_DATA = null;
+var NOTE_TEMPLATES_DATA = null;
 
 async function loadQuickChips() {
   try { QUICK_CHIPS_DATA = await fetch('../data/quick-chips.json').then(r => r.json()); } catch { QUICK_CHIPS_DATA = null; }
@@ -74,6 +74,11 @@ async function initAppForClinic() {
   hideLoading();
   render();
   updateStats();
+  // Refresh active view if on doctors or patients
+  if (currentView === 'doctors') renderAdminDoctorList();
+  if (currentView === 'patients') renderPatientsPage(patientRegistry);
+  // Apply permission guards based on role
+  if (typeof applyPermissionGuards === 'function') applyPermissionGuards();
   // Init AI search panel
   if (typeof initAiSearchPanel === 'function') initAiSearchPanel();
 }
@@ -81,7 +86,29 @@ async function initAppForClinic() {
 // ════════════════════════════════════════════════════════════
 //  RENDER
 // ════════════════════════════════════════════════════════════
-function render() { updateStats(); applyFilters(); }
+function render() { updateStats(); applyFilters(); applyPermissionUI(); }
+
+function applyPermissionUI() {
+  if (typeof can === 'undefined') return; // auth not loaded yet
+
+  // Generic data-perm handler — covers ALL permission-gated elements
+  document.querySelectorAll('[data-perm]').forEach(function(el) {
+    var perm = el.dataset.perm;
+    var allowed = (can[perm] && typeof can[perm] === 'function') ? can[perm]() : true;
+    el.style.display = allowed ? '' : 'none';
+  });
+
+  // Specific onclick-based guards
+  document.querySelectorAll('[onclick*="openAddModal"]').forEach(function(btn) {
+    btn.style.display = can.addPrescription() ? '' : 'none';
+  });
+  document.querySelectorAll('[onclick*="openRegisterModal"]').forEach(function(btn) {
+    btn.style.display = can.registerPatient() ? '' : 'none';
+  });
+  document.querySelectorAll('[onclick*="exportAll"]').forEach(function(btn) {
+    btn.style.display = can.exportData() ? '' : 'none';
+  });
+}
 
 function updateStats() {
   const total = prescriptions.length;
@@ -99,6 +126,8 @@ function updateStats() {
   setEl('badgeAll', total); setEl('badgeRecent', recent); setEl('badgeActive', active);
   setEl('badgeDoctors', doctorRegistry.length);
   setEl('badgePatients', patientRegistry.length);
+  var pendingRx = prescriptions.filter(function(p){ return !p.dispenseDate; }).length;
+  setEl('badgePharmacy', pendingRx);
 }
 function setEl(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
@@ -278,6 +307,7 @@ function renderCard(p, q='', allTerms=[]) {
         '<div class="rx-actions" onclick="event.stopPropagation()">' +
           '<button class="icon-btn print" title="Print"  onclick="printPrescription(\'' + p.id + '\')">🖨️</button>' +
           '<button class="icon-btn edit"  title="Edit"   onclick="openEditModal(\''    + p.id + '\')">✏️</button>' +
+          (p.status === 'expired' ? '<button class="icon-btn" title="Renew" onclick="renewPrescription(\'' + p.id + '\')" style="color:var(--teal)">🔄</button>' : '') +
           '<button class="icon-btn delete" title="Delete" onclick="confirmDelete(\''   + p.id + '\')">🗑️</button>' +
         '</div>' +
         '<span class="chevron-icon">▼</span>' +
@@ -301,6 +331,9 @@ function renderCard(p, q='', allTerms=[]) {
         '<div class="rx-footer-actions">' +
           '<button class="btn-sm btn-outline-teal" onclick="printPrescription(\'' + p.id + '\')">🖨️ Print</button>' +
           '<button class="btn-sm btn-outline-teal" onclick="openEditModal(\''    + p.id + '\')">✏️ Edit</button>' +
+          (p.status === 'expired' && can.addPrescription()
+            ? '<button class="btn-sm btn-teal" onclick="renewPrescription(\'' + p.id + '\')">🔄 Renew Rx</button>'
+            : '') +
           '<button class="btn-sm btn-outline-red"  onclick="confirmDelete(\''   + p.id + '\')">🗑️ Delete</button>' +
         '</div>' +
       '</div>' +
@@ -314,10 +347,12 @@ function toggleCard(id) { document.getElementById('card_'+id).classList.toggle('
 //  MODAL — ADD / EDIT
 // ════════════════════════════════════════════════════════════
 function openAddModal() {
+  if (!can.addPrescription()) { showToast('You do not have permission to add prescriptions.', 'error'); return; }
   editingId=null; resetForm();
   document.getElementById('modalTitle').textContent='New Rx';
   document.getElementById('saveBtn').textContent='💾 Save Rx';
   document.getElementById('fDate').value=todayISO();
+  document.getElementById('fValidUntil').value=addDays(todayISO(), 30);
   document.getElementById('medicinesEditor').innerHTML='';
   document.getElementById('diagnosticEditor').innerHTML='';
   expandSection('patientSection'); expandSection('doctorSection');
@@ -428,6 +463,7 @@ function confirmDelete(id) {
   document.getElementById('confirmDeleteBtn').onclick=()=>{deletePrescription(id);closeModal('confirmModal');};
 }
 async function deletePrescription(id) {
+  if (!can.deletePrescription()) { showToast('You do not have permission to delete prescriptions.', 'error'); return; }
   const p=prescriptions.find(x=>x.id===id);
   const ok = await dbDeletePrescription(id);
   if (!ok) { showToast('Delete failed — check console','error'); return; }
@@ -453,6 +489,7 @@ function printPrescription(id) {
 //  EXPORT / IMPORT (clinic-scoped)
 // ════════════════════════════════════════════════════════════
 function exportAll() {
+  if (!can.exportData()) { showToast('You do not have permission to export data.', 'error'); return; }
   if (!prescriptions.length){showToast('No prescriptions to export.','error');return;}
   const clinic=getActiveClinic();
   const exportData = { clinicId: activeClinicId, clinicName: clinic?.name || '', exportedAt: new Date().toISOString(), prescriptions };
@@ -612,13 +649,25 @@ function focusEl(id){document.getElementById(id)?.focus();}
 // ════════════════════════════════════════════════════════════
 //  TOAST
 // ════════════════════════════════════════════════════════════
-function showToast(msg,type='info') {
-  const icons={success:'✅',error:'❌',info:'ℹ️'};
-  const container=document.getElementById('toastContainer');
-  const toast=document.createElement('div'); toast.className=`toast ${type}`;
-  toast.innerHTML=`<span class="toast-icon">${icons[type]||'ℹ️'}</span> ${msg}`;
+function showToast(msg, type) {
+  type = type || 'info';
+  var icons = {success:'✅', error:'❌', info:'ℹ️'};
+  var container = document.getElementById('toastContainer');
+  if (!container) {
+    // Create container if missing
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<span class="toast-icon">' + (icons[type]||'ℹ️') + '</span> ' + msg;
   container.appendChild(toast);
-  setTimeout(()=>{toast.classList.add('toast-fade');setTimeout(()=>toast.remove(),350);},3200);
+  setTimeout(function() {
+    toast.classList.add('toast-fade');
+    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 350);
+  }, 3200);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -626,7 +675,12 @@ function showToast(msg,type='info') {
 // ════════════════════════════════════════════════════════════
 function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(str){return String(str||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function formatDate(d){if(!d)return'—';try{return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
+function formatDate(d){if(!d)return'—';try{var ds=String(d).length>10?d:d+'T00:00:00';return new Date(ds).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}catch(e){return d;}}
+function addDays(dateStr, days) {
+  var d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
 function todayISO(){return new Date().toISOString().split('T')[0];}
 function capitalize(str){return str?str.charAt(0).toUpperCase()+str.slice(1):'';}
 
@@ -732,21 +786,34 @@ function clearDoctorFields() {
 //  ADMIN PANEL
 // ════════════════════════════════════════════════════════════
 function openAdminPanel() {
-  const pinInp=document.getElementById('adminPinInput');
-  const pinErr=document.getElementById('adminPinError');
-  if(pinInp)pinInp.value=''; if(pinErr)pinErr.textContent='';
-  if(isAdminUnlocked){
-    document.getElementById('adminPinView').style.display='none';
-    document.getElementById('adminDoctorView').style.display='';
+  // Role-based auth check (auth.js) OR fallback to PIN
+  var hasAccess = (typeof can !== 'undefined') ? can.accessAdminPanel() : false;
+  var pinView   = document.getElementById('adminPinView');
+  var doctorView = document.getElementById('adminDoctorView');
+
+  if (!pinView || !doctorView) { showToast('Admin panel not found.', 'error'); return; }
+
+  if (hasAccess) {
+    // Logged in as admin/superadmin — bypass PIN
+    isAdminUnlocked = true;
+    pinView.style.display   = 'none';
+    doctorView.style.display = '';
     renderAdminDoctorList();
-    const ps = document.getElementById('adminPremiumSection');
-    if(ps && typeof renderPremiumUpgradeSection==='function') ps.innerHTML = renderPremiumUpgradeSection();
+    var ps = document.getElementById('adminPremiumSection');
+    if (ps && typeof renderPremiumUpgradeSection === 'function') ps.innerHTML = renderPremiumUpgradeSection();
+    openModal('adminModal');
   } else {
-    document.getElementById('adminPinView').style.display='';
-    document.getElementById('adminDoctorView').style.display='none';
+    // Not logged in as admin — show PIN screen
+    isAdminUnlocked = false;
+    pinView.style.display   = '';
+    doctorView.style.display = 'none';
+    var pinInp = document.getElementById('adminPinInput');
+    var pinErr = document.getElementById('adminPinError');
+    if (pinInp) pinInp.value = '';
+    if (pinErr) pinErr.textContent = '';
+    openModal('adminModal');
+    setTimeout(function(){ if(pinInp) pinInp.focus(); }, 150);
   }
-  openModal('adminModal');
-  setTimeout(()=>{if(!isAdminUnlocked&&pinInp)pinInp.focus();},200);
 }
 function checkAdminPin() {
   const entered=(document.getElementById('adminPinInput')?.value||'').trim();
@@ -827,12 +894,19 @@ async function saveDoctor() {
     if(!ok){showToast('DB save failed','error');return;}
     doctorRegistry.push(d);showToast(`Added Dr. ${name}`,'success');
   }
-  updateStats(); closeModal('doctorFormModal');
-  openModal('adminModal');
-  document.getElementById('adminPinView').style.display='none';
-  document.getElementById('adminDoctorView').style.display='';
+  updateStats();
+  closeModal('doctorFormModal');
   renderAdminDoctorList();
-  if(currentView==='doctors')renderDoctorsPage();
+  if (currentView === 'doctors') renderDoctorsPage();
+  // Reopen admin panel if it was open
+  var adminModal = document.getElementById('adminModal');
+  if (adminModal && !adminModal.classList.contains('open')) {
+    var pinView    = document.getElementById('adminPinView');
+    var doctorView = document.getElementById('adminDoctorView');
+    if (pinView)    pinView.style.display    = 'none';
+    if (doctorView) doctorView.style.display = '';
+    openModal('adminModal');
+  }
 }
 async function deleteDoctor(idx) {
   const d=doctorRegistry[idx]; if(!d)return;
@@ -849,14 +923,38 @@ const DAYS_OF_WEEK=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday
 function formatTime12to24(str){if(!str)return'';const m=str.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);if(!m)return str;let h=parseInt(m[1]);const min=m[2],p=m[3].toUpperCase();if(p==='AM'&&h===12)h=0;if(p==='PM'&&h!==12)h+=12;return`${String(h).padStart(2,'0')}:${min}`;}
 function formatTime24to12(t){if(!t)return'';const[hh,mm]=t.split(':').map(Number);const p=hh<12?'AM':'PM';const h12=hh===0?12:hh>12?hh-12:hh;return`${String(h12).padStart(2,'0')}:${String(mm).padStart(2,'0')} ${p}`;}
 function parseAvailTime(timeStr){const parts=(timeStr||'').split('–').map(s=>s.trim());return{from:formatTime12to24(parts[0]||''),to:formatTime12to24(parts[1]||'')};}
-function addAvailRow(data={}) {
-  const editor=document.getElementById('availEditor');
-  const row=document.createElement('div'); row.className='avail-row';
-  const dayOpts=DAYS_OF_WEEK.map(d=>`<option value="${d}" ${d===data.day?'selected':''}>${d}</option>`).join('');
-  const times=parseAvailTime(data.time||'');
-  row.innerHTML=`<select class="avail-day-select">${dayOpts}</select>
-    <div class="avail-time-range"><input type="time" class="avail-time-from" value="${escAttr(times.from)}"><span class="avail-time-sep">–</span><input type="time" class="avail-time-to" value="${escAttr(times.to)}"></div>
-    <button class="btn-remove-med" onclick="this.closest('.avail-row').remove()" title="Remove">✕</button>`;
+function addAvailRow(data) {
+  var editor = document.getElementById('availEditor');
+  // If no data passed, copy values from last row
+  if (!data) {
+    var rows = editor.querySelectorAll('.avail-row');
+    if (rows.length > 0) {
+      var lastRow = rows[rows.length - 1];
+      var lastDay  = lastRow.querySelector('.avail-day-select')?.value || '';
+      var lastFrom = lastRow.querySelector('.avail-time-from')?.value || '';
+      var lastTo   = lastRow.querySelector('.avail-time-to')?.value   || '';
+      // Advance to next day
+      var dayIdx = DAYS_OF_WEEK.indexOf(lastDay);
+      var nextDay = DAYS_OF_WEEK[(dayIdx + 1) % DAYS_OF_WEEK.length];
+      data = { day: nextDay, time: (lastFrom && lastTo) ? formatTime24to12(lastFrom) + ' – ' + formatTime24to12(lastTo) : '' };
+    } else {
+      data = {};
+    }
+  }
+  var row = document.createElement('div');
+  row.className = 'avail-row';
+  var times = parseAvailTime(data.time || '');
+  var dayOpts = DAYS_OF_WEEK.map(function(d) {
+    return '<option value="' + d + '"' + (d === data.day ? ' selected' : '') + '>' + d + '</option>';
+  }).join('');
+  row.innerHTML =
+    '<select class="avail-day-select">' + dayOpts + '</select>' +
+    '<div class="avail-time-range">' +
+      '<input type="time" class="avail-time-from" value="' + escAttr(times.from) + '">' +
+      '<span class="avail-time-sep">–</span>' +
+      '<input type="time" class="avail-time-to" value="' + escAttr(times.to) + '">' +
+    '</div>' +
+    '<button class="btn-remove-med" onclick="this.parentElement.remove()" title="Remove">✕</button>';
   editor.appendChild(row);
 }
 function getAvailSlots() {
@@ -878,6 +976,7 @@ function showDoctorView() {
   ['statsRow','controlsBar','prescriptionsList'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const pvHide=document.getElementById('patientsView'); if(pvHide) pvHide.style.display='none';
   const aiHide=document.getElementById('aiSearchPanel'); if(aiHide) aiHide.style.display='none';
+  const phHide2=document.getElementById('pharmacyView'); if(phHide2) phHide2.style.display='none';
   document.getElementById('doctorsView').style.display='';
   document.getElementById('pageTitle').textContent='👨‍⚕️ Doctors & Availability';
   document.getElementById('pageSubtitle').textContent='Registered practitioners and their consultation schedules';
@@ -1054,6 +1153,7 @@ function expandSection(sectionId){const el=document.getElementById(sectionId);if
 //  PATIENT REGISTRATION
 // ════════════════════════════════════════════════════════════
 function openRegisterModal() {
+  if (!can.registerPatient()) { showToast('You do not have permission to register patients.', 'error'); return; }
   ['regName','regAge','regPhone','regEmail','regAddress','regFee'].forEach(id=>setVal(id,''));
   setVal('regGender','');setVal('regBloodGroup','');
   document.querySelector('input[name="regPayment"][value="Cash"]').checked=true;
@@ -1083,6 +1183,165 @@ async function registerPatient() {
   closeModal('registerModal');
   showToast('✅ Patient registered! ID: ' + pid + ' · Fee ₹' + fee + ' received via ' + paymentMethod, 'success');
   // Open new prescription modal pre-filled with patient data
+  openAddModalForPatient(patient);
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  PATIENT FEE VALIDITY (7-day window)
+// ════════════════════════════════════════════════════════════
+var FEE_VALIDITY_DAYS = 7;
+
+function getPatientFeeStatus(patient) {
+  // Returns: 'valid' | 'expired' | 'never'
+  if (!patient) return 'never';
+  // Check if there's a payment within last 7 days
+  var lastPayment = getLastPaymentDate(patient);
+  if (!lastPayment) return 'never';
+  var diffMs   = Date.now() - lastPayment.getTime();
+  var diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays <= FEE_VALIDITY_DAYS ? 'valid' : 'expired';
+}
+
+function getLastPaymentDate(patient) {
+  // Check patient.registeredAt first (initial registration payment)
+  // Then check prescriptions for this patient to find any re-payment entries
+  var dates = [];
+  if (patient.registeredAt) dates.push(new Date(patient.registeredAt));
+  if (patient.lastFeeDate)   dates.push(new Date(patient.lastFeeDate));
+  // Also check prescriptions tagged with fee payment
+  prescriptions.forEach(function(rx) {
+    if ((rx.patientName||'').trim().toLowerCase() === (patient.name||'').trim().toLowerCase()) {
+      if (rx.feePaidDate) dates.push(new Date(rx.feePaidDate));
+    }
+  });
+  if (!dates.length) return null;
+  return dates.reduce(function(a, b) { return a > b ? a : b; });
+}
+
+function getFeeExpiryDate(patient) {
+  var last = getLastPaymentDate(patient);
+  if (!last) return null;
+  var exp = new Date(last.getTime() + FEE_VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+  return exp;
+}
+
+function getDaysRemaining(patient) {
+  var exp = getFeeExpiryDate(patient);
+  if (!exp) return 0;
+  return Math.max(0, Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
+// Open prescription for existing patient — checks fee validity first
+function openPrescriptionForPatient(patient) {
+  var status = getPatientFeeStatus(patient);
+  if (status === 'valid') {
+    var days = getDaysRemaining(patient);
+    showToast('✅ Fee valid for ' + days + ' more day' + (days !== 1 ? 's' : ''), 'success');
+    openAddModalForPatient(patient);
+  } else {
+    // Fee expired or never paid — show payment modal
+    openFeePaymentModal(patient);
+  }
+}
+
+function openFeePaymentModal(patient) {
+  var status = getPatientFeeStatus(patient);
+  var overlay = document.getElementById('feePaymentOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'feePaymentOverlay';
+    overlay.className = 'modal-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  var exp = getFeeExpiryDate(patient);
+  var expStr = exp ? formatDate(exp.toISOString().split('T')[0]) : '—';
+  var statusMsg = status === 'expired'
+    ? '<div style="background:var(--red-bg);color:var(--red);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">⚠️ Consultation fee expired on <strong>' + expStr + '</strong>. Payment required to continue.</div>'
+    : '<div style="background:var(--allopathy-bg);color:var(--allopathy);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">ℹ️ No prior payment found. Please collect consultation fee.</div>';
+
+  // Pre-fill fee from patient record
+  var defaultFee = patient.consultantFee || 0;
+  var defaultDoctor = patient.consultantDoctor || '';
+
+  overlay.innerHTML =
+    '<div class="modal" style="max-width:440px">' +
+      '<div class="modal-header">' +
+        '<div>' +
+          '<div class="modal-title">💳 Collect Consultation Fee</div>' +
+          '<div class="modal-subtitle">' + escHtml(patient.name) + ' · ' + escHtml(patient.id) + '</div>' +
+        '</div>' +
+        '<button class="modal-close" onclick="document.getElementById(&quot;feePaymentOverlay&quot;).classList.remove(&quot;open&quot;)">✕</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        statusMsg +
+        '<div class="form-row" style="margin-bottom:12px">' +
+          '<div class="field">' +
+            '<label>Consultation Fee (₹) <span style="color:var(--red)">*</span></label>' +
+            '<input type="number" id="feeAmount" value="' + defaultFee + '" min="0" placeholder="Enter fee amount">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Doctor</label>' +
+            '<select id="feeDoctorSelect">' +
+              '<option value="">— Select Doctor —</option>' +
+              doctorRegistry.map(function(d) {
+                return '<option value="' + escAttr(d.name) + '"' +
+                  (d.name === defaultDoctor ? ' selected' : '') +
+                  (d.unavailable ? ' disabled' : '') + '>Dr. ' + escHtml(d.name) + ' — ' + escHtml(d.specialization||d.type) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="field" style="margin-bottom:0">' +
+          '<label>Payment Method</label>' +
+          '<div style="display:flex;gap:12px;margin-top:6px">' +
+            ['Cash','Card','UPI','Online'].map(function(m) {
+              return '<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">' +
+                '<input type="radio" name="feePayment" value="' + m + '"' + (m === 'Cash' ? ' checked' : '') + '> ' + m +
+              '</label>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn-sm btn-outline-teal" onclick="document.getElementById(&quot;feePaymentOverlay&quot;).classList.remove(&quot;open&quot;)">Cancel</button>' +
+        '<button class="btn-sm btn-teal" onclick="collectFeeAndProceed(' + JSON.stringify(patient).replace(/"/g,'&quot;') + ')">✅ Collect & Proceed to Prescription</button>' +
+      '</div>' +
+    '</div>';
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function collectFeeAndProceed(patient) {
+  var fee    = parseFloat(document.getElementById('feeAmount')?.value || '0');
+  var doctor = document.getElementById('feeDoctorSelect')?.value || patient.consultantDoctor || '';
+  var method = document.querySelector('input[name="feePayment"]:checked')?.value || 'Cash';
+
+  if (!fee || fee <= 0) { showToast('Please enter a valid fee amount.', 'error'); return; }
+
+  // Record the payment date on patient record
+  patient.lastFeeDate = new Date().toISOString();
+  patient.consultantFee    = fee;
+  patient.consultantDoctor = doctor;
+  patient.paymentMethod    = method;
+
+  // Update patient in DB
+  await dbInsertPatient(Object.assign({}, patient, {
+    registeredAt: patient.registeredAt || new Date().toISOString()
+  })).catch(function() {});
+
+  // Update local registry
+  var idx = patientRegistry.findIndex(function(p) { return p.id === patient.id; });
+  if (idx > -1) patientRegistry[idx] = patient;
+
+  // Close fee modal
+  var overlay = document.getElementById('feePaymentOverlay');
+  if (overlay) { overlay.classList.remove('open'); }
+  document.body.style.overflow = '';
+
+  showToast('✅ Fee ₹' + fee + ' collected via ' + method + ' · Valid for ' + FEE_VALIDITY_DAYS + ' days', 'success');
   openAddModalForPatient(patient);
 }
 
@@ -1154,6 +1413,7 @@ function showPatientsView() {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
   document.getElementById('doctorsView').style.display = 'none';
+  var phHide3 = document.getElementById('pharmacyView'); if(phHide3) phHide3.style.display='none';
   document.getElementById('patientsView').style.display = '';
   const aiPanelHide = document.getElementById('aiSearchPanel');
   if (aiPanelHide) aiPanelHide.style.display = 'none';
@@ -1242,6 +1502,25 @@ function renderPatientsPage(list) {
       rxBadge.className = 'rx-meta-item';
       rxBadge.innerHTML = '<span class="nav-badge" style="background:var(--teal);color:#fff">' + rxCount + ' Rx</span>';
       meta.appendChild(rxBadge);
+    // Fee status badge
+    var feeStatus = getPatientFeeStatus(p);
+    var feeBadge = document.createElement('span');
+    feeBadge.className = 'rx-meta-item';
+    var feeBadgeInner = document.createElement('span');
+    feeBadgeInner.className = 'nav-badge';
+    if (feeStatus === 'valid') {
+      var d = getDaysRemaining(p);
+      feeBadgeInner.style.cssText = 'background:var(--green);color:#fff';
+      feeBadgeInner.textContent = '✅ ' + d + 'd left';
+    } else if (feeStatus === 'expired') {
+      feeBadgeInner.style.cssText = 'background:var(--red-bg);color:var(--red)';
+      feeBadgeInner.textContent = '⚠️ Fee expired';
+    } else {
+      feeBadgeInner.style.cssText = 'background:var(--bg);color:var(--text-muted);border:1px solid var(--border)';
+      feeBadgeInner.textContent = '💳 Fee pending';
+    }
+    feeBadge.appendChild(feeBadgeInner);
+    meta.appendChild(feeBadge);
     }
     main.appendChild(patientName);
     main.appendChild(meta);
@@ -1262,7 +1541,7 @@ function renderPatientsPage(list) {
     newRxBtn.textContent = '📝 New Rx';
     newRxBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      openAddModalForPatient(p);
+      openPrescriptionForPatient(p);
     });
     actions.appendChild(newRxBtn);
     header.appendChild(actions);
@@ -1360,7 +1639,7 @@ function renderPatientsPage(list) {
     footerBtn.textContent = '📝 New Prescription';
     footerBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      openAddModalForPatient(p);
+      openPrescriptionForPatient(p);
     });
     footer.appendChild(footerBtn);
     body.appendChild(footer);
@@ -1369,8 +1648,10 @@ function renderPatientsPage(list) {
     fragment.appendChild(card);
   });
 
-  grid.innerHTML = '';
-  grid.appendChild(fragment);
+  if (grid) {
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
+  }
 }
 
 
@@ -1393,11 +1674,358 @@ function clearPatientFilter() {
 }
 
 // ════════════════════════════════════════════════════════════
+//  USER MENU
+// ════════════════════════════════════════════════════════════
+function openUserMenu() {
+  var menu = document.getElementById('topbarUserMenu');
+  if (!menu) return;
+  var isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : '';
+  // Hide staff option if no permission
+  // staffMenuBtn removed - managed via data-perm in applyPermissionUI
+  if (!isOpen) {
+    // Close on outside click
+    setTimeout(function() {
+      document.addEventListener('click', closeUserMenuOutside, { once: true });
+    }, 10);
+  }
+}
+function closeUserMenu() {
+  var menu = document.getElementById('topbarUserMenu');
+  if (menu) menu.style.display = 'none';
+}
+function closeUserMenuOutside(e) {
+  var pill = document.querySelector('.topbar-user-pill');
+  var menu = document.getElementById('topbarUserMenu');
+  if (menu && pill && !pill.contains(e.target) && !menu.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ─── Audit Log ────────────────────────────────────────────
+
+
+
+// ─── Change Password ──────────────────────────────────────
+
+
+
+
+
+
+
+// ════════════════════════════════════════════════════════════
+//  PHARMACY MODULE
+//  Pharmacist can view prescriptions + mark medicines dispensed
+// ════════════════════════════════════════════════════════════
+
+function showPharmacyView() {
+  currentView = 'pharmacy';
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var nb = document.getElementById('navPharmacy');
+  if (nb) nb.classList.add('active');
+
+  // Hide all other views
+  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel','doctorsView','patientsView']
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+
+  var pv = document.getElementById('pharmacyView');
+  if (pv) pv.style.display = '';
+
+  document.getElementById('pageTitle').textContent    = '💊 Pharmacy';
+  document.getElementById('pageSubtitle').textContent = 'Prescribed medicines queue for dispensing';
+
+  renderPharmacyList();
+}
+
+function filterPharmacy() { renderPharmacyList(); }
+
+function renderPharmacyList() {
+  var container   = document.getElementById('pharmacyList');
+  var statsEl     = document.getElementById('pharmacyStats');
+  var searchVal   = (document.getElementById('pharmacySearch')?.value    || '').toLowerCase().trim();
+  var statusFilter= document.getElementById('pharmacyStatusFilter')?.value || 'all';
+  var typeFilter  = document.getElementById('pharmacyTypeFilter')?.value   || 'all';
+
+  if (!container) return;
+
+  // Only show active prescriptions (not expired/completed unless filter says otherwise)
+  var list = prescriptions.filter(function(rx) {
+    if (typeFilter !== 'all' && rx.type !== typeFilter) return false;
+    // Status filter: 'pending' = not yet dispensed (no dispenseDate), 'dispensed' = has dispenseDate
+    if (statusFilter === 'pending')   return !rx.dispenseDate;
+    if (statusFilter === 'dispensed') return !!rx.dispenseDate;
+    if (statusFilter === 'active')    return rx.status === 'active';
+    return true;
+  });
+
+  // Apply search
+  if (searchVal) {
+    list = list.filter(function(rx) {
+      var haystack = [
+        rx.patientName, rx.doctorName, rx.diagnosis,
+        (rx.medicines||[]).map(function(m){ return m.name; }).join(' ')
+      ].join(' ').toLowerCase();
+      return haystack.includes(searchVal);
+    });
+  }
+
+  // Sort: undispensed first, then by date desc
+  list.sort(function(a,b) {
+    if (!a.dispenseDate && b.dispenseDate) return -1;
+    if (a.dispenseDate && !b.dispenseDate) return 1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  // Stats
+  var total       = prescriptions.length;
+  var pending     = prescriptions.filter(function(rx){ return !rx.dispenseDate; }).length;
+  var dispensed   = prescriptions.filter(function(rx){ return !!rx.dispenseDate; }).length;
+  var todayStr    = todayISO();
+  var todayCount  = prescriptions.filter(function(rx){ return rx.date === todayStr; }).length;
+
+  if (statsEl) {
+    statsEl.innerHTML = [
+      { label:'Total Rx',   val: total,     bg:'var(--surface2)', clr:'var(--text-primary)' },
+      { label:'Pending',    val: pending,   bg:'var(--allopathy-bg)', clr:'var(--allopathy)' },
+      { label:'Dispensed',  val: dispensed, bg:'var(--green-pale,#e8f5e9)', clr:'var(--green)' },
+      { label:"Today's Rx", val: todayCount,bg:'var(--teal-pale)',  clr:'var(--teal)' },
+    ].map(function(s) {
+      return '<div style="background:' + s.bg + ';border:1px solid var(--border);border-radius:var(--radius);' +
+             'padding:10px 18px;display:flex;align-items:center;gap:10px;min-width:120px">' +
+             '<div style="font-size:22px;font-weight:700;color:' + s.clr + '">' + s.val + '</div>' +
+             '<div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">' + s.label + '</div>' +
+             '</div>';
+    }).join('');
+  }
+
+  if (!list.length) {
+    container.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">💊</div>' +
+        '<div class="empty-title">No prescriptions found</div>' +
+        '<div class="empty-sub">Adjust your filters or check back later.</div>' +
+      '</div>';
+    return;
+  }
+
+  var typeIcon  = { allopathy:'💉', homeopathy:'🌿', ayurveda:'🌱' };
+  var typeColor = { allopathy:'var(--allopathy)', homeopathy:'var(--homeopathy)', ayurveda:'var(--ayurveda)' };
+  var typeBg    = { allopathy:'var(--allopathy-bg)', homeopathy:'var(--homeopathy-bg)', ayurveda:'var(--ayurveda-bg)' };
+
+  container.innerHTML = list.map(function(rx) {
+    var dispensed  = !!rx.dispenseDate;
+    var meds       = (rx.medicines||[]);
+    var medsCount  = meds.length;
+    var dispBadge  = dispensed
+      ? '<span style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">✅ Dispensed</span>'
+      : '<span style="background:var(--allopathy-bg);color:var(--allopathy);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">⏳ Pending</span>';
+    var dispInfo   = dispensed
+      ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Dispensed: ' + formatDate(rx.dispenseDate) + '</div>'
+      : '';
+
+    // Medicines table
+    var medsHtml = '';
+    if (meds.length) {
+      medsHtml =
+        '<table class="medicine-table" style="margin-top:12px">' +
+          '<thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Route</th></tr></thead>' +
+          '<tbody>' +
+            meds.map(function(m) {
+              return '<tr>' +
+                '<td><strong>' + escHtml(m.name||'—') + '</strong></td>' +
+                '<td>' + escHtml(m.dosage||'—') + '</td>' +
+                '<td>' + escHtml(m.frequency||'—') + '</td>' +
+                '<td>' + escHtml(m.duration||'—') + '</td>' +
+                '<td>' + escHtml(m.route||'—') + '</td>' +
+              '</tr>';
+            }).join('') +
+          '</tbody>' +
+        '</table>';
+    } else {
+      medsHtml = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No medicines listed.</div>';
+    }
+
+    // Notes
+    var notesHtml = rx.notes
+      ? '<div style="margin-top:10px;background:var(--surface2);border-left:3px solid var(--teal);' +
+        'padding:10px 14px;border-radius:4px;font-size:13px">' +
+        '<strong style="color:var(--teal);font-size:11px;text-transform:uppercase;letter-spacing:.05em">📝 Clinical Notes</strong>' +
+        '<div style="margin-top:4px;color:var(--text-secondary)">' + escHtml(rx.notes) + '</div>' +
+        '</div>'
+      : '';
+
+    // Dispense button
+    var actionBtn = dispensed
+      ? '<button class="btn-sm btn-outline-teal" data-rxid="' + rx.id + '" ' +
+        'onclick="undispenseMedicine(this.dataset.rxid)" style="font-size:12px">↩️ Mark Undispensed</button>'
+      : '<button class="btn-sm btn-teal" data-rxid="' + rx.id + '" ' +
+        'onclick="dispenseMedicine(this.dataset.rxid)" style="font-size:12px">✅ Mark as Dispensed</button>';
+
+    return (
+      '<div class="rx-card" style="margin-bottom:14px;' + (dispensed ? 'opacity:0.7' : '') + '">' +
+
+        // Header
+        '<div style="padding:14px 18px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border)">' +
+          '<div style="background:' + (typeBg[rx.type]||'var(--bg)') + ';color:' + (typeColor[rx.type]||'var(--text-muted)') + ';' +
+            'font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;flex-shrink:0;margin-top:2px">' +
+            (typeIcon[rx.type]||'💊') + ' ' + capitalize(rx.type||'') +
+          '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:15px;font-weight:700;color:var(--text-primary)">' + escHtml(rx.patientName||'—') + '</div>' +
+            '<div style="font-size:12.5px;color:var(--text-secondary);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px">' +
+              '<span>🩺 Dr. ' + escHtml(rx.doctorName||'—') + '</span>' +
+              '<span>📅 ' + formatDate(rx.date) + '</span>' +
+              (rx.validUntil ? '<span>⏰ Valid till ' + formatDate(rx.validUntil) + '</span>' : '') +
+              (rx.diagnosis  ? '<span>🔬 ' + escHtml(rx.diagnosis) + '</span>' : '') +
+              '<span>📱 ' + escHtml(rx.phone||'—') + '</span>' +
+              '<span>👤 ' + escHtml(rx.age||'—') + (rx.gender ? ' · '+escHtml(rx.gender) : '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">' +
+            dispBadge +
+            dispInfo +
+            '<div style="font-size:11px;color:var(--text-muted)">' + medsCount + ' medicine' + (medsCount !== 1 ? 's' : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        // Medicines + Notes
+        '<div style="padding:14px 18px">' +
+          medsHtml +
+          notesHtml +
+          '<div style="margin-top:12px;display:flex;justify-content:flex-end">' +
+            actionBtn +
+          '</div>' +
+        '</div>' +
+
+      '</div>'
+    );
+  }).join('');
+}
+
+async function dispenseMedicine(rxId) {
+  var rx = prescriptions.find(function(r){ return r.id === rxId; });
+  if (!rx) return;
+  rx.dispenseDate = new Date().toISOString();
+  var ok = await dbUpsertPrescription(rx);
+  if (!ok) { showToast('Failed to update prescription.', 'error'); return; }
+  showToast('✅ Medicines marked as dispensed for ' + rx.patientName, 'success');
+  if (typeof dbAudit === 'function') dbAudit('update', 'prescriptions', rxId, null, { dispenseDate: rx.dispenseDate });
+  renderPharmacyList();
+}
+
+async function undispenseMedicine(rxId) {
+  var rx = prescriptions.find(function(r){ return r.id === rxId; });
+  if (!rx) return;
+  delete rx.dispenseDate;
+  rx.dispenseDate = null;
+  var ok = await dbUpsertPrescription(rx);
+  if (!ok) { showToast('Failed to update.', 'error'); return; }
+  showToast('↩️ Marked as undispensed.', 'info');
+  renderPharmacyList();
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  RENEW PRESCRIPTION
+// ════════════════════════════════════════════════════════════
+function renewPrescription(id) {
+  var original = prescriptions.find(function(x){ return x.id === id; });
+  if (!original) return;
+
+  if (!confirm(
+    'Renew prescription for ' + original.patientName + '?\n\n' +
+    'A new prescription will be created with today\'s date,\n' +
+    'pre-filled with the same medicines and details.\n' +
+    'You can review and edit before saving.'
+  )) return;
+
+  // Open Add modal pre-filled with original data
+  if (!can.addPrescription()) { showToast('Permission denied.', 'error'); return; }
+  editingId = null;
+  resetForm();
+
+  document.getElementById('modalTitle').textContent = '🔄 Renew Rx';
+  document.getElementById('saveBtn').textContent    = '💾 Save Renewed Rx';
+
+  // Set today's date and new validity
+  var today = todayISO();
+  document.getElementById('fDate').value       = today;
+  document.getElementById('fValidUntil').value = addDays(today, 30);
+
+  // Pre-fill patient + doctor fields from original
+  var fields = {
+    fPatientName:   original.patientName   || '',
+    fAge:           original.age           || '',
+    fGender:        original.gender        || '',
+    fBloodGroup:    original.bloodGroup    || '',
+    fPhone:         original.phone         || '',
+    fEmail:         original.email         || '',
+    fDoctorName:    original.doctorName    || '',
+    fSpecialization:original.specialization|| '',
+    fHospital:      original.hospital      || '',
+    fRegNo:         original.regNo         || '',
+    fDoctorPhone:   original.doctorPhone   || '',
+    fDiagnosis:     original.diagnosis     || '',
+    fNotes:         original.notes         || '',
+  };
+  Object.keys(fields).forEach(function(id) { setVal(id, fields[id]); });
+
+  // Set type
+  var typeEl = document.getElementById('fType');
+  if (typeEl) typeEl.value = original.type || 'allopathy';
+
+  // Set status to active
+  var statusEl = document.getElementById('fStatus');
+  if (statusEl) statusEl.value = 'active';
+
+  // Pre-fill medicines
+  var medEditor = document.getElementById('medicinesEditor');
+  if (medEditor) {
+    medEditor.innerHTML = '';
+    (original.medicines || []).forEach(function(m) { addMedicineRow(m); });
+    if (!original.medicines || !original.medicines.length) addMedicineRow();
+  }
+
+  // Pre-fill diagnostics
+  var diagEditor = document.getElementById('diagnosticEditor');
+  if (diagEditor) {
+    diagEditor.innerHTML = '';
+    (original.diagnostics || []).forEach(function(d) { addDiagnosticRow(d); });
+    if (!original.diagnostics || !original.diagnostics.length) addDiagnosticRow();
+  }
+
+  // Populate doctor dropdown
+  if (typeof populateHospitalDropdown === 'function') {
+    populateHospitalDropdown('dfHospital', original.hospital);
+  }
+
+  renderQuickChips();
+  expandSection('patientSection');
+  expandSection('doctorSection');
+  openModal('formModal');
+
+  showToast('📋 Pre-filled from original prescription · Review and save', 'info');
+}
+
+// ════════════════════════════════════════════════════════════
 //  BOOT
 // ════════════════════════════════════════════════════════════
 (async function boot() {
-  const gateShown = await initClinicGate();
-  if (!gateShown) {
-    await initAppForClinic();
-  }
+  var gateShown = await initClinicGate();
+  if (!gateShown) await initAppForClinic();
 })();
