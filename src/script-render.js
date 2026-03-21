@@ -133,6 +133,9 @@ function renderCard(p, q, allTerms) {
         '<div class="rx-footer-actions">' +
           '<button class="btn-sm btn-outline-teal" onclick="printPrescription(\'' + p.id + '\')">🖨️ Print</button>' +
           '<button class="btn-sm btn-outline-teal" onclick="openEditModal(\''    + p.id + '\')">✏️ Edit</button>' +
+          (p.email
+            ? '<button class="btn-sm" onclick="notifyPatientForRx(\'' + p.id + '\')" title="Send expiry notification" style="border:1px solid var(--teal);color:var(--teal);background:transparent;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:DM Sans,sans-serif">📧 Notify</button>'
+            : '') +
           (p.status === 'expired' && (typeof can !== 'undefined' && can.addPrescription())
             ? '<button class="btn-sm btn-teal" onclick="renewPrescription(\'' + p.id + '\')">🔄 Renew Rx</button>' : '') +
           '<button class="btn-sm btn-outline-red" onclick="confirmDelete(\'' + p.id + '\')">🗑️ Delete</button>' +

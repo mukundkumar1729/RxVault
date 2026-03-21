@@ -498,3 +498,46 @@ SET arrived = TRUE
 WHERE status IN ('in-room', 'done');
 
 SELECT 'Done. arrived column added.' AS status;
+
+-- ═══════════════════════════════════════════════════════════
+--  RX VAULT — Prescription Notification Tracking
+--  Run in Supabase → SQL Editor
+-- ═══════════════════════════════════════════════════════════
+
+-- Track sent notifications to avoid duplicate emails
+CREATE TABLE IF NOT EXISTS rx_notifications (
+  id              TEXT        PRIMARY KEY DEFAULT ('notif_' || extract(epoch from now())::bigint::text || '_' || substr(md5(random()::text),1,4)),
+  clinic_id       TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  prescription_id TEXT        NOT NULL,
+  patient_name    TEXT        NOT NULL,
+  patient_email   TEXT        NOT NULL,
+  notification_type TEXT      DEFAULT 'expiry_warning'
+                  CHECK (notification_type IN ('expiry_warning','expired','manual')),
+  days_left       INTEGER,
+  sent_at         TIMESTAMPTZ DEFAULT NOW(),
+  status          TEXT        DEFAULT 'sent'
+                  CHECK (status IN ('sent','failed','opened'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_clinic    ON rx_notifications(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_notif_rx        ON rx_notifications(prescription_id);
+CREATE INDEX IF NOT EXISTS idx_notif_sent      ON rx_notifications(sent_at DESC);
+
+-- RLS
+ALTER TABLE rx_notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_notifications" ON rx_notifications;
+CREATE POLICY "allow_all_notifications" ON rx_notifications FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- View: notification summary per clinic
+CREATE OR REPLACE VIEW notification_summary AS
+SELECT
+  clinic_id,
+  COUNT(*)                                    AS total_sent,
+  COUNT(*) FILTER (WHERE days_left <= 0)      AS expired_alerts,
+  COUNT(*) FILTER (WHERE days_left BETWEEN 1 AND 3) AS expiring_soon,
+  COUNT(*) FILTER (WHERE sent_at > NOW() - INTERVAL '7 days') AS last_7_days,
+  MAX(sent_at)                                AS last_sent_at
+FROM rx_notifications
+GROUP BY clinic_id;
+
+SELECT 'Notification tracking table created ✅' AS status;

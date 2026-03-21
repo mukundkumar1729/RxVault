@@ -4,6 +4,32 @@
 //  Load order: after features.js
 // ════════════════════════════════════════════════════════════
 
+// ─── AI proxy URL (Supabase Edge Function) ───────────────
+// Routes browser → Supabase Edge Function → Anthropic API
+// Avoids CORS errors from calling api.anthropic.com directly
+var AI_PROXY_URL = 'https://wavakcolrtrwmjcjkdfc.supabase.co/functions/v1/claude-proxy';
+
+/**
+ * Unified AI call — always goes through the proxy
+ */
+async function callClaude(opts) {
+  var response = await fetch(AI_PROXY_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model:      opts.model      || 'claude-sonnet-4-20250514',
+      max_tokens: opts.max_tokens || 1500,
+      system:     opts.system,
+      messages:   opts.messages,
+    })
+  });
+  if (!response.ok) {
+    var err = await response.json().catch(function(){ return {}; });
+    throw new Error(err.error || ('HTTP ' + response.status));
+  }
+  return await response.json();
+}
+
 //  5. LAB REPORT ANALYSER (AI-Powered)
 // ════════════════════════════════════════════════════════════
 function showLabView() {
@@ -76,16 +102,10 @@ async function analyseLabReport() {
     'Use ✅ for normal, ⚠️ for mildly abnormal, 🔴 for significantly abnormal values. Be concise and clinically relevant. Do not diagnose — support the treating physician.';
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }]
-      })
+    var data = await callClaude({
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: prompt }]
     });
-    var data = await response.json();
     var text = (data.content||[]).map(function(b){ return b.text||''; }).join('');
 
     if (resultEl) {
@@ -244,11 +264,7 @@ async function generateDietPlan() {
     'Keep it practical, affordable, and use common Indian foods. Be specific with quantities. Focus on the medical conditions mentioned.';
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2000, messages:[{role:'user',content:prompt}] })
-    });
-    var data = await response.json();
+    var data = await callClaude({ max_tokens:2000, messages:[{role:'user',content:prompt}] });
     var text = (data.content||[]).map(function(b){return b.text||'';}).join('');
 
     if (resultEl) {
@@ -462,11 +478,7 @@ async function sendPortalMessage() {
   portalMessages.forEach(function(m){ messages.push(m); });
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:600, system:systemPrompt, messages:portalMessages })
-    });
-    var data = await response.json();
+    var data = await callClaude({ max_tokens:600, system:systemPrompt, messages:portalMessages });
     var reply = (data.content||[]).map(function(b){return b.text||'';}).join('').trim();
 
     portalMessages.push({ role:'assistant', content: reply });
@@ -606,17 +618,13 @@ async function analyseMedImage() {
     'Be specific, use proper medical terminology, and flag any urgent or critical findings with 🚨.';
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1200,
-        messages:[{ role:'user', content:[
-          { type:'image', source:{ type:'base64', media_type:medImgMime, data:medImgBase64 } },
-          { type:'text', text:prompt }
-        ]}]
-      })
+    var data = await callClaude({
+      max_tokens: 1200,
+      messages: [{ role:'user', content:[
+        { type:'image', source:{ type:'base64', media_type:medImgMime, data:medImgBase64 } },
+        { type:'text', text:prompt }
+      ]}]
     });
-    var data = await response.json();
     var text = (data.content||[]).map(function(b){return b.text||'';}).join('').trim();
 
     if (resultEl) {
