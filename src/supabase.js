@@ -320,3 +320,95 @@ async function dbAudit(action, tableName, recordId, oldData, newData) {
     });
   } catch(e) { console.warn('[Audit]', e); }
 }
+
+// ════════════════════════════════════════════════════════════
+//  APPOINTMENTS
+// ════════════════════════════════════════════════════════════
+
+async function dbGetAppointments(clinicId, date) {
+  var query = db.from('appointments').select('*').eq('clinic_id', clinicId);
+  if (date) query = query.eq('appt_date', date);
+  var { data, error } = await query.order('appt_date', { ascending: true })
+                                    .order('token_no',  { ascending: true });
+  if (error) { dbErr('getAppointments', error); return []; }
+  return data || [];
+}
+
+async function dbUpsertAppointment(appt) {
+  var { error } = await db.from('appointments').upsert(appt, { onConflict: 'id' });
+  if (error) { dbErr('upsertAppointment', error); return false; }
+  return true;
+}
+
+async function dbDeleteAppointment(id) {
+  var { error } = await db.from('appointments').delete().eq('id', id);
+  if (error) { dbErr('deleteAppointment', error); return false; }
+  return true;
+}
+
+async function dbGetNextToken(clinicId, date) {
+  var { data, error } = await db
+    .from('appointments')
+    .select('token_no')
+    .eq('clinic_id', clinicId)
+    .eq('appt_date', date)
+    .order('token_no', { ascending: false })
+    .limit(1);
+  if (error || !data || !data.length) return 1;
+  return (data[0].token_no || 0) + 1;
+}
+
+// ════════════════════════════════════════════════════════════
+//  INVOICES
+// ════════════════════════════════════════════════════════════
+
+async function dbGetInvoices(clinicId) {
+  var { data, error } = await db
+    .from('invoices')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .order('created_at', { ascending: false });
+  if (error) { dbErr('getInvoices', error); return []; }
+  return data || [];
+}
+
+async function dbUpsertInvoice(inv) {
+  var { error } = await db.from('invoices').upsert(inv, { onConflict: 'id' });
+  if (error) { dbErr('upsertInvoice', error); return false; }
+  return true;
+}
+
+async function dbGetNextInvoiceNo(clinicId) {
+  var { data, error } = await db
+    .from('invoices')
+    .select('invoice_no')
+    .eq('clinic_id', clinicId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error || !data || !data.length) return 'INV-1001';
+  // Parse last number and increment
+  var last = data[0].invoice_no || 'INV-1000';
+  var match = last.match(/(\d+)$/);
+  if (!match) return 'INV-1001';
+  var next = parseInt(match[1], 10) + 1;
+  return 'INV-' + next;
+}
+
+// ════════════════════════════════════════════════════════════
+//  VITALS
+// ════════════════════════════════════════════════════════════
+
+async function dbGetVitals(clinicId, patientName) {
+  var query = db.from('vitals').select('*').eq('clinic_id', clinicId);
+  if (patientName) query = query.ilike('patient_name', patientName);
+  var { data, error } = await query.order('recorded_at', { ascending: false });
+  if (error) { dbErr('getVitals', error); return []; }
+  return data || [];
+}
+
+async function dbInsertVitals(record) {
+  var { error } = await db.from('vitals').insert(record);
+  if (error) { dbErr('insertVitals', error); return false; }
+  return true;
+}
+

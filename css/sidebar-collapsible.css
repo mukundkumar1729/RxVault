@@ -1,0 +1,94 @@
+/* ════════════════════════════════════════════════════════════
+   COLLAPSIBLE SIDEBAR SECTIONS
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Section label — now acts as a toggle header ─── */
+.sidebar-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px 3px 6px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  transition: background 0.12s;
+  margin-bottom: 0;
+}
+.sidebar-section-toggle:hover {
+  background: var(--bg);
+}
+
+.sidebar-section-toggle .sidebar-label {
+  margin-bottom: 0;
+  padding: 0;
+  flex: 1;
+}
+
+/* ─── Chevron icon ─── */
+.sidebar-toggle-chevron {
+  font-size: 9px;
+  color: var(--text-muted);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  opacity: 0.7;
+  margin-left: 4px;
+  line-height: 1;
+}
+
+/* When collapsed — chevron points right */
+.sidebar-collapsible.collapsed .sidebar-toggle-chevron {
+  transform: rotate(-90deg);
+}
+
+/* ─── Animated nav items container ─── */
+.sidebar-nav-items {
+  overflow: hidden;
+  max-height: 600px; /* large enough for any section */
+  opacity: 1;
+  transition:
+    max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease;
+}
+
+.sidebar-collapsible.collapsed .sidebar-nav-items {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* ─── Active section label stays slightly visible when collapsed ─── */
+.sidebar-collapsible.collapsed .sidebar-section-toggle .sidebar-label {
+  color: var(--text-muted);
+}
+.sidebar-collapsible.collapsed .sidebar-section-toggle:hover .sidebar-label {
+  color: var(--text-secondary);
+}
+
+/* ─── Subtle indicator dot when section has an active nav item inside ─── */
+.sidebar-section-toggle .sidebar-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  flex-shrink: 0;
+  margin-right: 4px;
+  display: none;
+}
+.sidebar-collapsible.collapsed .sidebar-section-toggle .sidebar-active-dot.visible {
+  display: block;
+}
+
+/* ─── Tighten spacing between sections ─── */
+.sidebar .sidebar-section {
+  padding: 0 12px;
+  margin-bottom: 0;
+}
+
+/* Dividers are thinner and closer */
+.sidebar .sidebar-divider {
+  margin: 3px 16px;
+}
+
+/* No leftover bottom space when a section is collapsed */
+.sidebar-collapsible.collapsed .sidebar-nav-items {
+  margin-bottom: 0;
+}

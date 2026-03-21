@@ -5,12 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rx Vault — Medical Records</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/clinic.css">
     <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/sidebar-collapsible.css">
 </head>
 
 <body>
@@ -21,47 +20,6 @@
             <div id="loginGateBody"></div>
         </div>
     </div>
-
-
-    <!-- ─── LOGIN GATE ─── -->
-    <!-- ─── LOGIN SCREEN ─── -->
-        <div class="login-screen" id="loginScreen">
-            <div class="login-panel">
-                <div class="login-header">
-                    <div class="login-logo">💊</div>
-                    <div class="login-brand">Rx Vault</div>
-                    <div class="login-tag">Medical Record Manager</div>
-                </div>
-                <div class="login-body">
-                    <div class="login-title">Sign In</div>
-                    <div class="login-sub">Enter your credentials to continue</div>
-                    <div class="field" style="margin-bottom:14px">
-                        <label>Email Address</label>
-                        <input type="email" id="loginEmail" placeholder="admin@rxvault.in"
-                            onkeydown="submitLoginOnEnter(event)" autocomplete="email">
-                    </div>
-                    <div class="field" style="margin-bottom:6px">
-                        <label>Password</label>
-                        <div style="position:relative">
-                            <input type="password" id="loginPassword" placeholder="••••••••"
-                                onkeydown="submitLoginOnEnter(event)" autocomplete="current-password"
-                                style="padding-right:40px">
-                            <button onclick="togglePasswordVisibility()" type="button"
-                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)"
-                                title="Show/hide password">👁</button>
-                        </div>
-                    </div>
-                    <div id="loginError" class="login-error"></div>
-                    <button class="btn-add" id="loginBtn" onclick="submitLogin()"
-                        style="width:100%;justify-content:center;margin-top:16px;padding:11px">
-                        🔓 Sign In
-                    </button>
-                </div>
-                <div class="login-footer">
-                    Secure access · Data stored in Supabase
-                </div>
-            </div>
-        </div>
 
     <!-- ─── CLINIC GATE OVERLAY ─── -->
     <div class="clinic-gate-overlay no-print" id="clinicGate">
@@ -77,15 +35,10 @@
                 <button class="clinic-gate-close" id="clinicGateCloseBtn" onclick="hideClinicGate()" title="Close" style="display:none">✕</button>
             </div>
             <div class="clinic-gate-body">
-
-                <!-- Clinic List (shown when clinics exist) -->
                 <div id="clinicGateList" style="display:none"></div>
-
-                <!-- New / Edit Clinic Form -->
                 <div id="clinicGateForm" style="display:none">
                     <div class="clinic-form-title" id="clinicFormTitle">🏥 Create Your First Clinic</div>
                     <div class="clinic-form-sub" id="clinicFormSub">Set up your clinic to get started with Rx Vault.</div>
-
                     <div class="clinic-form-grid">
                         <div class="clinic-field full">
                             <label>Clinic Name <span>*</span></label>
@@ -119,18 +72,14 @@
                         <div class="clinic-field full">
                             <label>Admin PIN <span>*</span></label>
                             <input type="password" id="cgPin" placeholder="e.g. admin1234 (default)">
-                            <div class="clinic-hint-row">
-                                ⚠️ This PIN is used to access the Admin Panel for this clinic. Default is <strong>admin1234</strong>.
-                            </div>
+                            <div class="clinic-hint-row">⚠️ This PIN is used to access the Admin Panel. Default is <strong>admin1234</strong>.</div>
                         </div>
                     </div>
-
                     <div class="clinic-form-actions">
                         <button class="btn-sm btn-outline-teal" onclick="cancelNewClinic()" id="cgCancelBtn">Cancel</button>
                         <button class="btn-sm btn-teal" onclick="saveClinicForm()" id="cgSaveBtn" data-edit-id="">🏥 Save &amp; Enter</button>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -138,7 +87,7 @@
     <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
 
-        <!-- TOP BAR -->
+        <!-- ─── TOP BAR ─── -->
         <header class="topbar no-print">
             <div class="topbar-brand">
                 <div class="brand-icon">💊</div>
@@ -148,7 +97,6 @@
                 </div>
             </div>
             <div class="topbar-right">
-                <!-- Clinic Switcher -->
                 <button class="topbar-clinic-btn" data-perm="switch_clinic" onclick="openClinicSwitcher()" title="Switch clinic">
                     <span class="topbar-clinic-icon" id="topbarClinicIcon">🏥</span>
                     <span class="topbar-clinic-name" id="topbarClinicName">Loading…</span>
@@ -164,7 +112,6 @@
                 <div class="topbar-stat" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.25)">
                     <span style="color:#f78c6c">Ayur:</span> <strong id="statAyur">0</strong>
                 </div>
-                <!-- User Menu -->
                 <div style="position:relative">
                     <div class="topbar-user-menu" onclick="toggleUserMenu(event)" id="topbarUserBtn">
                         <span class="topbar-user-avatar" id="topbarUserAvatar">👤</span>
@@ -185,116 +132,224 @@
                         <button class="logout-btn" onclick="authLogout()">🚪 Sign Out</button>
                     </div>
                 </div>
-            </div>        </header>
+            </div>
+        </header>
 
-        <!-- SIDEBAR -->
+        <!-- ─── SIDEBAR ─── -->
         <aside class="sidebar no-print">
-            <div class="sidebar-section">
-                <div class="sidebar-label">Navigation</div>
-                <button class="nav-item active" onclick="setView('all')">
-                    <span class="nav-icon">🗂️</span> All Records
-                    <span class="nav-badge" id="badgeAll">0</span>
-                </button>
-                <button class="nav-item" onclick="setView('recent')">
-                    <span class="nav-icon">🕒</span> Recent (30d)
-                    <span class="nav-badge" id="badgeRecent">0</span>
-                </button>
-                <button class="nav-item" onclick="setView('active')">
-                    <span class="nav-icon">✅</span> Active
-                    <span class="nav-badge" id="badgeActive">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Filter by Type</div>
-                <button class="type-filter-btn active-filter" onclick="filterByType('all')">
-                    <span class="type-dot dot-all"></span> All Types
-                </button>
-                <button class="type-filter-btn" onclick="filterByType('allopathy')">
-                    <span class="type-dot dot-allopathy"></span> Allopathy
-                </button>
-                <button class="type-filter-btn" onclick="filterByType('homeopathy')">
-                    <span class="type-dot dot-homeopathy"></span> Homeopathy
-                </button>
-                <button class="type-filter-btn" onclick="filterByType('ayurveda')">
-                    <span class="type-dot dot-ayurveda"></span> Ayurveda
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Quick Actions</div>
-                <button class="nav-item" onclick="openRegisterModal()">
-                    <span class="nav-icon">👤</span> Register Patient
-                </button>
-                <button class="nav-item" onclick="exportAll()">
-                    <span class="nav-icon">📤</span> Export JSON
-                </button>
-                <button class="nav-item" onclick="document.getElementById('importFile').click()">
-                    <span class="nav-icon">📥</span> Import JSON
-                </button>
-                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Doctors</div>
-                <button class="nav-item" id="navDoctors" onclick="showDoctorView()">
-                    <span class="nav-icon">👨‍⚕️</span> Doctors
-                    <span class="nav-badge" id="badgeDoctors">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Patients</div>
-                <button class="nav-item" id="navPatients" onclick="showPatientsView()">
-                    <span class="nav-icon">👥</span> Patients
-                    <span class="nav-badge" id="badgePatients">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Pharmacy</div>
-                <button class="nav-item" id="navPharmacy" data-perm="viewPharmacy" onclick="showPharmacyView()">
-                    <span class="nav-icon">💊</span> Pharmacy
-                    <span class="nav-badge" id="badgePharmacy">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Appointments</div>
-                <button class="nav-item" id="navAppointments" onclick="showAppointmentView()">
-                    <span class="nav-icon">📅</span> Queue / Appointments
-                    <span class="nav-badge" id="badgeAppointments">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Billing</div>
-                <button class="nav-item" id="navBilling" onclick="showBillingView()">
-                    <span class="nav-icon">💰</span> Billing & Invoices
-                    <span class="nav-badge" id="badgeBilling">0</span>
-                </button>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Administration</div>
-                <button class="nav-item" id="adminNavBtn" data-perm="manage_staff" onclick="openAdminPanel()">
-                    <span class="nav-icon">🔐</span> Admin Panel
-                </button>
 
-                <button class="nav-item" onclick="openClinicSwitcher()">
-                    <span class="nav-icon">🏥</span> Switch Clinic
-                </button>
+            <!-- NAVIGATION -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarNav">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarNav')">
+                    <span class="sidebar-active-dot" id="dotNav"></span>
+                    <span class="sidebar-label">Navigation</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item active" onclick="setView('all')">
+                        <span class="nav-icon">🗂️</span> All Records
+                        <span class="nav-badge" id="badgeAll">0</span>
+                    </button>
+                    <button class="nav-item" onclick="setView('recent')">
+                        <span class="nav-icon">🕒</span> Recent (30d)
+                        <span class="nav-badge" id="badgeRecent">0</span>
+                    </button>
+                    <button class="nav-item" onclick="setView('active')">
+                        <span class="nav-icon">✅</span> Active
+                        <span class="nav-badge" id="badgeActive">0</span>
+                    </button>
+                </div>
             </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- FILTER BY TYPE -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarFilter">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarFilter')">
+                    <span class="sidebar-active-dot" id="dotFilter"></span>
+                    <span class="sidebar-label">Filter by Type</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="type-filter-btn active-filter" onclick="filterByType('all')">
+                        <span class="type-dot dot-all"></span> All Types
+                    </button>
+                    <button class="type-filter-btn" onclick="filterByType('allopathy')">
+                        <span class="type-dot dot-allopathy"></span> Allopathy
+                    </button>
+                    <button class="type-filter-btn" onclick="filterByType('homeopathy')">
+                        <span class="type-dot dot-homeopathy"></span> Homeopathy
+                    </button>
+                    <button class="type-filter-btn" onclick="filterByType('ayurveda')">
+                        <span class="type-dot dot-ayurveda"></span> Ayurveda
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarActions">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarActions')">
+                    <span class="sidebar-active-dot" id="dotActions"></span>
+                    <span class="sidebar-label">Quick Actions</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" onclick="openRegisterModal()">
+                        <span class="nav-icon">👤</span> Register Patient
+                    </button>
+                    <button class="nav-item" onclick="exportAll()">
+                        <span class="nav-icon">📤</span> Export JSON
+                    </button>
+                    <button class="nav-item" onclick="document.getElementById('importFile').click()">
+                        <span class="nav-icon">📥</span> Import JSON
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- DOCTORS -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarDoctors">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarDoctors')">
+                    <span class="sidebar-active-dot" id="dotDoctors"></span>
+                    <span class="sidebar-label">Doctors</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navDoctors" onclick="showDoctorView()">
+                        <span class="nav-icon">👨‍⚕️</span> Doctors
+                        <span class="nav-badge" id="badgeDoctors">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- PATIENTS -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarPatients">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPatients')">
+                    <span class="sidebar-active-dot" id="dotPatients"></span>
+                    <span class="sidebar-label">Patients</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navPatients" onclick="showPatientsView()">
+                        <span class="nav-icon">👥</span> Patients
+                        <span class="nav-badge" id="badgePatients">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- PHARMACY -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarPharmacy">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPharmacy')">
+                    <span class="sidebar-active-dot" id="dotPharmacy"></span>
+                    <span class="sidebar-label">Pharmacy</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navPharmacy" data-perm="viewPharmacy" onclick="showPharmacyView()">
+                        <span class="nav-icon">💊</span> Pharmacy
+                        <span class="nav-badge" id="badgePharmacy">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- APPOINTMENTS -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarAppointments">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAppointments')">
+                    <span class="sidebar-active-dot" id="dotAppointments"></span>
+                    <span class="sidebar-label">Appointments</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navAppointments" onclick="showAppointmentView()">
+                        <span class="nav-icon">📅</span> Queue / Appointments
+                        <span class="nav-badge" id="badgeAppointments">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- BILLING -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarBilling">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarBilling')">
+                    <span class="sidebar-active-dot" id="dotBilling"></span>
+                    <span class="sidebar-label">Billing</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navBilling" onclick="showBillingView()">
+                        <span class="nav-icon">💰</span> Billing &amp; Invoices
+                        <span class="nav-badge" id="badgeBilling">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- AI TOOLS -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarAI">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAI')">
+                    <span class="sidebar-active-dot" id="dotAI"></span>
+                    <span class="sidebar-label">AI Tools</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navLab" onclick="showLabView()">
+                        <span class="nav-icon">🔬</span> Lab Analyser
+                    </button>
+                    <button class="nav-item" id="navDiet" onclick="showDietView()">
+                        <span class="nav-icon">🥗</span> Diet Planner
+                    </button>
+                    <button class="nav-item" id="navPortal" onclick="showPortalView()">
+                        <span class="nav-icon">👤</span> Patient Portal
+                    </button>
+                    <button class="nav-item" id="navMedImage" onclick="showMedImageView()">
+                        <span class="nav-icon">🩻</span> Medical Image AI
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- ADMINISTRATION -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarAdmin">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAdmin')">
+                    <span class="sidebar-active-dot" id="dotAdmin"></span>
+                    <span class="sidebar-label">Administration</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="adminNavBtn" data-perm="manage_staff" onclick="openAdminPanel()">
+                        <span class="nav-icon">🔐</span> Admin Panel
+                    </button>
+                    <button class="nav-item" onclick="openClinicSwitcher()">
+                        <span class="nav-icon">🏥</span> Switch Clinic
+                    </button>
+                </div>
+            </div>
+
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- ─── MAIN CONTENT ─── -->
         <main class="main">
+
             <!-- Page Header -->
             <div class="page-header">
                 <div>
                     <div class="page-title" id="pageTitle">All Rx</div>
                     <div class="page-subtitle" id="pageSubtitle">Manage and track all your medical Rx records</div>
                 </div>
+                <button class="btn-add no-print" id="btnAddRx" onclick="openAddModal()">＋ New Rx</button>
             </div>
 
             <!-- Stats Row -->
@@ -329,7 +384,7 @@
                 </div>
             </div>
 
-            <!-- Controls Bar -->
+            <!-- Controls / Search Bar -->
             <div class="controls-bar no-print" id="controlsBar">
                 <div class="search-panel-header">
                     <div class="search-panel-label">
@@ -405,89 +460,13 @@
                 </div>
             </div>
 
-            <!-- ─── AI SIMILAR CASES SEARCH ─── -->
+            <!-- AI Similar Cases Search -->
             <div id="aiSearchPanel" class="no-print"></div>
 
             <!-- Prescriptions List -->
             <div class="prescriptions-grid" id="prescriptionsList"></div>
 
-            <!-- Doctors View -->
-            <!-- APPOINTMENT / QUEUE VIEW -->
-            <div id="appointmentView" style="display:none">
-                <div class="page-header" style="padding:0 0 16px 0">
-                    <div>
-                        <div class="page-title" id="apptTitle">📅 Today's Queue</div>
-                        <div class="page-subtitle" id="apptSubtitle">Patient appointment queue</div>
-                    </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <input type="date" id="apptDateFilter" onchange="loadAppointmentView()"
-                            style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
-                        <button class="btn-add" onclick="openBookAppointment()" style="padding:8px 16px;font-size:13px">
-                            ＋ Book Appointment
-                        </button>
-                    </div>
-                </div>
-                <!-- Stats -->
-                <div id="apptStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
-                <!-- Queue List -->
-                <div id="apptList"></div>
-            </div>
-
-            <!-- BILLING VIEW -->
-            <div id="billingView" style="display:none">
-                <div class="page-header" style="padding:0 0 16px 0">
-                    <div>
-                        <div class="page-title">💰 Billing & Invoices</div>
-                        <div class="page-subtitle">Generate and manage patient invoices</div>
-                    </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <input type="text" id="billingSearch" placeholder="🔍 Search patient or invoice…"
-                            oninput="filterBilling()"
-                            style="padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;min-width:220px">
-                        <select id="billingStatusFilter" onchange="filterBilling()"
-                            style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
-                            <option value="all">All</option>
-                            <option value="paid">✅ Paid</option>
-                            <option value="unpaid">⏳ Unpaid</option>
-                        </select>
-                        <button class="btn-add" onclick="openNewInvoice()" style="padding:8px 16px;font-size:13px">
-                            ＋ New Invoice
-                        </button>
-                    </div>
-                </div>
-                <div id="billingStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
-                <div id="billingList"></div>
-            </div>
-
-            <!-- PHARMACY VIEW -->
-            <div id="pharmacyView" style="display:none">
-                <div style="padding:0 0 18px 0">
-                    <div class="page-title">💊 Pharmacy</div>
-                    <div class="page-subtitle">Prescribed medicines queue for dispensing</div>
-                </div>
-                <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-                    <input type="text" id="pharmacySearch" placeholder="🔍 Search patient, medicine, doctor…"
-                        oninput="filterPharmacy()"
-                        style="flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
-                    <select id="pharmacyStatusFilter" onchange="filterPharmacy()"
-                        style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
-                        <option value="all">All Status</option>
-                        <option value="active">🟢 Active</option>
-                        <option value="pending">⏳ Pending Dispense</option>
-                        <option value="dispensed">✅ Dispensed</option>
-                    </select>
-                    <select id="pharmacyTypeFilter" onchange="filterPharmacy()"
-                        style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
-                        <option value="all">All Types</option>
-                        <option value="allopathy">💉 Allopathy</option>
-                        <option value="homeopathy">🌿 Homeopathy</option>
-                        <option value="ayurveda">🌱 Ayurveda</option>
-                    </select>
-                </div>
-                <div id="pharmacyStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
-                <div id="pharmacyList"></div>
-            </div>
-
+            <!-- ─── DOCTORS VIEW ─── -->
             <div id="doctorsView" style="display:none">
                 <div class="doctors-filter-bar no-print">
                     <div class="doctors-search-wrap">
@@ -523,8 +502,71 @@
                 <div id="patientsGrid" class="prescriptions-grid"></div>
             </div>
 
+            <!-- ─── PHARMACY VIEW ─── -->
+            <div id="pharmacyView" style="display:none">
+                <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+                    <input type="text" id="pharmacySearch" placeholder="🔍 Search patient, medicine, doctor…"
+                        oninput="filterPharmacy()"
+                        style="flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
+                    <select id="pharmacyStatusFilter" onchange="filterPharmacy()"
+                        style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">
+                        <option value="all">All Status</option>
+                        <option value="active">🟢 Active</option>
+                        <option value="pending">⏳ Pending Dispense</option>
+                        <option value="dispensed">✅ Dispensed</option>
+                    </select>
+                    <select id="pharmacyTypeFilter" onchange="filterPharmacy()"
+                        style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">
+                        <option value="all">All Types</option>
+                        <option value="allopathy">💉 Allopathy</option>
+                        <option value="homeopathy">🌿 Homeopathy</option>
+                        <option value="ayurveda">🌱 Ayurveda</option>
+                    </select>
+                </div>
+                <div id="pharmacyStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
+                <div id="pharmacyList"></div>
+            </div>
+
+            <!-- ─── APPOINTMENT VIEW ─── -->
+            <div id="appointmentView" style="display:none">
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+                    <input type="date" id="apptDateFilter" onchange="loadAppointmentView()"
+                        style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">
+                    <button class="btn-add" onclick="openBookAppointment()" style="padding:8px 16px;font-size:13px;white-space:nowrap">
+                        ＋ Book Appointment
+                    </button>
+                </div>
+                <div id="apptStats" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
+                <div id="apptFilterBar"></div>
+                <div id="apptList"></div>
+            </div>
+
+            <!-- ─── BILLING VIEW ─── -->
+            <div id="billingView" style="display:none">
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+                    <input type="text" id="billingSearch" placeholder="🔍 Search patient or invoice…"
+                        oninput="filterBilling()"
+                        style="flex:1;min-width:220px;padding:9px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
+                    <select id="billingStatusFilter" onchange="filterBilling()"
+                        style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">
+                        <option value="all">All</option>
+                        <option value="paid">✅ Paid</option>
+                        <option value="unpaid">⏳ Unpaid</option>
+                    </select>
+                    <button class="btn-add" onclick="openNewInvoice()" style="padding:9px 18px;font-size:13px;white-space:nowrap">
+                        ＋ New Invoice
+                    </button>
+                </div>
+                <div id="billingStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
+                <div id="billingList"></div>
+            </div>
+
         </main>
     </div>
+
+    <!-- ════════════════════════════════════════════
+         MODALS
+         ════════════════════════════════════════════ -->
 
     <!-- ─── ADD / EDIT RX MODAL ─── -->
     <div class="modal-overlay no-print" id="formModal">
@@ -649,7 +691,7 @@
                     </div>
                 </div>
 
-                <!-- Inline Doctor Availability Panel -->
+                <!-- Inline Doctor Availability -->
                 <div id="doctorAvailPanel" class="doctor-avail-inline hidden">
                     <div class="avail-inline-header">
                         <span class="avail-inline-icon">📅</span>
@@ -672,7 +714,6 @@
                             <input type="date" id="fValidUntil">
                         </div>
                     </div>
-                    <!-- Diagnosis Textarea -->
                     <div class="field diag-field-full" style="margin-top:12px">
                         <label>🔬 Diagnosis / Condition</label>
                         <div class="diag-chips-bar">
@@ -846,7 +887,6 @@
                 <div class="modal-body" style="padding:0;max-height:60vh;overflow-y:auto">
                     <div id="adminDoctorList"></div>
                 </div>
-                <!-- Premium AI upgrade section -->
                 <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2)">
                     <div id="adminPremiumSection"></div>
                 </div>
@@ -886,12 +926,7 @@
                     </div>
                     <div class="form-row" style="margin-top:12px">
                         <div class="field"><label>Specialization</label><input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist"></div>
-                        <div class="field">
-                            <label>Hospital / Clinic</label>
-                            <select id="dfHospital">
-                                <option value="">— Select Clinic —</option>
-                            </select>
-                        </div>
+                        <div class="field"><label>Hospital / Clinic</label><select id="dfHospital"><option value="">— Select Clinic —</option></select></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
                         <div class="field"><label>Phone</label><input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX"></div>
@@ -903,7 +938,7 @@
                 </div>
                 <div class="form-section" style="margin-bottom:0">
                     <div class="form-section-title">📅 Availability Schedule</div>
-                    <div class="avail-col-labels"><span>Day</span><span>Timing <span style="font-size:10px;font-weight:400;color:var(--text-muted);letter-spacing:0">(24-hour format)</span></span><span></span></div>
+                    <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
                     <div id="availEditor"></div>
                     <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
                     <div class="unavail-toggle-row">
@@ -999,7 +1034,6 @@
         </div>
     </div>
 
-
     <!-- ─── STAFF MANAGEMENT MODAL ─── -->
     <div class="modal-overlay no-print" id="staffModal">
         <div class="modal" style="max-width:700px">
@@ -1011,36 +1045,23 @@
                 <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
             </div>
             <div class="modal-body" style="padding:0">
-                <!-- Tabs -->
                 <div class="staff-tabs">
                     <button class="staff-tab active" id="tabStaffList" onclick="showStaffTab('list')">👥 Staff List</button>
                     <button class="staff-tab" id="tabAddStaff" onclick="showStaffTab('add')">➕ Add Staff</button>
                     <button class="staff-tab" id="tabAuditLog" onclick="showStaffTab('audit')">📋 Audit Log</button>
                 </div>
-                <!-- Staff List -->
                 <div id="staffTabList" style="max-height:55vh;overflow-y:auto">
                     <div id="staffListContent" style="padding:0"></div>
                 </div>
-                <!-- Add Staff Form -->
                 <div id="staffTabAdd" style="display:none;padding:20px">
                     <div class="form-section-title">➕ Add New Staff Member</div>
                     <div class="form-row" style="margin-bottom:12px">
-                        <div class="field">
-                            <label>Full Name <span>*</span></label>
-                            <input type="text" id="staffName" placeholder="Dr. Full Name">
-                        </div>
-                        <div class="field">
-                            <label>Email <span>*</span></label>
-                            <input type="email" id="staffEmail" placeholder="staff@clinic.com">
-                        </div>
+                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="staffName" placeholder="Dr. Full Name"></div>
+                        <div class="field"><label>Email <span>*</span></label><input type="email" id="staffEmail" placeholder="staff@clinic.com"></div>
                     </div>
                     <div class="form-row" style="margin-bottom:12px">
-                        <div class="field">
-                            <label>Password <span>*</span></label>
-                            <input type="password" id="staffPassword" placeholder="Min 8 characters">
-                        </div>
-                        <div class="field">
-                            <label>Clinic Role <span>*</span></label>
+                        <div class="field"><label>Password <span>*</span></label><input type="password" id="staffPassword" placeholder="Min 8 characters"></div>
+                        <div class="field"><label>Clinic Role <span>*</span></label>
                             <select id="staffRole">
                                 <option value="doctor">🩺 Doctor</option>
                                 <option value="receptionist">🧑‍💼 Receptionist</option>
@@ -1052,10 +1073,9 @@
                     </div>
                     <div id="staffAddError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:8px"></div>
                     <button class="btn-sm btn-teal" onclick="addStaffMember()" style="width:100%;justify-content:center;padding:10px">
-                        ✅ Create Account & Add to Clinic
+                        ✅ Create Account &amp; Add to Clinic
                     </button>
                 </div>
-                <!-- Audit Log -->
                 <div id="staffTabAudit" style="display:none;max-height:55vh;overflow-y:auto">
                     <div id="auditLogContent" style="padding:0"></div>
                 </div>
@@ -1074,18 +1094,9 @@
                 <button class="modal-close" onclick="closeModal('changePassModal')">✕</button>
             </div>
             <div class="modal-body">
-                <div class="field" style="margin-bottom:12px">
-                    <label>Current Password</label>
-                    <input type="password" id="cpOldPass" placeholder="Current password">
-                </div>
-                <div class="field" style="margin-bottom:12px">
-                    <label>New Password</label>
-                    <input type="password" id="cpNewPass" placeholder="New password">
-                </div>
-                <div class="field" style="margin-bottom:12px">
-                    <label>Confirm New Password</label>
-                    <input type="password" id="cpConfirmPass" placeholder="Confirm new password">
-                </div>
+                <div class="field" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="cpOldPass" placeholder="Current password"></div>
+                <div class="field" style="margin-bottom:12px"><label>New Password</label><input type="password" id="cpNewPass" placeholder="New password"></div>
+                <div class="field" style="margin-bottom:12px"><label>Confirm New Password</label><input type="password" id="cpConfirmPass" placeholder="Confirm new password"></div>
                 <div id="changePassError" style="color:var(--red);font-size:12.5px;min-height:18px"></div>
             </div>
             <div class="modal-footer">
@@ -1095,84 +1106,7 @@
         </div>
     </div>
 
-    <!-- Supabase CDN — must load first -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Scripts — load order: supabase.js → clinic.js → script.js -->
-    <script src="src/supabase.js"></script>
-    <script src="src/auth.js"></script>
-    <script src="src/clinic.js"></script>
-    <script src="src/ai.js"></script>
-    <script src="src/script.js"></script>
-    <script src="src/features.js"></script>
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- BOOK APPOINTMENT MODAL -->
-    <div class="modal-overlay no-print" id="bookApptModal">
-        <div class="modal" style="max-width:560px">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title">📅 Book Appointment</div>
-                    <div class="modal-subtitle">Schedule a patient visit</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('bookApptModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Patient Name <span style="color:var(--red)">*</span></label>
-                        <input type="text" id="apptPatientName" placeholder="Full name" list="apptPatientList">
-                        <datalist id="apptPatientList"></datalist>
-                    </div>
-                    <div class="field">
-                        <label>Phone</label>
-                        <input type="tel" id="apptPatientPhone" placeholder="Mobile number">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Doctor <span style="color:var(--red)">*</span></label>
-                        <select id="apptDoctor">
-                            <option value="">— Select Doctor —</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Visit Type</label>
-                        <select id="apptVisitType">
-                            <option value="consultation">🩺 Consultation</option>
-                            <option value="follow-up">🔄 Follow-up</option>
-                            <option value="emergency">🚨 Emergency</option>
-                            <option value="procedure">⚕️ Procedure</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Date <span style="color:var(--red)">*</span></label>
-                        <input type="date" id="apptDate">
-                    </div>
-                    <div class="field">
-                        <label>Time Slot</label>
-                        <input type="time" id="apptTime" placeholder="HH:MM">
-                    </div>
-                </div>
-                <div class="field" style="margin-bottom:0">
-                    <label>Age</label>
-                    <input type="text" id="apptAge" placeholder="e.g. 35">
-                </div>
-                <div class="field" style="margin-top:12px;margin-bottom:0">
-                    <label>Notes</label>
-                    <input type="text" id="apptNotes" placeholder="Chief complaint or reason for visit">
-                </div>
-                <div id="apptError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:8px"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('bookApptModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="saveAppointment()">📅 Confirm Booking</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- VITALS MODAL -->
+    <!-- ─── VITALS MODAL (static shell, content rendered by JS) ─── -->
     <div class="modal-overlay no-print" id="vitalsModal">
         <div class="modal" style="max-width:600px">
             <div class="modal-header">
@@ -1182,74 +1116,13 @@
                 </div>
                 <button class="modal-close" onclick="closeModal('vitalsModal')">✕</button>
             </div>
-            <div class="modal-body">
-                <div class="form-row" style="margin-bottom:14px">
-                    <div class="field">
-                        <label>Blood Pressure (Systolic)</label>
-                        <input type="number" id="vBpSys" placeholder="e.g. 120" min="60" max="250">
-                    </div>
-                    <div class="field">
-                        <label>Blood Pressure (Diastolic)</label>
-                        <input type="number" id="vBpDia" placeholder="e.g. 80" min="40" max="150">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:14px">
-                    <div class="field">
-                        <label>Pulse (bpm)</label>
-                        <input type="number" id="vPulse" placeholder="e.g. 72" min="30" max="200">
-                    </div>
-                    <div class="field">
-                        <label>Temperature (°F)</label>
-                        <input type="number" id="vTemp" placeholder="e.g. 98.6" step="0.1" min="90" max="110">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:14px">
-                    <div class="field">
-                        <label>Weight (kg)</label>
-                        <input type="number" id="vWeight" placeholder="e.g. 70" step="0.1" min="1" max="300">
-                    </div>
-                    <div class="field">
-                        <label>Height (cm)</label>
-                        <input type="number" id="vHeight" placeholder="e.g. 170" min="30" max="250">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:14px">
-                    <div class="field">
-                        <label>SpO2 (%)</label>
-                        <input type="number" id="vSpo2" placeholder="e.g. 98" min="50" max="100">
-                    </div>
-                    <div class="field">
-                        <label>Blood Sugar — Fasting (mg/dL)</label>
-                        <input type="number" id="vSugarF" placeholder="e.g. 90" min="30" max="600">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:14px">
-                    <div class="field">
-                        <label>Blood Sugar — Post-Prandial (mg/dL)</label>
-                        <input type="number" id="vSugarPP" placeholder="e.g. 130" min="30" max="600">
-                    </div>
-                    <div class="field">
-                        <label>Blood Sugar — Random (mg/dL)</label>
-                        <input type="number" id="vSugarR" placeholder="e.g. 110" min="30" max="600">
-                    </div>
-                </div>
-                <div class="field" style="margin-bottom:0">
-                    <label>Notes</label>
-                    <input type="text" id="vNotes" placeholder="Any observations…">
-                </div>
-                <!-- BMI display -->
-                <div id="vBmiDisplay" style="display:none;margin-top:12px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);font-size:13px"></div>
-                <!-- Alerts -->
-                <div id="vitalsAlerts" style="margin-top:10px"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('vitalsModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="saveVitals()">💾 Save Vitals</button>
+            <div class="modal-body" id="vitalsModalBody">
+                <!-- Populated by saveVitals in features.js -->
             </div>
         </div>
     </div>
 
-    <!-- NEW INVOICE MODAL -->
+    <!-- ─── INVOICE MODAL (static shell) ─── -->
     <div class="modal-overlay no-print" id="invoiceModal">
         <div class="modal" style="max-width:640px">
             <div class="modal-header">
@@ -1259,84 +1132,27 @@
                 </div>
                 <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
             </div>
-            <div class="modal-body">
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Patient Name <span style="color:var(--red)">*</span></label>
-                        <input type="text" id="invPatientName" placeholder="Full name" list="invPatientList">
-                        <datalist id="invPatientList"></datalist>
-                    </div>
-                    <div class="field">
-                        <label>Phone</label>
-                        <input type="text" id="invPatientPhone" placeholder="Mobile">
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Invoice Date <span style="color:var(--red)">*</span></label>
-                        <input type="date" id="invDate">
-                    </div>
-                    <div class="field">
-                        <label>Doctor Name</label>
-                        <input type="text" id="invDoctorName" placeholder="e.g. Dr. Priya Mehta" list="invDoctorList">
-                        <datalist id="invDoctorList"></datalist>
-                    </div>
-                </div>
-                <div class="form-row" style="margin-bottom:12px">
-                    <div class="field">
-                        <label>Link to Prescription (optional)</label>
-                        <select id="invRxLink">
-                            <option value="">— None —</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Payment Method</label>
-                        <select id="invPayMethod">
-                            <option value="Cash">💵 Cash</option>
-                            <option value="Card">💳 Card</option>
-                            <option value="UPI">📱 UPI</option>
-                            <option value="Online">🌐 Online</option>
-                        </select>
-                    </div>
-                </div>
-                <!-- Line items -->
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Invoice Items</div>
-                <div id="invoiceItems">
-                    <!-- rows added dynamically -->
-                </div>
-                <button class="btn-sm btn-outline-teal" onclick="addInvoiceItem()" style="margin-top:8px;font-size:12px">＋ Add Item</button>
-                <!-- Totals -->
-                <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                        <span style="font-size:13px;color:var(--text-secondary)">Discount (₹)</span>
-                        <input type="number" id="invDiscount" value="0" min="0"
-                            oninput="updateInvTotal()"
-                            style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:13px">
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                        <span style="font-size:13px;color:var(--text-secondary)">Tax (%)</span>
-                        <input type="number" id="invTax" value="0" min="0" max="100"
-                            oninput="updateInvTotal()"
-                            style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:13px">
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:700;color:var(--text-primary)">
-                        <span>Total</span>
-                        <span id="invTotal">₹0</span>
-                    </div>
-                </div>
-                <div class="field" style="margin-top:12px;margin-bottom:0">
-                    <label>Notes</label>
-                    <input type="text" id="invNotes" placeholder="Any remarks…">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div id="invError" style="color:var(--red);font-size:12px;min-height:16px;text-align:left;flex:1"></div>
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('invoiceModal')">Cancel</button>
-                <button class="btn-sm btn-outline-teal" onclick="saveInvoice(false)">💾 Save</button>
-                <button class="btn-sm btn-teal" onclick="saveInvoice(true)">🖨️ Save & Print</button>
+            <div class="modal-body" id="invoiceModalBody">
+                <!-- Populated dynamically -->
             </div>
         </div>
     </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ════════════════════════════════════════════
+         SCRIPTS — load order matters
+         ════════════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="src/supabase.js"></script>
+    <script src="src/auth.js"></script>
+    <script src="src/clinic.js"></script>
+    <script src="src/ai.js"></script>
+    <script src="src/script.js"></script>
+    <script src="src/features.js"></script>
+    <script src="src/features-ai.js"></script>
+    <script src="src/sidebar-collapsible.js"></script>
 
 </body>
 </html>
