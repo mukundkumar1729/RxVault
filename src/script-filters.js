@@ -112,13 +112,22 @@ function setView(view) {
   }
 
   currentView = view;
+
+  // When switching to a named view (all/recent/active), reset the type filter
+  // so "All Records" always shows everything. But if the user came from a type
+  // filter click, filterByType() calls applyFilters() directly without setView,
+  // so the type is preserved across view changes made via the type buttons.
+  if (view === 'all') {
+    currentTypeFilter = 'all';
+    document.querySelectorAll('.type-filter-btn').forEach(function(b){ b.classList.remove('active-filter'); });
+    var firstTypeBtn = document.querySelector('.type-filter-btn');
+    if (firstTypeBtn) firstTypeBtn.classList.add('active-filter');
+  }
+
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
-  var titles = {all:'All Rx', recent:'Recent Rx (Last 30 Days)', active:'Active Rx'};
-  var subs   = {all:'Manage all your medical records', recent:'Rx issued in the last 30 days', active:'Currently active treatment records'};
-  document.getElementById('pageTitle').textContent    = titles[view] || 'Rx';
-  document.getElementById('pageSubtitle').textContent = subs[view]   || '';
+  updateViewTitle();
 
   // Show main Rx controls
   ['statsRow','controlsBar','prescriptionsList'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
@@ -128,9 +137,41 @@ function setView(view) {
   if (typeof refreshSidebarDots === 'function') setTimeout(refreshSidebarDots, 20);
 }
 
+/** Update the page title to reflect current view + type filter combination */
+function updateViewTitle() {
+  var viewLabel = {all:'All Rx', recent:'Recent (30d)', active:'Active'}[currentView] || 'Rx';
+  var typeLabel = {allopathy:'· Allopathy', homeopathy:'· Homeopathy', ayurveda:'· Ayurveda'}[currentTypeFilter] || '';
+  var viewSub   = {
+    all:    'All prescription records',
+    recent: 'Prescriptions from the last 30 days',
+    active: 'Currently active treatment records'
+  }[currentView] || '';
+  var typeSub = {
+    allopathy: ' · Allopathy only',
+    homeopathy:'· Homeopathy only',
+    ayurveda:  '· Ayurveda only'
+  }[currentTypeFilter] || '';
+  document.getElementById('pageTitle').textContent    = (viewLabel + ' ' + typeLabel).trim();
+  document.getElementById('pageSubtitle').textContent = (viewSub + typeSub).trim();
+}
+
 function filterByType(type) {
   currentTypeFilter = type;
+
+  // Highlight the clicked type button in the sidebar (nav-item style)
+  // and also the type-filter-btn if the old filter bar is present
   document.querySelectorAll('.type-filter-btn').forEach(function(b){ b.classList.remove('active-filter'); });
-  if (event && event.currentTarget) event.currentTarget.classList.add('active-filter');
+  if (event && event.currentTarget && event.currentTarget.classList.contains('type-filter-btn')) {
+    event.currentTarget.classList.add('active-filter');
+  } else {
+    // Called from sidebar nav-item button — mark All Types chip as active only for 'all'
+    if (type === 'all') {
+      var first = document.querySelector('.type-filter-btn');
+      if (first) first.classList.add('active-filter');
+    }
+  }
+
+  // Keep the current view (all/recent/active) but apply the new type filter on top
+  updateViewTitle();
   applyFilters();
 }

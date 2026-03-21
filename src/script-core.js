@@ -102,7 +102,7 @@ function updateStats() {
 }
 
 // ─── Render entry point ───────────────────────────────────
-function render() { updateStats(); applyFilters(); applyPermissionUI(); }
+function render() { updateStats(); if (typeof applyFilters === 'function') applyFilters(); applyPermissionUI(); }
 
 // ─── Permission UI ────────────────────────────────────────
 function applyPermissionUI() {

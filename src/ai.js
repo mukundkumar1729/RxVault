@@ -1,405 +1,312 @@
-// ═══════════════════════════════════════════════════════════
-//  AI SEARCH MODULE — Rx Vault
-//  Free tier:    pg_trgm fuzzy search (always available)
-//  Premium tier: Gemini embeddings + pgvector semantic search
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  AI.JS — Find Similar Cases / Fuzzy Search Panel
+//  Injected into #aiSearchPanel below the main controls bar.
+//  Uses the Claude API proxy for AI-powered case matching.
+// ════════════════════════════════════════════════════════════
 
-// ─── Plan detection ──────────────────────────────────────
-function isPremiumClinic() {
-  const clinic = getActiveClinic();
-  return clinic && clinic.plan === 'premium' && clinic.geminiKey;
-}
-
-function getGeminiKey() {
-  return getActiveClinic()?.geminiKey || '';
-}
-
-// ═══════════════════════════════════════════════════════════
-//  GEMINI EMBEDDING (Premium only)
-//  Uses text-embedding-004 — 768 dimensions, free 1500/day
-// ═══════════════════════════════════════════════════════════
-async function generateEmbedding(text) {
-  const key = getGeminiKey();
-  if (!key) throw new Error('No Gemini API key configured.');
-
-  const cleanText = text.replace(/\s+/g, ' ').trim().slice(0, 2000);
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=' + key;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'models/text-embedding-004',
-      content: { parts: [{ text: cleanText }] }
-    })
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error('Gemini API error: ' + (err && err.error && err.error.message ? err.error.message : res.status));
-  }
-
-  const data = await res.json();
-  return data?.embedding?.values || null;
-}
-
-// ─── Build search text from a prescription ───────────────
-function rxToSearchText(rx) {
-  const parts = [
-    rx.diagnosis     || '',
-    rx.notes         || '',
-    rx.patientName   || '',
-    (rx.medicines || []).map(m => m.name).join(' '),
-  ];
-  return parts.filter(Boolean).join(' ').trim();
-}
-
-// ─── Store embedding for a saved prescription ────────────
-async function storeEmbeddingForRx(rx) {
-  if (!isPremiumClinic()) return;
-  try {
-    const text = rxToSearchText(rx);
-    if (!text) return;
-    const embedding = await generateEmbedding(text);
-    if (!embedding) return;
-    await dbStoreEmbedding(rx.id, embedding);
-  } catch (e) {
-    console.warn('[AI] Embedding generation failed (non-fatal):', e.message);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SEARCH DISPATCHER
-//  Automatically picks semantic (premium) or fuzzy (free)
-// ═══════════════════════════════════════════════════════════
-async function aiSearch(query) {
-  if (!query || query.trim().length < 2) return [];
-
-  if (isPremiumClinic()) {
-    return searchSemantic(query);
-  } else {
-    return searchFuzzy(query);
-  }
-}
-
-// ─── FREE: pg_trgm fuzzy search ──────────────────────────
-async function searchFuzzy(query) {
-  try {
-    const results = await dbSearchFuzzy(query.trim(), activeClinicId);
-    return results.map(r => ({
-      ...dbToRx(r),
-      similarity: r.similarity,
-      searchMode: 'fuzzy'
-    }));
-  } catch (e) {
-    console.error('[AI] Fuzzy search error:', e);
-    return [];
-  }
-}
-
-// ─── PREMIUM: Gemini embedding + pgvector ────────────────
-async function searchSemantic(query) {
-  try {
-    const embedding = await generateEmbedding(query);
-    if (!embedding) return searchFuzzy(query); // fallback
-    const results = await dbSearchSemantic(embedding, activeClinicId);
-    return results.map(r => ({
-      ...dbToRx(r),
-      similarity: r.similarity,
-      searchMode: 'semantic'
-    }));
-  } catch (e) {
-    console.warn('[AI] Semantic search failed, falling back to fuzzy:', e.message);
-    return searchFuzzy(query); // graceful fallback
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  SIMILAR CASES UI
-// ═══════════════════════════════════════════════════════════
-var aiSearchDebounce = null;
-var lastAiQuery = '';
+var AI_PROXY_URL = 'https://wavakcolrtrwmjcjkdfc.supabase.co/functions/v1/claude-proxy';
 
 function initAiSearchPanel() {
-  renderAiSearchPanel();
-}
+  var panel = document.getElementById('aiSearchPanel');
+  if (!panel) return;
 
-function renderAiSearchPanel() {
-  var container = document.getElementById('aiSearchPanel');
-  if (!container) return;
-  var isPremium  = isPremiumClinic();
-  var modeCls    = isPremium ? 'ai-mode-premium' : 'ai-mode-free';
-  var modeLabel  = isPremium ? '✨ Semantic AI'  : '⚡ Fuzzy Search';
-  var hint       = isPremium
-    ? 'Searches by meaning — "stomach pain" matches "abdominal discomfort"'
-    : 'Fuzzy text search across diagnosis, notes and patient name';
+  panel.innerHTML =
+    '<div style="' +
+      'background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);' +
+      'border:1px solid var(--border);' +
+      'border-radius:var(--radius-lg);' +
+      'margin-bottom:14px;' +
+      'overflow:hidden;' +
+    '">' +
 
-  container.innerHTML =
-    '<div class="ai-search-wrap">' +
-      '<div class="ai-search-header">' +
-        '<div class="ai-search-title">' +
-          '<span class="ai-search-icon">🔍</span>' +
-          '<span>Find Similar Cases</span>' +
-          '<span class="ai-mode-badge ' + modeCls + '">' + modeLabel + '</span>' +
+      // ── Header bar (always visible, click to expand) ──
+      '<div id="aiPanelHeader" onclick="toggleAiPanel()" style="' +
+        'display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;' +
+        'border-bottom:1px solid transparent;transition:border-color 0.2s;user-select:none;' +
+      '" onmouseenter="this.style.background=\'var(--bg)\'" onmouseleave="this.style.background=\'\'">' +
+        '<div style="' +
+          'width:28px;height:28px;border-radius:8px;' +
+          'background:linear-gradient(135deg,var(--homeopathy) 0%,var(--teal) 100%);' +
+          'display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;' +
+        '">🔍</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px">' +
+            'Find Similar Cases' +
+            '<span style="background:var(--teal-pale);color:var(--teal);font-size:9px;font-weight:700;' +
+              'padding:1px 6px;border-radius:8px;letter-spacing:.06em;text-transform:uppercase">AI</span>' +
+          '</div>' +
+          '<div id="aiPanelSubtitle" style="font-size:11.5px;color:var(--text-muted);margin-top:1px">' +
+            'Search by symptom, diagnosis or patient name across all records' +
+          '</div>' +
         '</div>' +
-        '<div class="ai-search-hint">' + hint + '</div>' +
+        '<div id="aiPanelChevron" style="font-size:10px;color:var(--text-muted);transition:transform 0.22s;flex-shrink:0">▼</div>' +
       '</div>' +
-      '<div class="ai-search-input-row">' +
-        '<div class="ai-search-input-wrap">' +
-          '<span class="ai-search-input-icon">🩺</span>' +
-          '<input type="text" id="aiSearchInput" class="ai-search-input"' +
-            ' placeholder="Type symptoms or diagnosis… e.g. fever with chills"' +
-            ' oninput="onAiSearchInput(this.value)" autocomplete="off">' +
-          '<button class="ai-search-clear-btn" id="aiSearchClearBtn"' +
-            ' onclick="clearAiSearch()" style="display:none">✕</button>' +
+
+      // ── Expandable body ──
+      '<div id="aiPanelBody" style="overflow:hidden;max-height:0;transition:max-height 0.3s cubic-bezier(0.4,0,0.2,1)">' +
+        '<div style="padding:14px 16px">' +
+
+          // Search input row
+          '<div style="display:flex;gap:8px;margin-bottom:10px">' +
+            '<div style="flex:1;position:relative">' +
+              '<span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🩺</span>' +
+              '<input type="text" id="aiSearchInput"' +
+                ' placeholder="e.g. Fever with chills, Hypertension, Diabetic patient…"' +
+                ' onkeydown="if(event.key===\'Enter\')runAiSearch()"' +
+                ' style="' +
+                  'width:100%;padding:9px 12px 9px 34px;' +
+                  'border:1.5px solid var(--border);border-radius:var(--radius);' +
+                  'font-size:13px;font-family:DM Sans,sans-serif;' +
+                  'background:var(--surface);color:var(--text-primary);' +
+                  'box-sizing:border-box;outline:none;transition:border-color 0.15s;' +
+                '"' +
+                ' onfocus="this.style.borderColor=\'var(--teal)\'"' +
+                ' onblur="this.style.borderColor=\'var(--border)\'">' +
+            '</div>' +
+            '<button onclick="runAiSearch()" id="aiSearchBtn"' +
+              ' style="' +
+                'padding:9px 18px;background:var(--teal);color:#fff;' +
+                'border:none;border-radius:var(--radius);font-size:13px;font-weight:600;' +
+                'font-family:DM Sans,sans-serif;cursor:pointer;white-space:nowrap;' +
+                'transition:opacity 0.15s;' +
+              '"' +
+              ' onmouseenter="this.style.opacity=\'0.9\'" onmouseleave="this.style.opacity=\'1\'">' +
+              '🔍 Search' +
+            '</button>' +
+            '<button onclick="clearAiSearch()"' +
+              ' style="' +
+                'padding:9px 12px;background:transparent;' +
+                'border:1px solid var(--border);border-radius:var(--radius);' +
+                'font-size:12px;color:var(--text-muted);cursor:pointer;white-space:nowrap;' +
+                'font-family:DM Sans,sans-serif;transition:border-color 0.15s;' +
+              '"' +
+              ' onmouseenter="this.style.borderColor=\'var(--border2)\'" onmouseleave="this.style.borderColor=\'var(--border)\'">' +
+              '✕ Clear' +
+            '</button>' +
+          '</div>' +
+
+          // Quick chips
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">' +
+            '<span style="font-size:11px;color:var(--text-muted);align-self:center;flex-shrink:0">Quick:</span>' +
+            ['Fever & chills','Diabetes management','Hypertension','URTI','Thyroid disorder',
+             'Chest pain','Asthma','UTI','Dengue','Skin infection'].map(function(q) {
+              return '<button onclick="document.getElementById(\'aiSearchInput\').value=\'' + q + '\';runAiSearch()" ' +
+                'style="font-size:11px;padding:3px 10px;border:1px solid var(--border);' +
+                'border-radius:16px;background:var(--surface2);color:var(--text-secondary);' +
+                'cursor:pointer;font-family:DM Sans,sans-serif;transition:all 0.12s" ' +
+                'onmouseenter="this.style.background=\'var(--teal-pale)\';this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\'" ' +
+                'onmouseleave="this.style.background=\'var(--surface2)\';this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text-secondary)\'">' +
+                q + '</button>';
+            }).join('') +
+          '</div>' +
+
         '</div>' +
-        '<button class="ai-search-btn" onclick="runAiSearch()">' +
-          '<span id="aiSearchBtnIcon">🔍</span> Search' +
-        '</button>' +
-      '</div>' +
-      '<div id="aiSearchResults" class="ai-search-results"></div>' +
-    '</div>';
+
+        // Results area
+        '<div id="aiSearchResults"></div>' +
+
+      '</div>' + // end body
+    '</div>';   // end card
 }
 
-function onAiSearchInput(val) {
-  const clearBtn = document.getElementById('aiSearchClearBtn');
-  if (clearBtn) clearBtn.style.display = val ? '' : 'none';
-  clearTimeout(aiSearchDebounce);
-  if (!val || val.trim().length < 3) {
-    document.getElementById('aiSearchResults').innerHTML = '';
-    return;
-  }
-  aiSearchDebounce = setTimeout(() => runAiSearch(), 600);
+// ─── Toggle expand / collapse ─────────────────────────────
+var _aiPanelOpen = false;
+function toggleAiPanel() {
+  _aiPanelOpen = !_aiPanelOpen;
+  var body    = document.getElementById('aiPanelBody');
+  var chevron = document.getElementById('aiPanelChevron');
+  var header  = document.getElementById('aiPanelHeader');
+  if (body)    body.style.maxHeight    = _aiPanelOpen ? '600px' : '0';
+  if (chevron) chevron.style.transform = _aiPanelOpen ? 'rotate(180deg)' : '';
+  if (header)  header.style.borderBottomColor = _aiPanelOpen ? 'var(--border)' : 'transparent';
+  if (_aiPanelOpen) setTimeout(function(){ document.getElementById('aiSearchInput')?.focus(); }, 320);
 }
 
+// ─── Run search ───────────────────────────────────────────
 async function runAiSearch() {
-  const input = document.getElementById('aiSearchInput');
-  const query = input ? input.value.trim() : '';
-  if (!query || query.length < 2) return;
-  if (query === lastAiQuery) return;
-  lastAiQuery = query;
+  var query = (document.getElementById('aiSearchInput')?.value || '').trim();
+  if (!query) return;
 
-  const resultsEl = document.getElementById('aiSearchResults');
-  const btnIcon   = document.getElementById('aiSearchBtnIcon');
+  var resultsEl = document.getElementById('aiSearchResults');
+  var btn       = document.getElementById('aiSearchBtn');
+  if (!resultsEl) return;
 
-  // Show loading state
-  var loadTxt = isPremiumClinic() ? 'Generating semantic embedding…' : 'Searching records…';
+  // Update subtitle
+  var sub = document.getElementById('aiPanelSubtitle');
+  if (sub) sub.textContent = 'Searching for: "' + query + '"…';
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Searching…'; }
+
   resultsEl.innerHTML =
-    '<div class="ai-search-loading">' +
-      '<div class="ai-search-spinner"></div>' +
-      '<span>' + loadTxt + '</span>' +
-    '</div>';
-  if (btnIcon) btnIcon.textContent = '⏳';
+    '<div style="padding:16px 16px 8px;display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:13px">' +
+      '<div style="width:16px;height:16px;border:2px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite"></div>' +
+      'Finding matching records…' +
+    '</div>' +
+    '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
 
-  const results = await aiSearch(query);
-  if (btnIcon) btnIcon.textContent = '🔍';
+  // 1) Client-side fuzzy filter (instant, no API needed)
+  var qLow    = query.toLowerCase();
+  var terms   = qLow.split(/\s+/).filter(function(t){ return t.length > 2; });
+  var matched = (typeof prescriptions !== 'undefined' ? prescriptions : []).filter(function(rx) {
+    var haystack = [rx.patientName, rx.diagnosis, rx.notes, rx.doctorName,
+      (rx.medicines||[]).map(function(m){ return m.name; }).join(' ')].join(' ').toLowerCase();
+    return terms.some(function(t){ return haystack.includes(t); }) || haystack.includes(qLow);
+  });
 
-  if (!results.length) {
+  // Sort by match score (more term hits = higher)
+  matched.sort(function(a, b) {
+    var scoreA = terms.filter(function(t){ return [a.patientName,a.diagnosis,a.notes].join(' ').toLowerCase().includes(t); }).length;
+    var scoreB = terms.filter(function(t){ return [b.patientName,b.diagnosis,b.notes].join(' ').toLowerCase().includes(t); }).length;
+    return scoreB - scoreA;
+  });
+
+  renderAiResults(matched, query);
+
+  // 2) AI summary for the top hits (background)
+  if (matched.length > 0) {
+    try {
+      var topCases = matched.slice(0,5).map(function(rx) {
+        return '• ' + (rx.patientName||'?') + ', ' + (rx.date||'') + ': ' +
+          (rx.diagnosis||'No diagnosis') + '. Medicines: ' +
+          (rx.medicines||[]).map(function(m){ return m.name; }).slice(0,3).join(', ');
+      }).join('\n');
+
+      var resp = await fetch(AI_PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 250,
+          messages: [{
+            role: 'user',
+            content: 'You are a clinical assistant. The doctor searched for "' + query + '" and found these cases:\n\n' +
+              topCases + '\n\n' +
+              'In 2-3 sentences: what is the common clinical pattern? Any notable differences? ' +
+              'Keep it concise and clinically relevant. No disclaimers.'
+          }]
+        })
+      });
+      var data   = await resp.json();
+      var insight = (data.content||[]).map(function(b){ return b.text||''; }).join('').trim();
+      if (insight) {
+        var insightEl = document.getElementById('aiInsightBox');
+        if (insightEl) {
+          insightEl.innerHTML =
+            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;' +
+              'color:var(--teal);margin-bottom:5px">🤖 AI Pattern Insight</div>' +
+            '<div style="font-size:12.5px;color:var(--text-primary);line-height:1.6">' + escHtml(insight) + '</div>';
+          insightEl.style.display = '';
+        }
+      }
+    } catch(e) { /* fail silently — fuzzy results already shown */ }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔍 Search'; }
+  if (sub) sub.textContent = matched.length + ' record' + (matched.length !== 1 ? 's' : '') + ' found for "' + query + '"';
+}
+
+function renderAiResults(matched, query) {
+  var resultsEl = document.getElementById('aiSearchResults');
+  if (!resultsEl) return;
+
+  if (!matched.length) {
     resultsEl.innerHTML =
-      '<div class="ai-search-empty">' +
-        '<div class="ai-search-empty-icon">🔎</div>' +
-        '<div>No similar cases found for "<strong>' + escHtml(query) + '</strong>"</div>' +
-        '<div class="ai-search-empty-hint">Try different keywords or shorter terms</div>' +
+      '<div style="padding:16px 16px 20px;text-align:center">' +
+        '<div style="font-size:28px;margin-bottom:8px">🔍</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text-secondary)">No matching records found</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">Try different keywords or check spelling</div>' +
       '</div>';
     return;
   }
 
-  var modeLabel = (results[0] && results[0].searchMode === 'semantic') ? 'semantic similarity' : 'fuzzy match';
-  var plural    = results.length > 1 ? 's' : '';
+  var typeIcon = { allopathy:'💉', homeopathy:'🌿', ayurveda:'🌱' };
+  var typeBg   = { allopathy:'var(--allopathy-bg)', homeopathy:'var(--homeopathy-bg)', ayurveda:'var(--ayurveda-bg)' };
+  var typeClr  = { allopathy:'var(--allopathy)',    homeopathy:'var(--homeopathy)',    ayurveda:'var(--ayurveda)' };
+
+  function highlight(text, query) {
+    if (!text) return '—';
+    var escaped = escHtml(text);
+    var terms   = query.toLowerCase().split(/\s+/).filter(function(t){ return t.length > 2; });
+    terms.forEach(function(t) {
+      var re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      escaped = escaped.replace(re, '<mark style="background:var(--teal-pale);color:var(--teal);border-radius:2px;padding:0 1px">$1</mark>');
+    });
+    return escaped;
+  }
+
   resultsEl.innerHTML =
-    '<div class="ai-results-header">' +
-      'Found <strong>' + results.length + '</strong> similar case' + plural +
-      ' <span class="ai-results-mode">via ' + modeLabel + '</span>' +
+    // AI insight box (populated async above)
+    '<div id="aiInsightBox" style="display:none;margin:0 16px 10px;background:var(--teal-pale);' +
+      'border:1px solid rgba(10,124,110,0.2);border-radius:var(--radius);padding:10px 14px"></div>' +
+
+    // Count bar
+    '<div style="padding:8px 16px 6px;display:flex;align-items:center;justify-content:space-between">' +
+      '<span style="font-size:12px;font-weight:700;color:var(--text-secondary)">' +
+        matched.length + ' record' + (matched.length !== 1 ? 's' : '') + ' matched' +
+      '</span>' +
+      '<span style="font-size:11px;color:var(--text-muted)">Sorted by relevance</span>' +
     '</div>' +
-    '<div class="ai-results-list">' +
-      results.map(function(r){ return renderAiResult(r, query); }).join('') +
+
+    // Result rows
+    '<div style="padding:0 10px 12px;display:flex;flex-direction:column;gap:6px">' +
+    matched.slice(0, 10).map(function(rx) {
+      var icon = typeIcon[rx.type]||'💊';
+      var bg   = typeBg[rx.type]||'var(--surface2)';
+      var clr  = typeClr[rx.type]||'var(--text-muted)';
+      var meds = (rx.medicines||[]).slice(0,3).map(function(m){ return m.name; }).join(', ');
+      return '<div onclick="scrollToRx(\'' + rx.id + '\')" style="' +
+        'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);' +
+        'padding:10px 14px;cursor:pointer;transition:all 0.15s;' +
+      '" onmouseenter="this.style.borderColor=\'var(--teal)\';this.style.background=\'var(--teal-pale)\'" ' +
+         'onmouseleave="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--surface)\'">' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+          '<span style="background:' + bg + ';color:' + clr + ';font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px">' + icon + ' ' + (rx.type||'').toUpperCase() + '</span>' +
+          '<span style="font-weight:700;font-size:13px">' + highlight(rx.patientName, query) + '</span>' +
+          '<span style="font-size:11.5px;color:var(--text-muted)">📅 ' + escHtml(rx.date||'') + '</span>' +
+          (rx.status === 'active' ? '<span style="background:#e8f5e9;color:var(--green);font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px">Active</span>' : '') +
+        '</div>' +
+        '<div style="font-size:12.5px;color:var(--text-secondary);margin-top:4px">' +
+          '🔬 ' + highlight(rx.diagnosis||'No diagnosis', query) +
+          (rx.doctorName ? ' &nbsp;·&nbsp; 🩺 Dr. ' + escHtml(rx.doctorName) : '') +
+        '</div>' +
+        (meds ? '<div style="font-size:11.5px;color:var(--text-muted);margin-top:3px">💊 ' + escHtml(meds) + (rx.medicines.length > 3 ? ' +' + (rx.medicines.length-3) + ' more' : '') + '</div>' : '') +
+      '</div>';
+    }).join('') +
+    (matched.length > 10
+      ? '<div style="text-align:center;padding:8px;font-size:12px;color:var(--text-muted)">' +
+          '…and ' + (matched.length-10) + ' more records. Refine your search to narrow results.</div>'
+      : '') +
     '</div>';
 }
 
-function renderAiResult(r, query) {
-  var pct  = Math.round((r.similarity || 0) * 100);
-  var bar  = Math.min(pct, 100);
-  var clr  = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--teal)' : 'var(--text-muted)';
-  var typeLabel = { allopathy: '💉', homeopathy: '🌿', ayurveda: '🌱' };
-  var statusClr = { active: 'var(--green)', completed: 'var(--text-muted)', expired: 'var(--red)' };
-  var meds = (r.medicines || []).slice(0, 3).map(function(m){ return escHtml(m.name); }).join(', ');
-  var medsMore = r.medicines && r.medicines.length > 3 ? ' +' + (r.medicines.length - 3) + ' more' : '';
-  var sClr = statusClr[r.status] || 'var(--text-muted)';
-  var clickJs = "toggleCard('" + r.id + "');var el=document.getElementById('card_" + r.id + "');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})";
-
-  return (
-    '<div class="ai-result-card" onclick="' + clickJs + '">' +
-      '<div class="ai-result-top">' +
-        '<div class="ai-result-patient">' +
-          '<span class="ai-result-type">' + (typeLabel[r.type] || '🩺') + '</span>' +
-          '<strong>' + escHtml(r.patientName) + '</strong>' +
-          '<span class="ai-result-date">' + formatDate(r.date) + '</span>' +
-        '</div>' +
-        '<div class="ai-result-score" title="Match score">' +
-          '<div class="ai-score-bar-wrap">' +
-            '<div class="ai-score-bar" style="width:' + bar + '%;background:' + clr + '"></div>' +
-          '</div>' +
-          '<span class="ai-score-pct" style="color:' + clr + '">' + pct + '%</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="ai-result-diag">' + escHtml(r.diagnosis || '—') + '</div>' +
-      (meds ? '<div class="ai-result-meds">💊 ' + meds + medsMore + '</div>' : '') +
-      '<div class="ai-result-footer">' +
-        '<span>🩺 ' + escHtml(r.doctorName || '—') + '</span>' +
-        '<span style="color:' + sClr + '">● ' + capitalize(r.status || '') + '</span>' +
-        '<span class="ai-result-view">View record →</span>' +
-      '</div>' +
-    '</div>'
-  );
+function scrollToRx(rxId) {
+  clearAiSearch();
+  // Apply a filter that shows just this record
+  var rx = (typeof prescriptions !== 'undefined' ? prescriptions : []).find(function(r){ return r.id === rxId; });
+  if (!rx) return;
+  if (typeof setView === 'function') setView('all');
+  setTimeout(function() {
+    var card = document.querySelector('[data-rxid="' + rxId + '"]') || document.getElementById('rx_' + rxId);
+    if (card) {
+      card.scrollIntoView({ behavior:'smooth', block:'center' });
+      card.style.outline = '2px solid var(--teal)';
+      card.style.outlineOffset = '2px';
+      setTimeout(function(){ card.style.outline = ''; card.style.outlineOffset = ''; }, 2500);
+    } else {
+      // Fallback: filter by patient name
+      var inp = document.getElementById('srchPatient');
+      if (inp) { inp.value = rx.patientName; if (typeof applyFilters === 'function') applyFilters(); }
+    }
+  }, 100);
 }
 
 function clearAiSearch() {
-  const input = document.getElementById('aiSearchInput');
-  if (input) input.value = '';
-  const clearBtn = document.getElementById('aiSearchClearBtn');
-  if (clearBtn) clearBtn.style.display = 'none';
-  const resultsEl = document.getElementById('aiSearchResults');
-  if (resultsEl) resultsEl.innerHTML = '';
-  lastAiQuery = '';
-}
-
-// ═══════════════════════════════════════════════════════════
-//  PREMIUM UPGRADE UI (shown in admin panel)
-// ═══════════════════════════════════════════════════════════
-function renderPremiumUpgradeSection() {
-  var clinic = getActiveClinic();
-  if (!clinic) return '';
-  var isPremium = clinic.plan === 'premium';
-
-  if (isPremium) {
-    return (
-      '<div class="premium-status-row">' +
-        '<span class="premium-badge">✨ Premium Active</span>' +
-        '<span style="font-size:12px;color:var(--text-muted)">Semantic AI search enabled</span>' +
-        '<button class="btn-sm btn-outline-teal" style="margin-left:auto;font-size:11px" onclick="openGeminiKeyModal()">🔑 Update API Key</button>' +
-      '</div>'
-    );
-  }
-
-  return (
-    '<div class="premium-upgrade-box">' +
-      '<div class="premium-upgrade-header">' +
-        '<span class="premium-upgrade-icon">✨</span>' +
-        '<div>' +
-          '<div class="premium-upgrade-title">Upgrade to Semantic AI Search</div>' +
-          '<div class="premium-upgrade-sub">Find similar cases by meaning, not just keywords</div>' +
-        '</div>' +
-      '</div>' +
-      '<ul class="premium-upgrade-list">' +
-        '<li>✅ "Stomach pain after eating" matches "post-meal gastric discomfort"</li>' +
-        '<li>✅ Understands medical synonyms and related terms</li>' +
-        '<li>✅ Powered by Google Gemini — 1,500 free searches/day</li>' +
-        '<li>✅ Requires your free Gemini API key</li>' +
-      '</ul>' +
-      '<div class="premium-upgrade-actions">' +
-        '<a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn-sm btn-outline-teal">🔑 Get Free Gemini Key</a>' +
-        '<button class="btn-sm btn-teal" onclick="openGeminiKeyModal()">✨ Enable Premium</button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
-function openGeminiKeyModal() {
-  const clinic = getActiveClinic();
-  if (!clinic) return;
-  const existing = clinic.geminiKey || '';
-
-  // Build modal HTML
-  let overlay = document.getElementById('geminiKeyOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'geminiKeyOverlay';
-    overlay.className = 'modal-overlay';
-    overlay.onclick = function(e) { if (e.target === this) closeGeminiKeyModal(); };
-    document.body.appendChild(overlay);
-  }
-  overlay.innerHTML = (
-    '<div class="modal" style="max-width:480px">' +
-      '<div class="modal-header">' +
-        '<div>' +
-          '<div class="modal-title">🔑 Gemini API Key</div>' +
-          '<div class="modal-subtitle">Enables semantic AI search for this clinic</div>' +
-        '</div>' +
-        '<button class="modal-close" onclick="closeGeminiKeyModal()">✕</button>' +
-      '</div>' +
-      '<div class="modal-body">' +
-        '<div class="field" style="margin-bottom:14px">' +
-          '<label>Gemini API Key <span style="color:var(--red)">*</span></label>' +
-          '<input type="password" id="geminiKeyInput" value="' + escAttr(existing) + '"' +
-            ' placeholder="AIza…"' +
-            ' style="font-family:JetBrains Mono,monospace;font-size:13px">' +
-        '</div>' +
-        '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12.5px;color:var(--text-secondary);line-height:1.7">' +
-          '<strong>How to get a free key:</strong><br>' +
-          '1. Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal)">aistudio.google.com/app/apikey</a><br>' +
-          '2. Click "Create API Key"<br>' +
-          '3. Copy and paste it here<br><br>' +
-          '<strong>Free quota:</strong> 1,500 embedding requests/day.' +
-        '</div>' +
-      '</div>' +
-      '<div class="modal-footer">' +
-        '<button class="btn-sm btn-outline-teal" onclick="closeGeminiKeyModal()">Cancel</button>' +
-        '<button class="btn-sm btn-teal" onclick="saveGeminiKey()">✨ Save & Enable Premium</button>' +
-      '</div>' +
-    '</div>'
-  )
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => document.getElementById('geminiKeyInput')?.focus(), 100);
-}
-
-function closeGeminiKeyModal() {
-  const overlay = document.getElementById('geminiKeyOverlay');
-  if (overlay) { overlay.classList.remove('open'); document.body.style.overflow = ''; }
-}
-
-async function saveGeminiKey() {
-  const key = (document.getElementById('geminiKeyInput')?.value || '').trim();
-  if (!key) { alert('Please enter a Gemini API key.'); return; }
-
-  const btn = document.querySelector('#geminiKeyOverlay .btn-teal');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verifying…'; }
-
-  // Test the key with a small embedding
-  try {
-    var testUrl = 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=' + key;
-    const testRes = await fetch(testUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'models/text-embedding-004', content: { parts: [{ text: 'test' }] } })
-    });
-    if (!testRes.ok) {
-      const err = await testRes.json().catch(() => ({}));
-      throw new Error(err?.error?.message || 'Invalid API key');
-    }
-  } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = '✨ Save & Enable Premium'; }
-    alert('API key verification failed: ' + e.message);
-    return;
-  }
-
-  // Save to DB
-  const ok = await dbUpdateClinic(activeClinicId, { plan: 'premium', geminiKey: key });
-  if (!ok) {
-    if (btn) { btn.disabled = false; btn.textContent = '✨ Save & Enable Premium'; }
-    alert('Failed to save. Check console.');
-    return;
-  }
-
-  // Update local clinic object
-  const idx = clinics.findIndex(c => c.id === activeClinicId);
-  if (idx > -1) { clinics[idx].plan = 'premium'; clinics[idx].geminiKey = key; }
-
-  closeGeminiKeyModal();
-  showToast('✨ Premium AI search enabled!', 'success');
-
-  // Re-render the AI panel and admin premium section
-  renderAiSearchPanel();
-  const premiumSection = document.getElementById('adminPremiumSection');
-  if (premiumSection) premiumSection.innerHTML = renderPremiumUpgradeSection();
+  var inp = document.getElementById('aiSearchInput');
+  if (inp) inp.value = '';
+  var res = document.getElementById('aiSearchResults');
+  if (res) res.innerHTML = '';
+  var sub = document.getElementById('aiPanelSubtitle');
+  if (sub) sub.textContent = 'Search by symptom, diagnosis or patient name across all records';
+  // Collapse panel
+  if (_aiPanelOpen) toggleAiPanel();
 }

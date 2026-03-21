@@ -201,7 +201,8 @@ function showDoctorView() {
   currentView = 'doctors';
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   document.getElementById('navDoctors').classList.add('active');
-  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel','patientsView','pharmacyView'].forEach(function(id){
+  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel','patientsView','pharmacyView',
+   'stockView','analyticsView','outbreakView'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
   var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';

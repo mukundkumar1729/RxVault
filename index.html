@@ -138,7 +138,7 @@
         <!-- ─── SIDEBAR ─── -->
         <aside class="sidebar no-print">
 
-            <!-- NAVIGATION -->
+            <!-- ── NAVIGATION ── -->
             <div class="sidebar-section sidebar-collapsible" id="sidebarNav">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarNav')">
                     <span class="sidebar-active-dot" id="dotNav"></span>
@@ -158,64 +158,25 @@
                         <span class="nav-icon">✅</span> Active
                         <span class="nav-badge" id="badgeActive">0</span>
                     </button>
-                </div>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- FILTER BY TYPE -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarFilter">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarFilter')">
-                    <span class="sidebar-active-dot" id="dotFilter"></span>
-                    <span class="sidebar-label">Filter by Type</span>
-                    <span class="sidebar-toggle-chevron">▼</span>
-                </div>
-                <div class="sidebar-nav-items">
-                    <button class="type-filter-btn active-filter" onclick="filterByType('all')">
-                        <span class="type-dot dot-all"></span> All Types
+                    <button class="nav-item" onclick="filterByType('allopathy')">
+                        <span class="type-dot dot-allopathy" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:2px"></span> Allopathy
                     </button>
-                    <button class="type-filter-btn" onclick="filterByType('allopathy')">
-                        <span class="type-dot dot-allopathy"></span> Allopathy
+                    <button class="nav-item" onclick="filterByType('homeopathy')">
+                        <span class="type-dot dot-homeopathy" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:2px"></span> Homeopathy
                     </button>
-                    <button class="type-filter-btn" onclick="filterByType('homeopathy')">
-                        <span class="type-dot dot-homeopathy"></span> Homeopathy
-                    </button>
-                    <button class="type-filter-btn" onclick="filterByType('ayurveda')">
-                        <span class="type-dot dot-ayurveda"></span> Ayurveda
+                    <button class="nav-item" onclick="filterByType('ayurveda')">
+                        <span class="type-dot dot-ayurveda" style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:2px"></span> Ayurveda
                     </button>
                 </div>
             </div>
 
             <div class="sidebar-divider"></div>
 
-            <!-- QUICK ACTIONS -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarActions">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarActions')">
-                    <span class="sidebar-active-dot" id="dotActions"></span>
-                    <span class="sidebar-label">Quick Actions</span>
-                    <span class="sidebar-toggle-chevron">▼</span>
-                </div>
-                <div class="sidebar-nav-items">
-                    <button class="nav-item" onclick="openRegisterModal()">
-                        <span class="nav-icon">👤</span> Register Patient
-                    </button>
-                    <button class="nav-item" onclick="exportAll()">
-                        <span class="nav-icon">📤</span> Export JSON
-                    </button>
-                    <button class="nav-item" onclick="document.getElementById('importFile').click()">
-                        <span class="nav-icon">📥</span> Import JSON
-                    </button>
-                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-                </div>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- DOCTORS -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarDoctors">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarDoctors')">
-                    <span class="sidebar-active-dot" id="dotDoctors"></span>
-                    <span class="sidebar-label">Doctors</span>
+            <!-- ── RECORDS (Doctors · Patients · Appointments) ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarRecords">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarRecords')">
+                    <span class="sidebar-active-dot" id="dotRecords"></span>
+                    <span class="sidebar-label">Records</span>
                     <span class="sidebar-toggle-chevron">▼</span>
                 </div>
                 <div class="sidebar-nav-items">
@@ -223,55 +184,12 @@
                         <span class="nav-icon">👨‍⚕️</span> Doctors
                         <span class="nav-badge" id="badgeDoctors">0</span>
                     </button>
-                </div>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- PATIENTS -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarPatients">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPatients')">
-                    <span class="sidebar-active-dot" id="dotPatients"></span>
-                    <span class="sidebar-label">Patients</span>
-                    <span class="sidebar-toggle-chevron">▼</span>
-                </div>
-                <div class="sidebar-nav-items">
                     <button class="nav-item" id="navPatients" onclick="showPatientsView()">
                         <span class="nav-icon">👥</span> Patients
                         <span class="nav-badge" id="badgePatients">0</span>
                     </button>
-                </div>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- PHARMACY -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarPharmacy">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPharmacy')">
-                    <span class="sidebar-active-dot" id="dotPharmacy"></span>
-                    <span class="sidebar-label">Pharmacy</span>
-                    <span class="sidebar-toggle-chevron">▼</span>
-                </div>
-                <div class="sidebar-nav-items">
-                    <button class="nav-item" id="navPharmacy" data-perm="viewPharmacy" onclick="showPharmacyView()">
-                        <span class="nav-icon">💊</span> Pharmacy
-                        <span class="nav-badge" id="badgePharmacy">0</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- APPOINTMENTS -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarAppointments">
-                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAppointments')">
-                    <span class="sidebar-active-dot" id="dotAppointments"></span>
-                    <span class="sidebar-label">Appointments</span>
-                    <span class="sidebar-toggle-chevron">▼</span>
-                </div>
-                <div class="sidebar-nav-items">
                     <button class="nav-item" id="navAppointments" onclick="showAppointmentView()">
-                        <span class="nav-icon">📅</span> Queue / Appointments
+                        <span class="nav-icon">📅</span> Appointments
                         <span class="nav-badge" id="badgeAppointments">0</span>
                     </button>
                 </div>
@@ -279,8 +197,28 @@
 
             <div class="sidebar-divider"></div>
 
-            <!-- BILLING -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarBilling">
+            <!-- ── PHARMACY (Dispensing · Stock) ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarPharmacy">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPharmacy')">
+                    <span class="sidebar-active-dot" id="dotPharmacy"></span>
+                    <span class="sidebar-label">Pharmacy</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navPharmacy" data-perm="viewPharmacy" onclick="showPharmacyView()">
+                        <span class="nav-icon">💊</span> Dispensing Queue
+                        <span class="nav-badge" id="badgePharmacy">0</span>
+                    </button>
+                    <button class="nav-item" id="navStock" onclick="showStockView()">
+                        <span class="nav-icon">📦</span> Stock & Inventory
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- ── BILLING ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarBilling">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarBilling')">
                     <span class="sidebar-active-dot" id="dotBilling"></span>
                     <span class="sidebar-label">Billing</span>
@@ -296,8 +234,55 @@
 
             <div class="sidebar-divider"></div>
 
-            <!-- AI TOOLS -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarAI">
+            <!-- ── LAB & CLINICAL ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarLabClinical">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarLabClinical')">
+                    <span class="sidebar-active-dot" id="dotLabClinical"></span>
+                    <span class="sidebar-label">Lab &amp; Clinical</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navLabOrders" onclick="showLabOrdersView()">
+                        <span class="nav-icon">🔬</span> Lab Orders
+                        <span class="nav-badge" id="badgeLabOrders">0</span>
+                    </button>
+                    <button class="nav-item" id="navFollowup" onclick="showFollowupView()">
+                        <span class="nav-icon">📅</span> Follow-up Reminders
+                        <span class="nav-badge" id="badgeFollowup">0</span>
+                    </button>
+                    <button class="nav-item" id="navVaccination" onclick="showVaccinationView()">
+                        <span class="nav-icon">💉</span> Vaccination Tracker
+                        <span class="nav-badge" id="badgeVaccination">0</span>
+                    </button>
+                    <button class="nav-item" id="navOpdBoard" onclick="showOpdBoardView()">
+                        <span class="nav-icon">📺</span> OPD Display Board
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- ── ANALYTICS ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarAnalytics">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAnalytics')">
+                    <span class="sidebar-active-dot" id="dotAnalytics"></span>
+                    <span class="sidebar-label">Analytics</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navAnalytics" onclick="showAnalyticsView()">
+                        <span class="nav-icon">📊</span> Clinical Dashboard
+                    </button>
+                    <button class="nav-item" id="navOutbreak" onclick="showOutbreakView()">
+                        <span class="nav-icon">🦠</span> Outbreak Tracker
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- ── AI TOOLS ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarAI">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAI')">
                     <span class="sidebar-active-dot" id="dotAI"></span>
                     <span class="sidebar-label">AI Tools</span>
@@ -305,13 +290,13 @@
                 </div>
                 <div class="sidebar-nav-items">
                     <button class="nav-item" id="navLab" onclick="showLabView()">
-                        <span class="nav-icon">🔬</span> Lab Analyser
+                        <span class="nav-icon">🧪</span> Lab Analyser
                     </button>
                     <button class="nav-item" id="navDiet" onclick="showDietView()">
                         <span class="nav-icon">🥗</span> Diet Planner
                     </button>
                     <button class="nav-item" id="navPortal" onclick="showPortalView()">
-                        <span class="nav-icon">👤</span> Patient Portal
+                        <span class="nav-icon">💬</span> Patient Portal
                     </button>
                     <button class="nav-item" id="navMedImage" onclick="showMedImageView()">
                         <span class="nav-icon">🩻</span> Medical Image AI
@@ -321,8 +306,24 @@
 
             <div class="sidebar-divider"></div>
 
-            <!-- ADMINISTRATION -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarAdmin">
+            <!-- ── STAFF ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarStaff">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarStaff')">
+                    <span class="sidebar-active-dot" id="dotStaff"></span>
+                    <span class="sidebar-label">Staff</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" id="navRoster" onclick="showRosterView()">
+                        <span class="nav-icon">🗓️</span> Shift &amp; Duty Roster
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- ── ADMINISTRATION ── -->
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarAdmin">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarAdmin')">
                     <span class="sidebar-active-dot" id="dotAdmin"></span>
                     <span class="sidebar-label">Administration</span>
@@ -335,6 +336,13 @@
                     <button class="nav-item" onclick="openClinicSwitcher()">
                         <span class="nav-icon">🏥</span> Switch Clinic
                     </button>
+                    <button class="nav-item" onclick="exportAll()">
+                        <span class="nav-icon">📤</span> Export Data
+                    </button>
+                    <button class="nav-item" onclick="document.getElementById('importFile').click()">
+                        <span class="nav-icon">📥</span> Import Data
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
                 </div>
             </div>
 
@@ -1145,13 +1153,11 @@
          SCRIPTS — load order matters
          ════════════════════════════════════════════ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="src/supabase.js"></script>
     <script src="src/auth.js"></script>
     <script src="src/clinic.js"></script>
     <script src="src/ai.js"></script>
-    <script src="src/features.js"></script>
-    <script src="src/features-ai.js"></script>
-    <script src="src/sidebar-collapsible.js"></script>
     <script src="src/script-utils.js"></script>
     <script src="src/script-core.js"></script>
     <script src="src/script-render.js"></script>
@@ -1160,6 +1166,17 @@
     <script src="src/script-filters.js"></script>
     <script src="src/script-doctors.js"></script>
     <script src="src/script-patients.js"></script>
+    <script src="src/features.js"></script>
+    <script src="src/features-ai.js"></script>
+    <script src="src/features-stock.js"></script>
+    <script src="src/features-analytics.js"></script>
     <script src="src/patient-notifications.js"></script>
+    <script src="src/features-clinical.js"></script>
+    <script src="src/features-opd.js"></script>
+    <script src="src/features-lab.js"></script>
+    <script src="src/features-roster.js"></script>
+    <script src="src/bulk-import.js"></script>
+    <script src="src/sidebar-collapsible.js"></script>
+
 </body>
 </html>

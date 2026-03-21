@@ -169,7 +169,8 @@ function showPatientsView() {
   currentView = 'patients';
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   document.getElementById('navPatients').classList.add('active');
-  ['statsRow','controlsBar','prescriptionsList','doctorsView','pharmacyView','aiSearchPanel'].forEach(function(id){
+  ['statsRow','controlsBar','prescriptionsList','doctorsView','pharmacyView','aiSearchPanel',
+   'stockView','analyticsView','outbreakView'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
   var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
@@ -285,20 +286,82 @@ function clearPatientFilter() { var inp = document.getElementById('patientFilter
 // ════════════════════════════════════════════════════════════
 //  PHARMACY VIEW
 // ════════════════════════════════════════════════════════════
+
+/** Returns true if Rx is >30 days old, not dispensed, not already self-handled */
+function isSelfHandledEligible(rx) {
+  if (rx.dispenseDate || rx.selfHandled) return false;
+  var diffDays = (new Date() - new Date(rx.date + 'T00:00:00')) / (1000 * 60 * 60 * 24);
+  return diffDays > 30;
+}
+
+/** Auto-mark all eligible Rxs as self-handled and persist silently */
+async function autoMarkSelfHandled() {
+  var changed = [];
+  for (var i = 0; i < prescriptions.length; i++) {
+    var rx = prescriptions[i];
+    if (isSelfHandledEligible(rx)) {
+      rx.selfHandled     = true;
+      rx.selfHandledDate = new Date().toISOString();
+      changed.push(rx);
+    }
+  }
+  for (var j = 0; j < changed.length; j++) {
+    await dbUpsertPrescription(changed[j]);
+  }
+  return changed.length;
+}
+
+async function markSelfHandled(rxId) {
+  var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
+  rx.selfHandled     = true;
+  rx.selfHandledDate = new Date().toISOString();
+  var ok = await dbUpsertPrescription(rx);
+  if (!ok) { showToast('Failed to update.', 'error'); return; }
+  showToast('🙋 Marked as patient handled own', 'info');
+  renderPharmacyList();
+}
+
+async function unmarkSelfHandled(rxId) {
+  var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
+  rx.selfHandled     = false;
+  rx.selfHandledDate = null;
+  var ok = await dbUpsertPrescription(rx);
+  if (!ok) { showToast('Failed to update.', 'error'); return; }
+  showToast('↩️ Unmarked — moved back to pending', 'info');
+  renderPharmacyList();
+}
+
 function showPharmacyView() {
   currentView = 'pharmacy';
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   var nb = document.getElementById('navPharmacy'); if (nb) nb.classList.add('active');
-  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel','doctorsView','patientsView'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel',
+   'doctorsView','patientsView',
+   'stockView','analyticsView','outbreakView'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
   var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
   var pv = document.getElementById('pharmacyView'); if (pv) pv.style.display = '';
   document.getElementById('pageTitle').textContent    = '💊 Pharmacy';
   document.getElementById('pageSubtitle').textContent = 'Prescribed medicines queue for dispensing';
+
+  // Auto-mark self-handled silently, re-render if any changed
+  autoMarkSelfHandled().then(function(count) {
+    if (count > 0) renderPharmacyList();
+  });
+
   renderPharmacyList();
   if (typeof refreshSidebarDots === 'function') setTimeout(refreshSidebarDots, 20);
 }
 
 function filterPharmacy() { renderPharmacyList(); }
+
+function pharmacyStatToFilter(label) {
+  if (label === 'Pending')         return 'pending';
+  if (label === 'Dispensed')       return 'dispensed';
+  if (label === 'Patient Handled') return 'self_handled';
+  return 'all';
+}
 
 function renderPharmacyList() {
   var container    = document.getElementById('pharmacyList');
@@ -308,11 +371,20 @@ function renderPharmacyList() {
   var typeFilter   = document.getElementById('pharmacyTypeFilter')?.value    || 'all';
   if (!container) return;
 
+  // Inject self_handled option into dropdown if not already there
+  var statusSel = document.getElementById('pharmacyStatusFilter');
+  if (statusSel && !statusSel.querySelector('[value="self_handled"]')) {
+    var shOpt = document.createElement('option');
+    shOpt.value = 'self_handled'; shOpt.textContent = '🙋 Patient Handled Own';
+    statusSel.appendChild(shOpt);
+  }
+
   var list = prescriptions.filter(function(rx) {
     if (typeFilter !== 'all' && rx.type !== typeFilter) return false;
-    if (statusFilter === 'pending')   return !rx.dispenseDate;
-    if (statusFilter === 'dispensed') return !!rx.dispenseDate;
-    if (statusFilter === 'active')    return rx.status === 'active';
+    if (statusFilter === 'pending')      return !rx.dispenseDate && !rx.selfHandled;
+    if (statusFilter === 'dispensed')    return !!rx.dispenseDate;
+    if (statusFilter === 'active')       return rx.status === 'active';
+    if (statusFilter === 'self_handled') return !!rx.selfHandled && !rx.dispenseDate;
     return true;
   });
   if (searchVal) {
@@ -320,61 +392,117 @@ function renderPharmacyList() {
       return [rx.patientName, rx.doctorName, rx.diagnosis, (rx.medicines||[]).map(function(m){return m.name;}).join(' ')].join(' ').toLowerCase().includes(searchVal);
     });
   }
-  list.sort(function(a,b){ if (!a.dispenseDate && b.dispenseDate) return -1; if (a.dispenseDate && !b.dispenseDate) return 1; return new Date(b.date)-new Date(a.date); });
+  list.sort(function(a,b){
+    if (a.selfHandled && !b.selfHandled) return 1;
+    if (!a.selfHandled && b.selfHandled) return -1;
+    if (!a.dispenseDate && b.dispenseDate) return -1;
+    if (a.dispenseDate && !b.dispenseDate) return 1;
+    return new Date(b.date) - new Date(a.date);
+  });
 
-  var total    = prescriptions.length;
-  var pending  = prescriptions.filter(function(rx){ return !rx.dispenseDate; }).length;
-  var dispensed= prescriptions.filter(function(rx){ return !!rx.dispenseDate; }).length;
-  var todayCount= prescriptions.filter(function(rx){ return rx.date === todayISO(); }).length;
+  var total       = prescriptions.length;
+  var pending     = prescriptions.filter(function(rx){ return !rx.dispenseDate && !rx.selfHandled; }).length;
+  var dispensed   = prescriptions.filter(function(rx){ return !!rx.dispenseDate; }).length;
+  var selfHandled = prescriptions.filter(function(rx){ return !!rx.selfHandled && !rx.dispenseDate; }).length;
+  var todayCount  = prescriptions.filter(function(rx){ return rx.date === todayISO(); }).length;
+
+  // Sidebar badge shows only truly pending
+  if (typeof setEl === 'function') setEl('badgePharmacy', pending || '');
+
   if (statsEl) {
     statsEl.innerHTML = [
-      {label:'Total Rx',   val:total,      bg:'var(--surface2)',      clr:'var(--text-primary)'},
-      {label:'Pending',    val:pending,    bg:'var(--allopathy-bg)',  clr:'var(--allopathy)'},
-      {label:'Dispensed',  val:dispensed,  bg:'#e8f5e9',              clr:'var(--green)'},
-      {label:"Today's Rx", val:todayCount, bg:'var(--teal-pale)',     clr:'var(--teal)'},
+      {label:'Total Rx',        val:total,       bg:'var(--surface2)',      clr:'var(--text-primary)',  filter:'all'},
+      {label:'Pending',         val:pending,     bg:'var(--allopathy-bg)',  clr:'var(--allopathy)',     filter:'pending'},
+      {label:'Dispensed',       val:dispensed,   bg:'#e8f5e9',              clr:'var(--green)',         filter:'dispensed'},
+      {label:'Patient Handled', val:selfHandled, bg:'var(--homeopathy-bg)', clr:'var(--homeopathy)',    filter:'self_handled'},
+      {label:"Today's Rx",     val:todayCount,  bg:'var(--teal-pale)',     clr:'var(--teal)',          filter:'all'},
     ].map(function(s){
-      return '<div style="background:'+s.bg+';border:1px solid var(--border);border-radius:var(--radius);padding:10px 18px;display:flex;align-items:center;gap:10px;min-width:120px">' +
+      return '<div style="background:'+s.bg+';border:1px solid var(--border);border-radius:var(--radius);padding:10px 18px;' +
+        'display:flex;align-items:center;gap:10px;min-width:110px;cursor:pointer;transition:box-shadow 0.15s" ' +
+        'onclick="var el=document.getElementById(\'pharmacyStatusFilter\');if(el)el.value=\''+s.filter+'\';renderPharmacyList()" ' +
+        'onmouseenter="this.style.boxShadow=\'var(--shadow)\'" onmouseleave="this.style.boxShadow=\'\'">' +
         '<div style="font-size:22px;font-weight:700;color:'+s.clr+'">'+s.val+'</div>' +
         '<div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">'+s.label+'</div></div>';
     }).join('');
   }
 
-  if (!list.length) { container.innerHTML='<div class="empty-state"><div class="empty-icon">💊</div><div class="empty-title">No prescriptions found</div><div class="empty-sub">Adjust your filters or check back later.</div></div>'; return; }
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💊</div><div class="empty-title">No prescriptions found</div><div class="empty-sub">Adjust your filters or check back later.</div></div>';
+    return;
+  }
 
   var typeIcon  = {allopathy:'💉', homeopathy:'🌿', ayurveda:'🌱'};
   var typeColor = {allopathy:'var(--allopathy)', homeopathy:'var(--homeopathy)', ayurveda:'var(--ayurveda)'};
   var typeBg    = {allopathy:'var(--allopathy-bg)', homeopathy:'var(--homeopathy-bg)', ayurveda:'var(--ayurveda-bg)'};
 
   container.innerHTML = list.map(function(rx) {
-    var disp     = !!rx.dispenseDate;
-    var meds     = rx.medicines || [];
+    var disp         = !!rx.dispenseDate;
+    var isSH         = !!rx.selfHandled && !disp;
+    var eligible     = isSelfHandledEligible(rx);
+    var meds         = rx.medicines || [];
+    var daysSince    = Math.floor((new Date() - new Date(rx.date + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+
+    var ageBadge = daysSince > 30
+      ? '<span style="background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">📅 '+daysSince+' days ago</span>'
+      : daysSince > 14
+        ? '<span style="background:var(--ayurveda-bg);color:var(--ayurveda);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">📅 '+daysSince+' days ago</span>'
+        : '';
+
     var medsHtml = meds.length
       ? '<table class="medicine-table" style="margin-top:12px"><thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Route</th></tr></thead><tbody>' +
-        meds.map(function(m){ return '<tr><td><strong>' + escHtml(m.name||'—') + '</strong></td><td>' + escHtml(m.dosage||'—') + '</td><td>' + escHtml(m.frequency||'—') + '</td><td>' + escHtml(m.duration||'—') + '</td><td>' + escHtml(m.route||'—') + '</td></tr>'; }).join('') + '</tbody></table>'
+        meds.map(function(m){ return '<tr><td><strong>'+escHtml(m.name||'—')+'</strong></td><td>'+escHtml(m.dosage||'—')+'</td><td>'+escHtml(m.frequency||'—')+'</td><td>'+escHtml(m.duration||'—')+'</td><td>'+escHtml(m.route||'—')+'</td></tr>'; }).join('')+'</tbody></table>'
       : '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No medicines listed.</div>';
-    var actionBtn = disp
-      ? '<button class="btn-sm btn-outline-teal" data-rxid="' + rx.id + '" onclick="undispenseMedicine(this.dataset.rxid)" style="font-size:12px">↩️ Undispense</button>'
-      : '<button class="btn-sm btn-teal"         data-rxid="' + rx.id + '" onclick="dispenseMedicine(this.dataset.rxid)"   style="font-size:12px">✅ Mark Dispensed</button>';
-    return '<div class="rx-card" style="margin-bottom:14px;' + (disp?'opacity:0.7':'') + '">' +
+
+    var statusBadge = disp
+      ? '<span style="background:#e8f5e9;color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">✅ Dispensed</span>'
+      : isSH
+        ? '<span style="background:var(--homeopathy-bg);color:var(--homeopathy);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">🙋 Patient Handled</span>'
+        : eligible
+          ? '<span style="background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">⚠️ Overdue</span>'
+          : '<span style="background:var(--allopathy-bg);color:var(--allopathy);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">⏳ Pending</span>';
+
+    var contextNote = isSH
+      ? '<div style="margin-top:8px;background:var(--homeopathy-bg);border-left:3px solid var(--homeopathy);padding:8px 14px;border-radius:4px;font-size:12.5px;color:var(--homeopathy)">' +
+          '🙋 Marked as patient-handled on ' + formatDate((rx.selfHandledDate||'').split('T')[0]) +
+          ' — medicine was not dispensed from pharmacy (patient sourced independently or 30+ days elapsed).' +
+        '</div>'
+      : eligible
+        ? '<div style="margin-top:8px;background:var(--red-bg);border-left:3px solid var(--red);padding:8px 14px;border-radius:4px;font-size:12.5px;color:var(--red)">' +
+            '⚠️ This prescription is <strong>'+daysSince+' days old</strong> and has not been dispensed. ' +
+            'If the patient sourced the medicine themselves, mark it accordingly.' +
+          '</div>'
+        : '';
+
+    var actionBtns = disp
+      ? '<button class="btn-sm btn-outline-teal" data-rxid="'+rx.id+'" onclick="undispenseMedicine(this.dataset.rxid)" style="font-size:12px">↩️ Undispense</button>'
+      : isSH
+        ? '<button class="btn-sm" data-rxid="'+rx.id+'" onclick="unmarkSelfHandled(this.dataset.rxid)" ' +
+            'style="font-size:12px;border:1px solid var(--border);border-radius:7px;padding:6px 12px;background:transparent;color:var(--text-muted);cursor:pointer;font-family:DM Sans,sans-serif">↩️ Unmark</button>' +
+          ' <button class="btn-sm btn-teal" data-rxid="'+rx.id+'" onclick="dispenseMedicine(this.dataset.rxid)" style="font-size:12px">✅ Dispense Instead</button>'
+        : '<button class="btn-sm btn-teal" data-rxid="'+rx.id+'" onclick="dispenseMedicine(this.dataset.rxid)" style="font-size:12px">✅ Mark Dispensed</button>' +
+          ' <button class="btn-sm" data-rxid="'+rx.id+'" onclick="markSelfHandled(this.dataset.rxid)" ' +
+            'style="font-size:12px;border:1px solid var(--homeopathy);border-radius:7px;padding:6px 12px;background:transparent;color:var(--homeopathy);cursor:pointer;font-family:DM Sans,sans-serif;font-weight:600">🙋 Patient Handled Own</button>';
+
+    return '<div class="rx-card" style="margin-bottom:14px;' + ((disp||isSH)?'opacity:0.75;':'') + '">' +
       '<div style="padding:14px 18px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border)">' +
-        '<div style="background:' + (typeBg[rx.type]||'var(--bg)') + ';color:' + (typeColor[rx.type]||'var(--text-muted)') + ';font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;flex-shrink:0;margin-top:2px">' + (typeIcon[rx.type]||'💊') + ' ' + capitalize(rx.type||'') + '</div>' +
+        '<div style="background:'+(typeBg[rx.type]||'var(--bg)')+';color:'+(typeColor[rx.type]||'var(--text-muted)')+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;flex-shrink:0;margin-top:2px">'+(typeIcon[rx.type]||'💊')+' '+capitalize(rx.type||'')+'</div>' +
         '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:15px;font-weight:700">' + escHtml(rx.patientName||'—') + '</div>' +
+          '<div style="font-size:15px;font-weight:700">'+escHtml(rx.patientName||'—')+'</div>' +
           '<div style="font-size:12.5px;color:var(--text-secondary);margin-top:3px;display:flex;flex-wrap:wrap;gap:10px">' +
-            '<span>🩺 Dr. ' + escHtml(rx.doctorName||'—') + '</span>' +
-            '<span>📅 ' + formatDate(rx.date) + '</span>' +
-            (rx.diagnosis ? '<span>🔬 ' + escHtml(rx.diagnosis) + '</span>' : '') +
-            '<span>📱 ' + escHtml(rx.phone||'—') + '</span>' +
+            '<span>🩺 Dr. '+escHtml(rx.doctorName||'—')+'</span>' +
+            '<span>📅 '+formatDate(rx.date)+'</span>' +
+            (rx.diagnosis ? '<span>🔬 '+escHtml(rx.diagnosis)+'</span>' : '') +
+            '<span>📱 '+escHtml(rx.phone||'—')+'</span>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">' +
-          '<span style="background:' + (disp?'#e8f5e9':'var(--allopathy-bg)') + ';color:' + (disp?'var(--green)':'var(--allopathy)') + ';font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">' + (disp?'✅ Dispensed':'⏳ Pending') + '</span>' +
-          '<div style="font-size:11px;color:var(--text-muted)">' + meds.length + ' medicine' + (meds.length !== 1 ? 's' : '') + '</div>' +
+          statusBadge + ageBadge +
+          '<div style="font-size:11px;color:var(--text-muted)">'+meds.length+' medicine'+(meds.length!==1?'s':'')+'</div>' +
         '</div>' +
       '</div>' +
-      '<div style="padding:14px 18px">' + medsHtml +
-        (rx.notes ? '<div style="margin-top:10px;background:var(--surface2);border-left:3px solid var(--teal);padding:10px 14px;border-radius:4px;font-size:13px">' + escHtml(rx.notes) + '</div>' : '') +
-        '<div style="margin-top:12px;display:flex;justify-content:flex-end">' + actionBtn + '</div>' +
+      '<div style="padding:14px 18px">'+medsHtml+contextNote+
+        (rx.notes ? '<div style="margin-top:10px;background:var(--surface2);border-left:3px solid var(--teal);padding:10px 14px;border-radius:4px;font-size:13px">'+escHtml(rx.notes)+'</div>' : '') +
+        '<div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">'+actionBtns+'</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -382,17 +510,67 @@ function renderPharmacyList() {
 
 async function dispenseMedicine(rxId) {
   var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
-  rx.dispenseDate = new Date().toISOString();
+  rx.dispenseDate    = new Date().toISOString();
+  // If it was marked self-handled before, clear that when properly dispensed
+  rx.selfHandled     = false;
+  rx.selfHandledDate = null;
   var ok = await dbUpsertPrescription(rx);
   if (!ok) { showToast('Failed to update.', 'error'); return; }
-  showToast('✅ Dispensed for ' + rx.patientName, 'success');
+
+  // Deduct stock for each dispensed medicine
+  if (typeof stockItems !== 'undefined' && stockItems.length && rx.medicines && rx.medicines.length) {
+    var deducted = [];
+    for (var i = 0; i < rx.medicines.length; i++) {
+      var med  = rx.medicines[i];
+      var qty  = parseInt(med.quantity || med.dosage || '1') || 1;
+      var item = stockItems.find(function(s) {
+        return (s.name || '').toLowerCase().includes((med.name || '').toLowerCase().split(' ')[0].toLowerCase()) ||
+               (med.name || '').toLowerCase().includes((s.name || '').toLowerCase().split(' ')[0].toLowerCase());
+      });
+      if (item && item.quantity > 0) {
+        var prevQty   = item.quantity;
+        item.quantity = Math.max(0, item.quantity - qty);
+        item.updated_at = new Date().toISOString();
+        if (typeof dbUpsertStock === 'function') await dbUpsertStock(item);
+        deducted.push(med.name + ' (' + prevQty + ' → ' + item.quantity + ')');
+        if (item.quantity <= item.min_quantity) {
+          showToast('⚠️ Low stock: ' + item.name + ' (' + item.quantity + ' left)', 'error');
+        }
+      }
+    }
+    if (deducted.length) {
+      showToast('✅ Dispensed · Stock updated: ' + deducted.join(', '), 'success');
+    } else {
+      showToast('✅ Dispensed for ' + rx.patientName, 'success');
+    }
+  } else {
+    showToast('✅ Dispensed for ' + rx.patientName, 'success');
+  }
   renderPharmacyList();
 }
+
 async function undispenseMedicine(rxId) {
   var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
   rx.dispenseDate = null;
   var ok = await dbUpsertPrescription(rx);
   if (!ok) { showToast('Failed to update.', 'error'); return; }
-  showToast('↩️ Marked as undispensed.', 'info');
+
+  // Restore stock when undispensed
+  if (typeof stockItems !== 'undefined' && stockItems.length && rx.medicines && rx.medicines.length) {
+    for (var i = 0; i < rx.medicines.length; i++) {
+      var med  = rx.medicines[i];
+      var qty  = parseInt(med.quantity || med.dosage || '1') || 1;
+      var item = stockItems.find(function(s) {
+        return (s.name || '').toLowerCase().includes((med.name || '').toLowerCase().split(' ')[0].toLowerCase()) ||
+               (med.name || '').toLowerCase().includes((s.name || '').toLowerCase().split(' ')[0].toLowerCase());
+      });
+      if (item) {
+        item.quantity   = item.quantity + qty;
+        item.updated_at = new Date().toISOString();
+        if (typeof dbUpsertStock === 'function') await dbUpsertStock(item);
+      }
+    }
+  }
+  showToast('↩️ Marked as undispensed. Stock restored.', 'info');
   renderPharmacyList();
 }

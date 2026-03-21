@@ -541,3 +541,114 @@ FROM rx_notifications
 GROUP BY clinic_id;
 
 SELECT 'Notification tracking table created ✅' AS status;
+
+-- ═══════════════════════════════════════════════════════════
+--  RX VAULT — Stock / Inventory Table
+--  Run in Supabase → SQL Editor
+-- ═══════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS stock_items (
+  id            TEXT        PRIMARY KEY DEFAULT ('stk_' || extract(epoch from now())::bigint::text || '_' || substr(md5(random()::text),1,4)),
+  clinic_id     TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  name          TEXT        NOT NULL,
+  category      TEXT        DEFAULT 'General',
+  quantity      INTEGER     DEFAULT 0 CHECK (quantity >= 0),
+  unit          TEXT        DEFAULT 'tablets',
+  min_quantity  INTEGER     DEFAULT 10,
+  unit_price    NUMERIC     DEFAULT 0,
+  batch_no      TEXT        DEFAULT '',
+  expiry_date   DATE        DEFAULT NULL,
+  updated_at    TIMESTAMPTZ DEFAULT NOW(),
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_clinic  ON stock_items(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_stock_name    ON stock_items(name);
+CREATE INDEX IF NOT EXISTS idx_stock_low     ON stock_items(clinic_id, quantity) WHERE quantity <= min_quantity;
+
+ALTER TABLE stock_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_stock" ON stock_items;
+CREATE POLICY "allow_all_stock" ON stock_items FOR ALL TO anon USING (true) WITH CHECK (true);
+
+SELECT 'stock_items table created ✅' AS status;
+
+-- ═══════════════════════════════════════════════════════════
+--  RX VAULT — New Feature Tables Migration
+--  Run in Supabase → SQL Editor
+--  Covers: Lab Orders, Shift Roster, Shift Swaps
+--  (Patient allergies/vaccinations stored in existing patients table as JSONB)
+-- ═══════════════════════════════════════════════════════════
+
+-- ── Add allergy and vaccination columns to patients ────────
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS allergies      JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS vaccinations   JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS dob            DATE DEFAULT NULL;
+
+-- ── Add followupDate column to prescriptions ──────────────
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS followup_date     DATE    DEFAULT NULL;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS self_handled      BOOLEAN DEFAULT FALSE;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS self_handled_date TIMESTAMPTZ DEFAULT NULL;
+
+-- ── Lab Orders ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS lab_orders (
+  id               TEXT        PRIMARY KEY,
+  clinic_id        TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  patient_name     TEXT        NOT NULL,
+  doctor_name      TEXT        DEFAULT '',
+  test_name        TEXT        NOT NULL,
+  lab_name         TEXT        DEFAULT '',
+  urgency          TEXT        DEFAULT 'routine' CHECK (urgency IN ('routine','urgent','stat')),
+  clinical_notes   TEXT        DEFAULT '',
+  external         BOOLEAN     DEFAULT FALSE,
+  status           TEXT        DEFAULT 'ordered' CHECK (status IN ('ordered','received','reviewed','cancelled','external')),
+  result_text      TEXT        DEFAULT NULL,
+  result_file_url  TEXT        DEFAULT NULL,
+  result_file_b64  TEXT        DEFAULT NULL,
+  result_file_mime TEXT        DEFAULT NULL,
+  result_lab_notes TEXT        DEFAULT NULL,
+  ai_interpretation TEXT       DEFAULT NULL,
+  ordered_on       TIMESTAMPTZ DEFAULT NOW(),
+  received_on      TIMESTAMPTZ DEFAULT NULL,
+  reviewed_on      TIMESTAMPTZ DEFAULT NULL,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_laborders_clinic   ON lab_orders(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_laborders_patient  ON lab_orders(patient_name);
+CREATE INDEX IF NOT EXISTS idx_laborders_status   ON lab_orders(status);
+ALTER TABLE lab_orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_lab_orders" ON lab_orders;
+CREATE POLICY "allow_all_lab_orders" ON lab_orders FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ── Shift Roster ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS shift_roster (
+  id          TEXT        PRIMARY KEY DEFAULT ('sr_' || extract(epoch from now())::bigint::text || '_' || substr(md5(random()::text),1,4)),
+  clinic_id   TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  staff_id    TEXT        NOT NULL,
+  slot_key    TEXT        NOT NULL,   -- e.g. 'Monday_2026-03-24'
+  shift_code  TEXT        NOT NULL DEFAULT 'OFF' CHECK (shift_code IN ('M','A','N','OC','OFF')),
+  updated_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(clinic_id, staff_id, slot_key)
+);
+CREATE INDEX IF NOT EXISTS idx_roster_clinic ON shift_roster(clinic_id);
+ALTER TABLE shift_roster ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_roster" ON shift_roster;
+CREATE POLICY "allow_all_roster" ON shift_roster FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ── Shift Swap Requests ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS shift_swaps (
+  id           TEXT        PRIMARY KEY DEFAULT ('sw_' || extract(epoch from now())::bigint::text || '_' || substr(md5(random()::text),1,4)),
+  clinic_id    TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  requester_id TEXT        NOT NULL,
+  target_id    TEXT        NOT NULL,
+  slot_key_a   TEXT        NOT NULL,
+  slot_key_b   TEXT        NOT NULL,
+  message      TEXT        DEFAULT '',
+  status       TEXT        DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  requested_on TIMESTAMPTZ DEFAULT NOW(),
+  resolved_on  TIMESTAMPTZ DEFAULT NULL
+);
+ALTER TABLE shift_swaps ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_swaps" ON shift_swaps;
+CREATE POLICY "allow_all_swaps" ON shift_swaps FOR ALL TO anon USING (true) WITH CHECK (true);
+
+SELECT 'All new feature tables created ✅' AS status;
