@@ -260,6 +260,22 @@
             </div>
             <div class="sidebar-divider"></div>
             <div class="sidebar-section">
+                <div class="sidebar-label">Appointments</div>
+                <button class="nav-item" id="navAppointments" onclick="showAppointmentView()">
+                    <span class="nav-icon">📅</span> Queue / Appointments
+                    <span class="nav-badge" id="badgeAppointments">0</span>
+                </button>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Billing</div>
+                <button class="nav-item" id="navBilling" onclick="showBillingView()">
+                    <span class="nav-icon">💰</span> Billing & Invoices
+                    <span class="nav-badge" id="badgeBilling">0</span>
+                </button>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section">
                 <div class="sidebar-label">Administration</div>
                 <button class="nav-item" id="adminNavBtn" data-perm="manage_staff" onclick="openAdminPanel()">
                     <span class="nav-icon">🔐</span> Admin Panel
@@ -396,6 +412,53 @@
             <div class="prescriptions-grid" id="prescriptionsList"></div>
 
             <!-- Doctors View -->
+            <!-- APPOINTMENT / QUEUE VIEW -->
+            <div id="appointmentView" style="display:none">
+                <div class="page-header" style="padding:0 0 16px 0">
+                    <div>
+                        <div class="page-title" id="apptTitle">📅 Today's Queue</div>
+                        <div class="page-subtitle" id="apptSubtitle">Patient appointment queue</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <input type="date" id="apptDateFilter" onchange="loadAppointmentView()"
+                            style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
+                        <button class="btn-add" onclick="openBookAppointment()" style="padding:8px 16px;font-size:13px">
+                            ＋ Book Appointment
+                        </button>
+                    </div>
+                </div>
+                <!-- Stats -->
+                <div id="apptStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
+                <!-- Queue List -->
+                <div id="apptList"></div>
+            </div>
+
+            <!-- BILLING VIEW -->
+            <div id="billingView" style="display:none">
+                <div class="page-header" style="padding:0 0 16px 0">
+                    <div>
+                        <div class="page-title">💰 Billing & Invoices</div>
+                        <div class="page-subtitle">Generate and manage patient invoices</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <input type="text" id="billingSearch" placeholder="🔍 Search patient or invoice…"
+                            oninput="filterBilling()"
+                            style="padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;min-width:220px">
+                        <select id="billingStatusFilter" onchange="filterBilling()"
+                            style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif">
+                            <option value="all">All</option>
+                            <option value="paid">✅ Paid</option>
+                            <option value="unpaid">⏳ Unpaid</option>
+                        </select>
+                        <button class="btn-add" onclick="openNewInvoice()" style="padding:8px 16px;font-size:13px">
+                            ＋ New Invoice
+                        </button>
+                    </div>
+                </div>
+                <div id="billingStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
+                <div id="billingList"></div>
+            </div>
+
             <!-- PHARMACY VIEW -->
             <div id="pharmacyView" style="display:none">
                 <div style="padding:0 0 18px 0">
@@ -1040,6 +1103,240 @@
     <script src="src/clinic.js"></script>
     <script src="src/ai.js"></script>
     <script src="src/script.js"></script>
+    <script src="src/features.js"></script>
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- BOOK APPOINTMENT MODAL -->
+    <div class="modal-overlay no-print" id="bookApptModal">
+        <div class="modal" style="max-width:560px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">📅 Book Appointment</div>
+                    <div class="modal-subtitle">Schedule a patient visit</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('bookApptModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Patient Name <span style="color:var(--red)">*</span></label>
+                        <input type="text" id="apptPatientName" placeholder="Full name" list="apptPatientList">
+                        <datalist id="apptPatientList"></datalist>
+                    </div>
+                    <div class="field">
+                        <label>Phone</label>
+                        <input type="tel" id="apptPatientPhone" placeholder="Mobile number">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Doctor <span style="color:var(--red)">*</span></label>
+                        <select id="apptDoctor">
+                            <option value="">— Select Doctor —</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Visit Type</label>
+                        <select id="apptVisitType">
+                            <option value="consultation">🩺 Consultation</option>
+                            <option value="follow-up">🔄 Follow-up</option>
+                            <option value="emergency">🚨 Emergency</option>
+                            <option value="procedure">⚕️ Procedure</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Date <span style="color:var(--red)">*</span></label>
+                        <input type="date" id="apptDate">
+                    </div>
+                    <div class="field">
+                        <label>Time Slot</label>
+                        <input type="time" id="apptTime" placeholder="HH:MM">
+                    </div>
+                </div>
+                <div class="field" style="margin-bottom:0">
+                    <label>Age</label>
+                    <input type="text" id="apptAge" placeholder="e.g. 35">
+                </div>
+                <div class="field" style="margin-top:12px;margin-bottom:0">
+                    <label>Notes</label>
+                    <input type="text" id="apptNotes" placeholder="Chief complaint or reason for visit">
+                </div>
+                <div id="apptError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:8px"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm btn-outline-teal" onclick="closeModal('bookApptModal')">Cancel</button>
+                <button class="btn-sm btn-teal" onclick="saveAppointment()">📅 Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VITALS MODAL -->
+    <div class="modal-overlay no-print" id="vitalsModal">
+        <div class="modal" style="max-width:600px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">🩺 Record Vital Signs</div>
+                    <div class="modal-subtitle" id="vitalsPatientName">Patient</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('vitalsModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row" style="margin-bottom:14px">
+                    <div class="field">
+                        <label>Blood Pressure (Systolic)</label>
+                        <input type="number" id="vBpSys" placeholder="e.g. 120" min="60" max="250">
+                    </div>
+                    <div class="field">
+                        <label>Blood Pressure (Diastolic)</label>
+                        <input type="number" id="vBpDia" placeholder="e.g. 80" min="40" max="150">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:14px">
+                    <div class="field">
+                        <label>Pulse (bpm)</label>
+                        <input type="number" id="vPulse" placeholder="e.g. 72" min="30" max="200">
+                    </div>
+                    <div class="field">
+                        <label>Temperature (°F)</label>
+                        <input type="number" id="vTemp" placeholder="e.g. 98.6" step="0.1" min="90" max="110">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:14px">
+                    <div class="field">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="vWeight" placeholder="e.g. 70" step="0.1" min="1" max="300">
+                    </div>
+                    <div class="field">
+                        <label>Height (cm)</label>
+                        <input type="number" id="vHeight" placeholder="e.g. 170" min="30" max="250">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:14px">
+                    <div class="field">
+                        <label>SpO2 (%)</label>
+                        <input type="number" id="vSpo2" placeholder="e.g. 98" min="50" max="100">
+                    </div>
+                    <div class="field">
+                        <label>Blood Sugar — Fasting (mg/dL)</label>
+                        <input type="number" id="vSugarF" placeholder="e.g. 90" min="30" max="600">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:14px">
+                    <div class="field">
+                        <label>Blood Sugar — Post-Prandial (mg/dL)</label>
+                        <input type="number" id="vSugarPP" placeholder="e.g. 130" min="30" max="600">
+                    </div>
+                    <div class="field">
+                        <label>Blood Sugar — Random (mg/dL)</label>
+                        <input type="number" id="vSugarR" placeholder="e.g. 110" min="30" max="600">
+                    </div>
+                </div>
+                <div class="field" style="margin-bottom:0">
+                    <label>Notes</label>
+                    <input type="text" id="vNotes" placeholder="Any observations…">
+                </div>
+                <!-- BMI display -->
+                <div id="vBmiDisplay" style="display:none;margin-top:12px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);font-size:13px"></div>
+                <!-- Alerts -->
+                <div id="vitalsAlerts" style="margin-top:10px"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm btn-outline-teal" onclick="closeModal('vitalsModal')">Cancel</button>
+                <button class="btn-sm btn-teal" onclick="saveVitals()">💾 Save Vitals</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW INVOICE MODAL -->
+    <div class="modal-overlay no-print" id="invoiceModal">
+        <div class="modal" style="max-width:640px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">💰 New Invoice</div>
+                    <div class="modal-subtitle" id="invoiceModalSubtitle">Create patient invoice</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Patient Name <span style="color:var(--red)">*</span></label>
+                        <input type="text" id="invPatientName" placeholder="Full name" list="invPatientList">
+                        <datalist id="invPatientList"></datalist>
+                    </div>
+                    <div class="field">
+                        <label>Phone</label>
+                        <input type="text" id="invPatientPhone" placeholder="Mobile">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Invoice Date <span style="color:var(--red)">*</span></label>
+                        <input type="date" id="invDate">
+                    </div>
+                    <div class="field">
+                        <label>Doctor Name</label>
+                        <input type="text" id="invDoctorName" placeholder="e.g. Dr. Priya Mehta" list="invDoctorList">
+                        <datalist id="invDoctorList"></datalist>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="field">
+                        <label>Link to Prescription (optional)</label>
+                        <select id="invRxLink">
+                            <option value="">— None —</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Payment Method</label>
+                        <select id="invPayMethod">
+                            <option value="Cash">💵 Cash</option>
+                            <option value="Card">💳 Card</option>
+                            <option value="UPI">📱 UPI</option>
+                            <option value="Online">🌐 Online</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Line items -->
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Invoice Items</div>
+                <div id="invoiceItems">
+                    <!-- rows added dynamically -->
+                </div>
+                <button class="btn-sm btn-outline-teal" onclick="addInvoiceItem()" style="margin-top:8px;font-size:12px">＋ Add Item</button>
+                <!-- Totals -->
+                <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <span style="font-size:13px;color:var(--text-secondary)">Discount (₹)</span>
+                        <input type="number" id="invDiscount" value="0" min="0"
+                            oninput="updateInvTotal()"
+                            style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:13px">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <span style="font-size:13px;color:var(--text-secondary)">Tax (%)</span>
+                        <input type="number" id="invTax" value="0" min="0" max="100"
+                            oninput="updateInvTotal()"
+                            style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;text-align:right;font-size:13px">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:700;color:var(--text-primary)">
+                        <span>Total</span>
+                        <span id="invTotal">₹0</span>
+                    </div>
+                </div>
+                <div class="field" style="margin-top:12px;margin-bottom:0">
+                    <label>Notes</label>
+                    <input type="text" id="invNotes" placeholder="Any remarks…">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="invError" style="color:var(--red);font-size:12px;min-height:16px;text-align:left;flex:1"></div>
+                <button class="btn-sm btn-outline-teal" onclick="closeModal('invoiceModal')">Cancel</button>
+                <button class="btn-sm btn-outline-teal" onclick="saveInvoice(false)">💾 Save</button>
+                <button class="btn-sm btn-teal" onclick="saveInvoice(true)">🖨️ Save & Print</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
