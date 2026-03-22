@@ -385,6 +385,8 @@ function renderPharmacyList() {
     if (statusFilter === 'dispensed')    return !!rx.dispenseDate;
     if (statusFilter === 'active')       return rx.status === 'active';
     if (statusFilter === 'self_handled') return !!rx.selfHandled && !rx.dispenseDate;
+    // By default (All Status), hide prescriptions that are marked as 'expired'
+    if (statusFilter === 'all' && rx.status === 'expired') return false;
     return true;
   });
   if (searchVal) {

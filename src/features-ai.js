@@ -4,30 +4,34 @@
 //  Load order: after features.js
 // ════════════════════════════════════════════════════════════
 
-// ─── AI proxy URL (Supabase Edge Function) ───────────────
-// Routes browser → Supabase Edge Function → Anthropic API
-// Avoids CORS errors from calling api.anthropic.com directly
-var AI_PROXY_URL = 'https://wavakcolrtrwmjcjkdfc.supabase.co/functions/v1/claude-proxy';
+// ─── AI via Supabase Edge Function ───────────────────────
+// Uses db.functions.invoke() so the Supabase client automatically
+// handles JWT auth — avoids 401 that raw fetch() gets.
 
 /**
- * Unified AI call — always goes through the proxy
+ * Unified AI call — routes through the Supabase Edge Function claude-proxy
  */
 async function callClaude(opts) {
-  var response = await fetch(AI_PROXY_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model:      opts.model      || 'claude-sonnet-4-20250514',
+  debugger;
+  var { data, error } = await db.functions.invoke('claude-proxy', {
+    body: {
+      model:      opts.model      || 'claude-3-5-sonnet-20241022',
       max_tokens: opts.max_tokens || 1500,
       system:     opts.system,
       messages:   opts.messages,
-    })
+    }
   });
-  if (!response.ok) {
-    var err = await response.json().catch(function(){ return {}; });
-    throw new Error(err.error || ('HTTP ' + response.status));
+  if (error) {
+    // FunctionsHttpError has a .context with the response — surface the real message
+    var detail = error.message || 'Edge Function error';
+    try {
+      var ctx = await error.context?.json();
+      if (ctx?.error) detail = ctx.error;
+      else if (ctx?.message) detail = ctx.message;
+    } catch(_) {}
+    throw new Error(detail);
   }
-  return await response.json();
+  return data;
 }
 
 //  5. LAB REPORT ANALYSER (AI-Powered)
@@ -79,6 +83,7 @@ function showLabView() {
 }
 
 async function analyseLabReport() {
+  debugger;
   var report  = (document.getElementById('labReportText')?.value || '').trim();
   var type    = document.getElementById('labReportType')?.value || 'Custom';
   var patient = document.getElementById('labPatientName')?.value || '';
@@ -106,6 +111,7 @@ async function analyseLabReport() {
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }]
     });
+    debugger;
     var text = (data.content||[]).map(function(b){ return b.text||''; }).join('');
 
     if (resultEl) {

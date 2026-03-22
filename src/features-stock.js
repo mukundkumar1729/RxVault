@@ -76,6 +76,12 @@ function renderStockView(container) {
         '<option value="prescribed_missing">🚫 Prescribed — Not in Stock</option>' +
         '<option value="prescribed_low">📉 Prescribed — Low in Stock</option>' +
       '</select>' +
+      '<select id="stockExpiryFilter" onchange="filterStock()" style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">' +
+        '<option value="valid">✅ Valid (Non-Expired)</option>' +
+        '<option value="soon">⚠️ Expiring Soon (<30d)</option>' +
+        '<option value="expired">🔴 Expired</option>' +
+        '<option value="all_inc_expired">📦 Include Expired</option>' +
+      '</select>' +
       '<button class="btn-add" onclick="openAddStockItem()" style="padding:9px 16px;font-size:13px;white-space:nowrap">＋ Add Item</button>' +
     '</div>' +
 
@@ -132,12 +138,15 @@ function renderStockTable(items) {
       var sColors = { out:{bg:'var(--red-bg)',clr:'var(--red)',label:'Out'}, low:{bg:'var(--ayurveda-bg)',clr:'var(--ayurveda)',label:'Low'}, ok:{bg:'#e8f5e9',clr:'var(--green)',label:'OK'} };
       var sc = sColors[status];
       var expiry = item.expiry_date ? new Date(item.expiry_date) : null;
+      var today = new Date();
+      var isExpired = expiry && expiry < today;
       var expiryLabel = expiry ? formatDate(item.expiry_date) : '—';
-      var expiryWarn  = expiry && (expiry - new Date()) < 30 * 24 * 60 * 60 * 1000;
+      var expiryWarn  = expiry && !isExpired && (expiry - today) < 30 * 24 * 60 * 60 * 1000;
       var value = (item.quantity * (item.unit_price||0)).toLocaleString('en-IN');
-      return '<tr style="border-bottom:1px solid var(--border);transition:background 0.12s" ' +
-        'onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'\'">' +
-        '<td style="padding:10px 14px"><div style="font-weight:600">' + escHtml(item.name) + '</div>' +
+      var rowStyle = isExpired ? 'color:var(--text-muted);background:rgba(220,38,38,0.02)' : '';
+      return '<tr style="border-bottom:1px solid var(--border);transition:background 0.12s;' + rowStyle + '" ' +
+        'onmouseenter="this.style.background=\'var(--surface2)\'" onmouseleave="this.style.background=\'' + (isExpired?'rgba(220,38,38,0.02)':'') + '\'">' +
+        '<td style="padding:10px 14px"><div style="font-weight:600;' + (isExpired?'text-decoration:line-through':'') + '">' + escHtml(item.name) + '</div>' +
           '<div style="font-size:11.5px;color:var(--text-muted)">' + escHtml(item.unit||'') + '</div></td>' +
         '<td style="padding:10px 14px"><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:8px;font-size:11.5px">' + escHtml(item.category||'General') + '</span></td>' +
         '<td style="padding:10px 14px;text-align:center">' +
@@ -146,7 +155,7 @@ function renderStockTable(items) {
         '<td style="padding:10px 14px;text-align:center;color:var(--text-muted)">' + (item.min_quantity||0) + '</td>' +
         '<td style="padding:10px 14px;text-align:right">₹' + (item.unit_price||0).toLocaleString('en-IN') + '</td>' +
         '<td style="padding:10px 14px;text-align:right;font-weight:600;color:var(--teal)">₹' + value + '</td>' +
-        '<td style="padding:10px 14px;text-align:center;' + (expiryWarn?'color:var(--red);font-weight:600':'color:var(--text-muted)') + '">' + expiryLabel + (expiryWarn?' ⚠️':'') + '</td>' +
+        '<td style="padding:10px 14px;text-align:center;' + (isExpired?'color:var(--red);font-weight:700':(expiryWarn?'color:var(--red);font-weight:600':'color:var(--text-muted)')) + '">' + (isExpired?'🔴 EXPIRED':expiryLabel) + (expiryWarn?' ⚠️':'') + '</td>' +
         '<td style="padding:10px 14px;text-align:center">' +
           '<div style="display:flex;gap:6px;justify-content:center">' +
             '<button onclick="openAdjustStock(\'' + item.id + '\')" style="font-size:11px;padding:4px 10px;border:1px solid var(--teal);border-radius:6px;background:transparent;color:var(--teal);cursor:pointer">± Adjust</button>' +
@@ -190,8 +199,11 @@ function stockNameMatch(stockName, prescName) {
 function filterStock() {
   var q   = (document.getElementById('stockSearch')?.value || '').toLowerCase().trim();
   var fil = document.getElementById('stockFilter')?.value || 'all';
+  var exp = document.getElementById('stockExpiryFilter')?.value || 'valid';
 
   var prescribedNames = getPrescribedMedicineNames();
+  var today = new Date();
+  var thirtyDays = 30 * 24 * 60 * 60 * 1000;
 
   var list;
 
@@ -228,6 +240,20 @@ function filterStock() {
       return true;
     });
   }
+
+  // Apply Expiry Filter
+  list = list.filter(function(i) {
+    if (!i.expiry_date) return (exp !== 'expired' && exp !== 'soon'); // Unset expiry is considered non-expired
+    var expDate = new Date(i.expiry_date);
+    var isExpired = expDate < today;
+    var isSoon = !isExpired && (expDate - today) < thirtyDays;
+
+    if (exp === 'valid')           return !isExpired;
+    if (exp === 'soon')            return isSoon;
+    if (exp === 'expired')         return isExpired;
+    if (exp === 'all_inc_expired') return true;
+    return !isExpired; // Default to hiding expired
+  });
 
   if (q) {
     list = list.filter(function(i) {
