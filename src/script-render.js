@@ -103,7 +103,17 @@ function renderCard(p, q, allTerms) {
         '<div class="rx-main">' +
           '<div class="rx-patient">' + hl(p.patientName) + '</div>' +
           '<div class="rx-meta">' +
-            '<span class="rx-meta-item">🩺 ' + hl(p.doctorName) + '</span>' +
+            '<span class="rx-meta-item">🩺 ' + hl(p.doctorName) + 
+            (function(){
+              if (typeof window === 'undefined' || !window.staffStatusMap) return '';
+              var ss = window.staffStatusMap && window.staffStatusMap[p.doctorName];
+              if (ss && ss.status && ss.status !== 'available') {
+                var cls = ss.status.includes('_') ? ss.status.split('_')[0] : 'custom';
+                if (ss.status.startsWith('on_')) cls = ss.status.split('_')[1];
+                return ' <small class="status-badge status-' + cls + '" style="font-size:8.5px;padding:1px 5px">' + formatStatusLabel(ss.status) + '</small>';
+              }
+              return '';
+            })() + '</span>' +
             (p.diagnosis ? '<span class="rx-meta-item">🔬 ' + hl(p.diagnosis) + '</span>' : '') +
             (p.hospital  ? '<span class="rx-meta-item">🏥 ' + hl(p.hospital)  + '</span>' : '') +
             '<span class="rx-meta-item" style="color:' + statusColor + '">' + statusIcon + ' ' + capitalize(p.status || 'unknown') + '</span>' +

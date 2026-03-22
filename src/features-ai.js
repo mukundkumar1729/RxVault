@@ -51,13 +51,21 @@ function showLabView() {
   document.getElementById('pageSubtitle').textContent = 'AI-powered interpretation of lab reports and diagnostics';
 
   lv.innerHTML =
-    '<div style="max-width:800px">' +
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);margin-bottom:16px">' +
-        '<div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">📋 Paste or type your lab report values below</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
-          '<div class="field"><label>Patient Name (optional)</label><input type="text" id="labPatientName" placeholder="Patient name"></div>' +
-          '<div class="field"><label>Report Type</label>' +
-            '<select id="labReportType">' +
+    '<div style="max-width:850px">' +
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow-sm);margin-bottom:16px">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:18px;display:flex;align-items:center;gap:8px">' +
+          '<span>📋</span> Report Details & Values' +
+        '</div>' +
+        
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">' +
+          '<div class="field">' +
+            '<label>Select Patient</label>' +
+            '<input type="text" id="labPatientName" placeholder="Search or type patient name" list="labPatList" oninput="autofillLabPatient(this.value)">' +
+            '<datalist id="labPatList">' + patientRegistry.map(function(p){return '<option value="'+escAttr(p.name)+'">';}).join('') + '</datalist>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Report Type</label>' +
+            '<select id="labReportType" onchange="updateLabPlaceholder(this.value)">' +
               '<option value="CBC">CBC (Complete Blood Count)</option>' +
               '<option value="LFT">LFT (Liver Function Test)</option>' +
               '<option value="KFT">KFT (Kidney Function Test)</option>' +
@@ -69,17 +77,71 @@ function showLabView() {
             '</select>' +
           '</div>' +
         '</div>' +
-        '<div class="field" style="margin-bottom:14px">' +
-          '<label>Lab Report Values <span style="color:var(--red)">*</span></label>' +
-          '<textarea id="labReportText" rows="8" placeholder="Paste lab values here, e.g.:\nHemoglobin: 10.2 g/dL\nWBC: 11,500 /μL\nPlatelets: 420,000 /μL\nCreatinine: 1.8 mg/dL\nBilirubin: 2.1 mg/dL&#10;&#10;Or describe: Patient is a 45-year-old diabetic. HbA1c is 9.2%, fasting sugar 210 mg/dL." style="resize:vertical;min-height:180px"></textarea>' +
+
+        '<div class="field" style="margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+            '<label style="margin-bottom:0">Lab Report Values <span style="color:var(--red)">*</span></label>' +
+            '<div style="display:flex;gap:5px" id="labSampleButtons">' +
+              '<button class="btn-sm" onclick="loadLabSample(\'CBC\')" style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--text-secondary)">Example CBC</button>' +
+              '<button class="btn-sm" onclick="loadLabSample(\'LFT\')" style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--text-secondary)">Example LFT</button>' +
+              '<button class="btn-sm" onclick="loadLabSample(\'Diabetes\')" style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--text-secondary)">Example HbA1c</button>' +
+            '</div>' +
+          '</div>' +
+          '<textarea id="labReportText" rows="10" placeholder="Paste lab values here..." style="resize:vertical;min-height:200px;line-height:1.6;font-family:monospace;font-size:13px"></textarea>' +
         '</div>' +
-        '<div style="display:flex;gap:10px">' +
-          '<button class="btn-add" onclick="analyseLabReport()" id="labAnalyseBtn">🤖 Analyse with AI</button>' +
-          '<button class="btn-sm btn-outline-teal" onclick="document.getElementById(\'labReportText\').value=\'\';document.getElementById(\'labResult\').innerHTML=\'\'">✕ Clear</button>' +
+
+        '<div style="display:flex;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">' +
+          '<button class="btn-add" onclick="analyseLabReport()" id="labAnalyseBtn" style="padding:10px 24px">🤖 Analyse with AI</button>' +
+          '<button class="btn-sm btn-outline-teal" onclick="clearLabView()" style="padding:10px 16px">✕ Clear All</button>' +
         '</div>' +
       '</div>' +
       '<div id="labResult"></div>' +
     '</div>';
+
+  updateLabPlaceholder('CBC');
+}
+
+function updateLabPlaceholder(type) {
+  var area = document.getElementById('labReportText');
+  if (!area) return;
+  var placeholders = {
+    'CBC': "Hemoglobin: 10.2 g/dL\nWBC: 11,500 /μL\nPlatelets: 420,000 /μL\nMCV: 78 fL\nNeutrophils: 72%",
+    'LFT': "Bilirubin Total: 2.1 mg/dL\nSGPT/ALT: 85 U/L\nSGOT/AST: 72 U/L\nAlkaline Phosphatase: 160 U/L",
+    'KFT': "Creatinine: 1.8 mg/dL\nUrea: 55 mg/dL\nUric Acid: 8.2 mg/dL\neGFR: 42 ml/min",
+    'Lipid': "Total Cholesterol: 240 mg/dL\nTriglycerides: 210 mg/dL\nHDL: 35 mg/dL\nLDL: 163 mg/dL",
+    'Thyroid': "TSH: 8.5 mIU/L\nFree T4: 0.9 ng/dL",
+    'Diabetes': "HbA1c: 9.2%\nFasting Blood Sugar: 185 mg/dL\nPP Sugar: 260 mg/dL",
+    'Urine': "Pus Cells: 10-12 /hpf\nEpithelial Cells: 4-6\nProteins: Trace\nSugar: Nil",
+    'Custom': "Paste any lab report text or values here…"
+  };
+  area.placeholder = "Example Data Format:\n" + (placeholders[type] || placeholders['Custom']);
+}
+
+function loadLabSample(type) {
+  var samples = {
+    'CBC': "DATE: 20-MAR-2026\nHemoglobin: 9.8 g/dL (Low)\nWBC Count: 12,400 /μL (High)\nPlatelets: 1,80,000 /μL\nMCV: 74 fL (Low)\nMCH: 24 pg\nNeutrophils: 78% (High)\nLymphocytes: 16% (Low)",
+    'LFT': "Bilirubin Total: 2.4 mg/dL\nBilirubin Direct: 0.9 mg/dL\nSGPT (ALT): 92 U/L\nSGOT (AST): 84 U/L\nAlkaline Phosphatase: 210 U/L\nAlbumin: 3.2 g/dL",
+    'Diabetes': "HbA1c (Glycated Hemoglobin): 8.4 %\nEstimated Average Glucose: 194 mg/dL\nFasting Blood Sugar: 162 mg/dL\nSerum Insulin: 15.2 uIU/mL"
+  };
+  var area = document.getElementById('labReportText');
+  var sel  = document.getElementById('labReportType');
+  if (area && type) {
+    area.value = samples[type] || "";
+    if (sel) sel.value = (type === 'Diabetes' ? 'Diabetes' : type);
+  }
+}
+
+function autofillLabPatient(name) {
+  var p = patientRegistry.find(function(x) {
+    return (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase();
+  });
+  if (!p) return;
+  showToast('Verified patient: ' + p.name, 'success');
+}
+
+function clearLabView() {
+  ['labPatientName','labReportText'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var res = document.getElementById('labResult'); if(res) res.innerHTML='';
 }
 
 async function analyseLabReport() {

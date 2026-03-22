@@ -65,15 +65,38 @@ Deno.serve(async (req) => {
       for (const { model, api } of geminiModels) {
         try {
           console.log(`[claude-proxy] Calling Gemini: ${model} (${api})`);
+          // ✅ Extract images and text for Gemini
+          const geminiParts = [];
+          if (systemMsg) geminiParts.push({ text: systemMsg });
+
+          for (const m of messages) {
+            if (typeof m.content === 'string') {
+              geminiParts.push({ text: m.content });
+            } else if (Array.isArray(m.content)) {
+              for (const part of m.content) {
+                if (part.type === 'text') {
+                  geminiParts.push({ text: part.text ?? '' });
+                } else if (part.type === 'image' && part.source?.data) {
+                  geminiParts.push({
+                    inlineData: {
+                      mimeType: part.source.media_type || 'image/jpeg',
+                      data:     part.source.data
+                    }
+                  });
+                }
+              }
+            }
+          }
+
           const geminiRes = await fetch(
             `https://generativelanguage.googleapis.com/${api}/models/${model}:generateContent?key=${geminiKey}`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+                contents: [{ role: 'user', parts: geminiParts }],
                 generationConfig: { maxOutputTokens: maxTokens, temperature: 0.4 },
-                // ✅ Fixed: disable safety filters so medical content is not blocked
+                // ✅ Disabled safety filters to prevent blocking medical content
                 safetySettings: [
                   { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
                   { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },

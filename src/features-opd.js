@@ -72,7 +72,16 @@ function renderOpdBoardManager(container) {
       return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:12px">' +
         '<div style="background:var(--teal);color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + (a.token_no||'?') + '</div>' +
         '<div style="flex:1"><div style="font-weight:600">' + escHtml(a.patient_name) + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted)">' + (a.doctor_name ? 'Dr. ' + escHtml(a.doctor_name) + ' · ' : '') + (a.appt_time || '') + '</div></div>' +
+          '<div style="font-size:12px;color:var(--text-muted)">' + (a.doctor_name ? 'Dr. ' + escHtml(a.doctor_name) + 
+            (function(){
+              var ss = window.staffStatusMap && window.staffStatusMap[a.doctor_name];
+              if (ss && ss.status && ss.status !== 'available') {
+                var cls = ss.status.includes('_') ? ss.status.split('_')[0] : 'custom';
+                if (ss.status.startsWith('on_')) cls = ss.status.split('_')[1];
+                return ' <small class="status-badge status-' + cls + '" style="font-size:7.5px;padding:0px 4px">' + formatStatusLabel(ss.status) + '</small>';
+              }
+              return '';
+            })() + ' · ' : '') + (a.appt_time || '') + '</div></div>' +
         '<span style="color:' + clr + ';font-size:12px;font-weight:700">' + (a.status||'').toUpperCase() + '</span>' +
       '</div>';
     }).join('') +
@@ -380,7 +389,16 @@ function renderFollowupView(container) {
         return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">' +
           '<div style="flex:1">' +
             '<div style="font-weight:600;font-size:13.5px">' + escHtml(r.rx.patientName) + '</div>' +
-            '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">🩺 Dr. ' + escHtml(r.rx.doctorName||'—') + ' · 🔬 ' + escHtml(r.rx.diagnosis||'—') + '</div>' +
+            '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">🩺 Dr. ' + escHtml(r.rx.doctorName||'—') + 
+            (function(){
+              var ss = window.staffStatusMap && window.staffStatusMap[r.rx.doctorName];
+              if (ss && ss.status && ss.status !== 'available') {
+                var cls = ss.status.includes('_') ? ss.status.split('_')[0] : 'custom';
+                if (ss.status.startsWith('on_')) cls = ss.status.split('_')[1];
+                return ' <small class="status-badge status-' + cls + '" style="font-size:7.5px;padding:0px 4px;margin-left:4px">' + formatStatusLabel(ss.status) + '</small>';
+              }
+              return '';
+            })() + ' · 🔬 ' + escHtml(r.rx.diagnosis||'—') + '</div>' +
             '<div style="font-size:12px;margin-top:3px;color:' + uc[1] + ';font-weight:600">' + label + '</div>' +
           '</div>' +
           '<div style="display:flex;gap:6px">' +

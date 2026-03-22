@@ -652,3 +652,12 @@ DROP POLICY IF EXISTS "allow_all_swaps" ON shift_swaps;
 CREATE POLICY "allow_all_swaps" ON shift_swaps FOR ALL TO anon USING (true) WITH CHECK (true);
 
 SELECT 'All new feature tables created ✅' AS status;
+
+-- Add status and status_until columns to clinic_staff
+ALTER TABLE clinic_staff 
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'available',
+ADD COLUMN IF NOT EXISTS status_until TIMESTAMP WITH TIME ZONE;
+
+-- (Optional) Update existing staff to have a default status
+UPDATE clinic_staff SET status = 'available' WHERE status IS NULL;
+

@@ -35,7 +35,7 @@ async function showAppointmentView() {
   document.getElementById('pageTitle').textContent    = '📅 Appointments & Queue';
   document.getElementById('pageSubtitle').textContent = 'Today\'s patient queue and appointment management';
   var dateEl = document.getElementById('apptDateFilter');
-  if (dateEl && dateEl.tagName === 'INPUT' && !dateEl.value) dateEl.value = todayISO();
+  // Removed: if (dateEl && dateEl.tagName === 'INPUT' && !dateEl.value) dateEl.value = todayISO();
   await loadAppointmentView();
 }
 
@@ -60,7 +60,7 @@ function clearApptFilters() {
 
 async function loadAppointmentView() {
   var dateEl = document.getElementById('apptDateFilter');
-  var date   = dateEl ? dateEl.value : todayISO();
+  var date   = dateEl ? dateEl.value : '';
   var list   = document.getElementById('apptList');
   var stats  = document.getElementById('apptStats');
   if (!list) return;

@@ -1,0 +1,501 @@
+name,category,quantity,unit,min_quantity,unit_price,batch_no,expiry_date
+"Amoxicillin 1 250mg","allopathy",205,"Capsule",5,45,"BCH1001",2027-12-31
+"Cetirizine 1 500mg","allopathy",202,"Tablet",5,15,"BCH1002",2027-12-31
+"Ibuprofen 1 250mg","allopathy",92,"Tablet",5,25,"BCH1003",2027-12-31
+"Pantoprazole 1 500mg","allopathy",154,"Tablet",5,60,"BCH1004",2027-12-31
+"Metformin 1 250mg","allopathy",132,"Tablet",5,30,"BCH1005",2027-12-31
+"Azithromycin 1 500mg","allopathy",112,"Tablet",5,120,"BCH1006",2027-12-31
+"Omeprazole 1 250mg","allopathy",27,"Capsule",5,40,"BCH1007",2027-12-31
+"Ciprofloxacin 1 500mg","allopathy",161,"Tablet",5,55,"BCH1008",2027-12-31
+"Loratadine 1 250mg","allopathy",19,"Tablet",5,20,"BCH1009",2027-12-31
+"Arnica Montana 1 500mg","homeopathy",157,"Dilution",5,150,"BCH1010",2027-12-31
+"Nux Vomica 1 250mg","homeopathy",193,"Dilution",5,140,"BCH1011",2027-12-31
+"Belladonna 1 500mg","homeopathy",166,"Dilution",5,130,"BCH1012",2027-12-31
+"Bryonia Album 1 250mg","homeopathy",90,"Dilution",5,145,"BCH1013",2027-12-31
+"Rhus Tox 1 500mg","homeopathy",202,"Dilution",5,155,"BCH1014",2027-12-31
+"Ashwagandha Churna 1 250mg","ayurveda",99,"Powder",5,200,"BCH1015",2027-12-31
+"Triphala Churna 1 500mg","ayurveda",180,"Powder",5,180,"BCH1016",2027-12-31
+"Chyawanprash 1 250mg","ayurveda",145,"Paste",5,350,"BCH1017",2027-12-31
+"Brahmi Vati 1 500mg","ayurveda",203,"Tablet",5,250,"BCH1018",2027-12-31
+"Shatavari 1 250mg","ayurveda",97,"Capsule",5,280,"BCH1019",2027-12-31
+"Paracetamol 1 500mg","allopathy",196,"Tablet",5,10,"BCH1020",2027-12-31
+"Amoxicillin 2 250mg","allopathy",84,"Capsule",5,45,"BCH1021",2027-12-31
+"Cetirizine 2 500mg","allopathy",208,"Tablet",5,15,"BCH1022",2027-12-31
+"Ibuprofen 2 250mg","allopathy",114,"Tablet",5,25,"BCH1023",2027-12-31
+"Pantoprazole 2 500mg","allopathy",159,"Tablet",5,60,"BCH1024",2027-12-31
+"Metformin 2 250mg","allopathy",145,"Tablet",5,30,"BCH1025",2027-12-31
+"Azithromycin 2 500mg","allopathy",102,"Tablet",5,120,"BCH1026",2027-12-31
+"Omeprazole 2 250mg","allopathy",88,"Capsule",5,40,"BCH1027",2027-12-31
+"Ciprofloxacin 2 500mg","allopathy",135,"Tablet",5,55,"BCH1028",2027-12-31
+"Loratadine 2 250mg","allopathy",39,"Tablet",5,20,"BCH1029",2027-12-31
+"Arnica Montana 2 500mg","homeopathy",45,"Dilution",5,150,"BCH1030",2027-12-31
+"Nux Vomica 2 250mg","homeopathy",179,"Dilution",5,140,"BCH1031",2027-12-31
+"Belladonna 2 500mg","homeopathy",65,"Dilution",5,130,"BCH1032",2027-12-31
+"Bryonia Album 2 250mg","homeopathy",47,"Dilution",5,145,"BCH1033",2027-12-31
+"Rhus Tox 2 500mg","homeopathy",15,"Dilution",5,155,"BCH1034",2027-12-31
+"Ashwagandha Churna 2 250mg","ayurveda",86,"Powder",5,200,"BCH1035",2027-12-31
+"Triphala Churna 2 500mg","ayurveda",58,"Powder",5,180,"BCH1036",2027-12-31
+"Chyawanprash 2 250mg","ayurveda",173,"Paste",5,350,"BCH1037",2027-12-31
+"Brahmi Vati 2 500mg","ayurveda",139,"Tablet",5,250,"BCH1038",2027-12-31
+"Shatavari 2 250mg","ayurveda",160,"Capsule",5,280,"BCH1039",2027-12-31
+"Paracetamol 2 500mg","allopathy",114,"Tablet",5,10,"BCH1040",2027-12-31
+"Amoxicillin 3 250mg","allopathy",49,"Capsule",5,45,"BCH1041",2027-12-31
+"Cetirizine 3 500mg","allopathy",64,"Tablet",5,15,"BCH1042",2027-12-31
+"Ibuprofen 3 250mg","allopathy",20,"Tablet",5,25,"BCH1043",2027-12-31
+"Pantoprazole 3 500mg","allopathy",27,"Tablet",5,60,"BCH1044",2027-12-31
+"Metformin 3 250mg","allopathy",70,"Tablet",5,30,"BCH1045",2027-12-31
+"Azithromycin 3 500mg","allopathy",176,"Tablet",5,120,"BCH1046",2027-12-31
+"Omeprazole 3 250mg","allopathy",123,"Capsule",5,40,"BCH1047",2027-12-31
+"Ciprofloxacin 3 500mg","allopathy",202,"Tablet",5,55,"BCH1048",2027-12-31
+"Loratadine 3 250mg","allopathy",105,"Tablet",5,20,"BCH1049",2027-12-31
+"Arnica Montana 3 500mg","homeopathy",139,"Dilution",5,150,"BCH1050",2027-12-31
+"Nux Vomica 3 250mg","homeopathy",141,"Dilution",5,140,"BCH1051",2027-12-31
+"Belladonna 3 500mg","homeopathy",160,"Dilution",5,130,"BCH1052",2027-12-31
+"Bryonia Album 3 250mg","homeopathy",140,"Dilution",5,145,"BCH1053",2027-12-31
+"Rhus Tox 3 500mg","homeopathy",47,"Dilution",5,155,"BCH1054",2027-12-31
+"Ashwagandha Churna 3 250mg","ayurveda",201,"Powder",5,200,"BCH1055",2027-12-31
+"Triphala Churna 3 500mg","ayurveda",59,"Powder",5,180,"BCH1056",2027-12-31
+"Chyawanprash 3 250mg","ayurveda",180,"Paste",5,350,"BCH1057",2027-12-31
+"Brahmi Vati 3 500mg","ayurveda",155,"Tablet",5,250,"BCH1058",2027-12-31
+"Shatavari 3 250mg","ayurveda",152,"Capsule",5,280,"BCH1059",2027-12-31
+"Paracetamol 3 500mg","allopathy",42,"Tablet",5,10,"BCH1060",2027-12-31
+"Amoxicillin 4 250mg","allopathy",65,"Capsule",5,45,"BCH1061",2027-12-31
+"Cetirizine 4 500mg","allopathy",74,"Tablet",5,15,"BCH1062",2027-12-31
+"Ibuprofen 4 250mg","allopathy",162,"Tablet",5,25,"BCH1063",2027-12-31
+"Pantoprazole 4 500mg","allopathy",130,"Tablet",5,60,"BCH1064",2027-12-31
+"Metformin 4 250mg","allopathy",195,"Tablet",5,30,"BCH1065",2027-12-31
+"Azithromycin 4 500mg","allopathy",19,"Tablet",5,120,"BCH1066",2027-12-31
+"Omeprazole 4 250mg","allopathy",47,"Capsule",5,40,"BCH1067",2027-12-31
+"Ciprofloxacin 4 500mg","allopathy",203,"Tablet",5,55,"BCH1068",2027-12-31
+"Loratadine 4 250mg","allopathy",40,"Tablet",5,20,"BCH1069",2027-12-31
+"Arnica Montana 4 500mg","homeopathy",76,"Dilution",5,150,"BCH1070",2027-12-31
+"Nux Vomica 4 250mg","homeopathy",118,"Dilution",5,140,"BCH1071",2027-12-31
+"Belladonna 4 500mg","homeopathy",155,"Dilution",5,130,"BCH1072",2027-12-31
+"Bryonia Album 4 250mg","homeopathy",40,"Dilution",5,145,"BCH1073",2027-12-31
+"Rhus Tox 4 500mg","homeopathy",76,"Dilution",5,155,"BCH1074",2027-12-31
+"Ashwagandha Churna 4 250mg","ayurveda",153,"Powder",5,200,"BCH1075",2027-12-31
+"Triphala Churna 4 500mg","ayurveda",130,"Powder",5,180,"BCH1076",2027-12-31
+"Chyawanprash 4 250mg","ayurveda",181,"Paste",5,350,"BCH1077",2027-12-31
+"Brahmi Vati 4 500mg","ayurveda",92,"Tablet",5,250,"BCH1078",2027-12-31
+"Shatavari 4 250mg","ayurveda",186,"Capsule",5,280,"BCH1079",2027-12-31
+"Paracetamol 4 500mg","allopathy",46,"Tablet",5,10,"BCH1080",2027-12-31
+"Amoxicillin 5 250mg","allopathy",167,"Capsule",5,45,"BCH1081",2027-12-31
+"Cetirizine 5 500mg","allopathy",23,"Tablet",5,15,"BCH1082",2027-12-31
+"Ibuprofen 5 250mg","allopathy",140,"Tablet",5,25,"BCH1083",2027-12-31
+"Pantoprazole 5 500mg","allopathy",70,"Tablet",5,60,"BCH1084",2027-12-31
+"Metformin 5 250mg","allopathy",162,"Tablet",5,30,"BCH1085",2027-12-31
+"Azithromycin 5 500mg","allopathy",125,"Tablet",5,120,"BCH1086",2027-12-31
+"Omeprazole 5 250mg","allopathy",42,"Capsule",5,40,"BCH1087",2027-12-31
+"Ciprofloxacin 5 500mg","allopathy",112,"Tablet",5,55,"BCH1088",2027-12-31
+"Loratadine 5 250mg","allopathy",104,"Tablet",5,20,"BCH1089",2027-12-31
+"Arnica Montana 5 500mg","homeopathy",21,"Dilution",5,150,"BCH1090",2027-12-31
+"Nux Vomica 5 250mg","homeopathy",162,"Dilution",5,140,"BCH1091",2027-12-31
+"Belladonna 5 500mg","homeopathy",60,"Dilution",5,130,"BCH1092",2027-12-31
+"Bryonia Album 5 250mg","homeopathy",198,"Dilution",5,145,"BCH1093",2027-12-31
+"Rhus Tox 5 500mg","homeopathy",15,"Dilution",5,155,"BCH1094",2027-12-31
+"Ashwagandha Churna 5 250mg","ayurveda",158,"Powder",5,200,"BCH1095",2027-12-31
+"Triphala Churna 5 500mg","ayurveda",95,"Powder",5,180,"BCH1096",2027-12-31
+"Chyawanprash 5 250mg","ayurveda",64,"Paste",5,350,"BCH1097",2027-12-31
+"Brahmi Vati 5 500mg","ayurveda",158,"Tablet",5,250,"BCH1098",2027-12-31
+"Shatavari 5 250mg","ayurveda",32,"Capsule",5,280,"BCH1099",2027-12-31
+"Paracetamol 5 500mg","allopathy",174,"Tablet",5,10,"BCH1100",2027-12-31
+"Amoxicillin 6 250mg","allopathy",13,"Capsule",5,45,"BCH1101",2027-12-31
+"Cetirizine 6 500mg","allopathy",149,"Tablet",5,15,"BCH1102",2027-12-31
+"Ibuprofen 6 250mg","allopathy",141,"Tablet",5,25,"BCH1103",2027-12-31
+"Pantoprazole 6 500mg","allopathy",173,"Tablet",5,60,"BCH1104",2027-12-31
+"Metformin 6 250mg","allopathy",49,"Tablet",5,30,"BCH1105",2027-12-31
+"Azithromycin 6 500mg","allopathy",31,"Tablet",5,120,"BCH1106",2027-12-31
+"Omeprazole 6 250mg","allopathy",122,"Capsule",5,40,"BCH1107",2027-12-31
+"Ciprofloxacin 6 500mg","allopathy",52,"Tablet",5,55,"BCH1108",2027-12-31
+"Loratadine 6 250mg","allopathy",130,"Tablet",5,20,"BCH1109",2027-12-31
+"Arnica Montana 6 500mg","homeopathy",172,"Dilution",5,150,"BCH1110",2027-12-31
+"Nux Vomica 6 250mg","homeopathy",174,"Dilution",5,140,"BCH1111",2027-12-31
+"Belladonna 6 500mg","homeopathy",122,"Dilution",5,130,"BCH1112",2027-12-31
+"Bryonia Album 6 250mg","homeopathy",108,"Dilution",5,145,"BCH1113",2027-12-31
+"Rhus Tox 6 500mg","homeopathy",26,"Dilution",5,155,"BCH1114",2027-12-31
+"Ashwagandha Churna 6 250mg","ayurveda",117,"Powder",5,200,"BCH1115",2027-12-31
+"Triphala Churna 6 500mg","ayurveda",167,"Powder",5,180,"BCH1116",2027-12-31
+"Chyawanprash 6 250mg","ayurveda",49,"Paste",5,350,"BCH1117",2027-12-31
+"Brahmi Vati 6 500mg","ayurveda",29,"Tablet",5,250,"BCH1118",2027-12-31
+"Shatavari 6 250mg","ayurveda",202,"Capsule",5,280,"BCH1119",2027-12-31
+"Paracetamol 6 500mg","allopathy",90,"Tablet",5,10,"BCH1120",2027-12-31
+"Amoxicillin 7 250mg","allopathy",59,"Capsule",5,45,"BCH1121",2027-12-31
+"Cetirizine 7 500mg","allopathy",169,"Tablet",5,15,"BCH1122",2027-12-31
+"Ibuprofen 7 250mg","allopathy",26,"Tablet",5,25,"BCH1123",2027-12-31
+"Pantoprazole 7 500mg","allopathy",25,"Tablet",5,60,"BCH1124",2027-12-31
+"Metformin 7 250mg","allopathy",203,"Tablet",5,30,"BCH1125",2027-12-31
+"Azithromycin 7 500mg","allopathy",19,"Tablet",5,120,"BCH1126",2027-12-31
+"Omeprazole 7 250mg","allopathy",63,"Capsule",5,40,"BCH1127",2027-12-31
+"Ciprofloxacin 7 500mg","allopathy",205,"Tablet",5,55,"BCH1128",2027-12-31
+"Loratadine 7 250mg","allopathy",121,"Tablet",5,20,"BCH1129",2027-12-31
+"Arnica Montana 7 500mg","homeopathy",163,"Dilution",5,150,"BCH1130",2027-12-31
+"Nux Vomica 7 250mg","homeopathy",154,"Dilution",5,140,"BCH1131",2027-12-31
+"Belladonna 7 500mg","homeopathy",207,"Dilution",5,130,"BCH1132",2027-12-31
+"Bryonia Album 7 250mg","homeopathy",46,"Dilution",5,145,"BCH1133",2027-12-31
+"Rhus Tox 7 500mg","homeopathy",31,"Dilution",5,155,"BCH1134",2027-12-31
+"Ashwagandha Churna 7 250mg","ayurveda",122,"Powder",5,200,"BCH1135",2027-12-31
+"Triphala Churna 7 500mg","ayurveda",81,"Powder",5,180,"BCH1136",2027-12-31
+"Chyawanprash 7 250mg","ayurveda",125,"Paste",5,350,"BCH1137",2027-12-31
+"Brahmi Vati 7 500mg","ayurveda",24,"Tablet",5,250,"BCH1138",2027-12-31
+"Shatavari 7 250mg","ayurveda",46,"Capsule",5,280,"BCH1139",2027-12-31
+"Paracetamol 7 500mg","allopathy",121,"Tablet",5,10,"BCH1140",2027-12-31
+"Amoxicillin 8 250mg","allopathy",129,"Capsule",5,45,"BCH1141",2027-12-31
+"Cetirizine 8 500mg","allopathy",33,"Tablet",5,15,"BCH1142",2027-12-31
+"Ibuprofen 8 250mg","allopathy",70,"Tablet",5,25,"BCH1143",2027-12-31
+"Pantoprazole 8 500mg","allopathy",147,"Tablet",5,60,"BCH1144",2027-12-31
+"Metformin 8 250mg","allopathy",173,"Tablet",5,30,"BCH1145",2027-12-31
+"Azithromycin 8 500mg","allopathy",90,"Tablet",5,120,"BCH1146",2027-12-31
+"Omeprazole 8 250mg","allopathy",209,"Capsule",5,40,"BCH1147",2027-12-31
+"Ciprofloxacin 8 500mg","allopathy",94,"Tablet",5,55,"BCH1148",2027-12-31
+"Loratadine 8 250mg","allopathy",56,"Tablet",5,20,"BCH1149",2027-12-31
+"Arnica Montana 8 500mg","homeopathy",105,"Dilution",5,150,"BCH1150",2027-12-31
+"Nux Vomica 8 250mg","homeopathy",138,"Dilution",5,140,"BCH1151",2027-12-31
+"Belladonna 8 500mg","homeopathy",52,"Dilution",5,130,"BCH1152",2027-12-31
+"Bryonia Album 8 250mg","homeopathy",81,"Dilution",5,145,"BCH1153",2027-12-31
+"Rhus Tox 8 500mg","homeopathy",108,"Dilution",5,155,"BCH1154",2027-12-31
+"Ashwagandha Churna 8 250mg","ayurveda",100,"Powder",5,200,"BCH1155",2027-12-31
+"Triphala Churna 8 500mg","ayurveda",87,"Powder",5,180,"BCH1156",2027-12-31
+"Chyawanprash 8 250mg","ayurveda",108,"Paste",5,350,"BCH1157",2027-12-31
+"Brahmi Vati 8 500mg","ayurveda",176,"Tablet",5,250,"BCH1158",2027-12-31
+"Shatavari 8 250mg","ayurveda",201,"Capsule",5,280,"BCH1159",2027-12-31
+"Paracetamol 8 500mg","allopathy",117,"Tablet",5,10,"BCH1160",2027-12-31
+"Amoxicillin 9 250mg","allopathy",203,"Capsule",5,45,"BCH1161",2027-12-31
+"Cetirizine 9 500mg","allopathy",179,"Tablet",5,15,"BCH1162",2027-12-31
+"Ibuprofen 9 250mg","allopathy",80,"Tablet",5,25,"BCH1163",2027-12-31
+"Pantoprazole 9 500mg","allopathy",33,"Tablet",5,60,"BCH1164",2027-12-31
+"Metformin 9 250mg","allopathy",198,"Tablet",5,30,"BCH1165",2027-12-31
+"Azithromycin 9 500mg","allopathy",196,"Tablet",5,120,"BCH1166",2027-12-31
+"Omeprazole 9 250mg","allopathy",105,"Capsule",5,40,"BCH1167",2027-12-31
+"Ciprofloxacin 9 500mg","allopathy",16,"Tablet",5,55,"BCH1168",2027-12-31
+"Loratadine 9 250mg","allopathy",157,"Tablet",5,20,"BCH1169",2027-12-31
+"Arnica Montana 9 500mg","homeopathy",97,"Dilution",5,150,"BCH1170",2027-12-31
+"Nux Vomica 9 250mg","homeopathy",100,"Dilution",5,140,"BCH1171",2027-12-31
+"Belladonna 9 500mg","homeopathy",97,"Dilution",5,130,"BCH1172",2027-12-31
+"Bryonia Album 9 250mg","homeopathy",204,"Dilution",5,145,"BCH1173",2027-12-31
+"Rhus Tox 9 500mg","homeopathy",101,"Dilution",5,155,"BCH1174",2027-12-31
+"Ashwagandha Churna 9 250mg","ayurveda",102,"Powder",5,200,"BCH1175",2027-12-31
+"Triphala Churna 9 500mg","ayurveda",204,"Powder",5,180,"BCH1176",2027-12-31
+"Chyawanprash 9 250mg","ayurveda",149,"Paste",5,350,"BCH1177",2027-12-31
+"Brahmi Vati 9 500mg","ayurveda",14,"Tablet",5,250,"BCH1178",2027-12-31
+"Shatavari 9 250mg","ayurveda",139,"Capsule",5,280,"BCH1179",2027-12-31
+"Paracetamol 9 500mg","allopathy",201,"Tablet",5,10,"BCH1180",2027-12-31
+"Amoxicillin 10 250mg","allopathy",75,"Capsule",5,45,"BCH1181",2027-12-31
+"Cetirizine 10 500mg","allopathy",49,"Tablet",5,15,"BCH1182",2027-12-31
+"Ibuprofen 10 250mg","allopathy",208,"Tablet",5,25,"BCH1183",2027-12-31
+"Pantoprazole 10 500mg","allopathy",47,"Tablet",5,60,"BCH1184",2027-12-31
+"Metformin 10 250mg","allopathy",168,"Tablet",5,30,"BCH1185",2027-12-31
+"Azithromycin 10 500mg","allopathy",100,"Tablet",5,120,"BCH1186",2027-12-31
+"Omeprazole 10 250mg","allopathy",44,"Capsule",5,40,"BCH1187",2027-12-31
+"Ciprofloxacin 10 500mg","allopathy",196,"Tablet",5,55,"BCH1188",2027-12-31
+"Loratadine 10 250mg","allopathy",71,"Tablet",5,20,"BCH1189",2027-12-31
+"Arnica Montana 10 500mg","homeopathy",54,"Dilution",5,150,"BCH1190",2027-12-31
+"Nux Vomica 10 250mg","homeopathy",14,"Dilution",5,140,"BCH1191",2027-12-31
+"Belladonna 10 500mg","homeopathy",155,"Dilution",5,130,"BCH1192",2027-12-31
+"Bryonia Album 10 250mg","homeopathy",186,"Dilution",5,145,"BCH1193",2027-12-31
+"Rhus Tox 10 500mg","homeopathy",99,"Dilution",5,155,"BCH1194",2027-12-31
+"Ashwagandha Churna 10 250mg","ayurveda",116,"Powder",5,200,"BCH1195",2027-12-31
+"Triphala Churna 10 500mg","ayurveda",66,"Powder",5,180,"BCH1196",2027-12-31
+"Chyawanprash 10 250mg","ayurveda",155,"Paste",5,350,"BCH1197",2027-12-31
+"Brahmi Vati 10 500mg","ayurveda",90,"Tablet",5,250,"BCH1198",2027-12-31
+"Shatavari 10 250mg","ayurveda",86,"Capsule",5,280,"BCH1199",2027-12-31
+"Paracetamol 10 500mg","allopathy",45,"Tablet",5,10,"BCH1200",2027-12-31
+"Amoxicillin 11 250mg","allopathy",187,"Capsule",5,45,"BCH1201",2027-12-31
+"Cetirizine 11 500mg","allopathy",37,"Tablet",5,15,"BCH1202",2027-12-31
+"Ibuprofen 11 250mg","allopathy",33,"Tablet",5,25,"BCH1203",2027-12-31
+"Pantoprazole 11 500mg","allopathy",139,"Tablet",5,60,"BCH1204",2027-12-31
+"Metformin 11 250mg","allopathy",109,"Tablet",5,30,"BCH1205",2027-12-31
+"Azithromycin 11 500mg","allopathy",160,"Tablet",5,120,"BCH1206",2027-12-31
+"Omeprazole 11 250mg","allopathy",168,"Capsule",5,40,"BCH1207",2027-12-31
+"Ciprofloxacin 11 500mg","allopathy",147,"Tablet",5,55,"BCH1208",2027-12-31
+"Loratadine 11 250mg","allopathy",21,"Tablet",5,20,"BCH1209",2027-12-31
+"Arnica Montana 11 500mg","homeopathy",151,"Dilution",5,150,"BCH1210",2027-12-31
+"Nux Vomica 11 250mg","homeopathy",36,"Dilution",5,140,"BCH1211",2027-12-31
+"Belladonna 11 500mg","homeopathy",94,"Dilution",5,130,"BCH1212",2027-12-31
+"Bryonia Album 11 250mg","homeopathy",78,"Dilution",5,145,"BCH1213",2027-12-31
+"Rhus Tox 11 500mg","homeopathy",152,"Dilution",5,155,"BCH1214",2027-12-31
+"Ashwagandha Churna 11 250mg","ayurveda",39,"Powder",5,200,"BCH1215",2027-12-31
+"Triphala Churna 11 500mg","ayurveda",89,"Powder",5,180,"BCH1216",2027-12-31
+"Chyawanprash 11 250mg","ayurveda",89,"Paste",5,350,"BCH1217",2027-12-31
+"Brahmi Vati 11 500mg","ayurveda",130,"Tablet",5,250,"BCH1218",2027-12-31
+"Shatavari 11 250mg","ayurveda",195,"Capsule",5,280,"BCH1219",2027-12-31
+"Paracetamol 11 500mg","allopathy",180,"Tablet",5,10,"BCH1220",2027-12-31
+"Amoxicillin 12 250mg","allopathy",92,"Capsule",5,45,"BCH1221",2027-12-31
+"Cetirizine 12 500mg","allopathy",78,"Tablet",5,15,"BCH1222",2027-12-31
+"Ibuprofen 12 250mg","allopathy",87,"Tablet",5,25,"BCH1223",2027-12-31
+"Pantoprazole 12 500mg","allopathy",51,"Tablet",5,60,"BCH1224",2027-12-31
+"Metformin 12 250mg","allopathy",67,"Tablet",5,30,"BCH1225",2027-12-31
+"Azithromycin 12 500mg","allopathy",10,"Tablet",5,120,"BCH1226",2027-12-31
+"Omeprazole 12 250mg","allopathy",39,"Capsule",5,40,"BCH1227",2027-12-31
+"Ciprofloxacin 12 500mg","allopathy",150,"Tablet",5,55,"BCH1228",2027-12-31
+"Loratadine 12 250mg","allopathy",117,"Tablet",5,20,"BCH1229",2027-12-31
+"Arnica Montana 12 500mg","homeopathy",138,"Dilution",5,150,"BCH1230",2027-12-31
+"Nux Vomica 12 250mg","homeopathy",166,"Dilution",5,140,"BCH1231",2027-12-31
+"Belladonna 12 500mg","homeopathy",16,"Dilution",5,130,"BCH1232",2027-12-31
+"Bryonia Album 12 250mg","homeopathy",78,"Dilution",5,145,"BCH1233",2027-12-31
+"Rhus Tox 12 500mg","homeopathy",89,"Dilution",5,155,"BCH1234",2027-12-31
+"Ashwagandha Churna 12 250mg","ayurveda",137,"Powder",5,200,"BCH1235",2027-12-31
+"Triphala Churna 12 500mg","ayurveda",91,"Powder",5,180,"BCH1236",2027-12-31
+"Chyawanprash 12 250mg","ayurveda",36,"Paste",5,350,"BCH1237",2027-12-31
+"Brahmi Vati 12 500mg","ayurveda",162,"Tablet",5,250,"BCH1238",2027-12-31
+"Shatavari 12 250mg","ayurveda",98,"Capsule",5,280,"BCH1239",2027-12-31
+"Paracetamol 12 500mg","allopathy",61,"Tablet",5,10,"BCH1240",2027-12-31
+"Amoxicillin 13 250mg","allopathy",120,"Capsule",5,45,"BCH1241",2027-12-31
+"Cetirizine 13 500mg","allopathy",178,"Tablet",5,15,"BCH1242",2027-12-31
+"Ibuprofen 13 250mg","allopathy",81,"Tablet",5,25,"BCH1243",2027-12-31
+"Pantoprazole 13 500mg","allopathy",98,"Tablet",5,60,"BCH1244",2027-12-31
+"Metformin 13 250mg","allopathy",29,"Tablet",5,30,"BCH1245",2027-12-31
+"Azithromycin 13 500mg","allopathy",159,"Tablet",5,120,"BCH1246",2027-12-31
+"Omeprazole 13 250mg","allopathy",76,"Capsule",5,40,"BCH1247",2027-12-31
+"Ciprofloxacin 13 500mg","allopathy",74,"Tablet",5,55,"BCH1248",2027-12-31
+"Loratadine 13 250mg","allopathy",74,"Tablet",5,20,"BCH1249",2027-12-31
+"Arnica Montana 13 500mg","homeopathy",28,"Dilution",5,150,"BCH1250",2027-12-31
+"Nux Vomica 13 250mg","homeopathy",15,"Dilution",5,140,"BCH1251",2027-12-31
+"Belladonna 13 500mg","homeopathy",32,"Dilution",5,130,"BCH1252",2027-12-31
+"Bryonia Album 13 250mg","homeopathy",156,"Dilution",5,145,"BCH1253",2027-12-31
+"Rhus Tox 13 500mg","homeopathy",190,"Dilution",5,155,"BCH1254",2027-12-31
+"Ashwagandha Churna 13 250mg","ayurveda",167,"Powder",5,200,"BCH1255",2027-12-31
+"Triphala Churna 13 500mg","ayurveda",169,"Powder",5,180,"BCH1256",2027-12-31
+"Chyawanprash 13 250mg","ayurveda",182,"Paste",5,350,"BCH1257",2027-12-31
+"Brahmi Vati 13 500mg","ayurveda",85,"Tablet",5,250,"BCH1258",2027-12-31
+"Shatavari 13 250mg","ayurveda",159,"Capsule",5,280,"BCH1259",2027-12-31
+"Paracetamol 13 500mg","allopathy",186,"Tablet",5,10,"BCH1260",2027-12-31
+"Amoxicillin 14 250mg","allopathy",124,"Capsule",5,45,"BCH1261",2027-12-31
+"Cetirizine 14 500mg","allopathy",89,"Tablet",5,15,"BCH1262",2027-12-31
+"Ibuprofen 14 250mg","allopathy",24,"Tablet",5,25,"BCH1263",2027-12-31
+"Pantoprazole 14 500mg","allopathy",45,"Tablet",5,60,"BCH1264",2027-12-31
+"Metformin 14 250mg","allopathy",173,"Tablet",5,30,"BCH1265",2027-12-31
+"Azithromycin 14 500mg","allopathy",117,"Tablet",5,120,"BCH1266",2027-12-31
+"Omeprazole 14 250mg","allopathy",46,"Capsule",5,40,"BCH1267",2027-12-31
+"Ciprofloxacin 14 500mg","allopathy",166,"Tablet",5,55,"BCH1268",2027-12-31
+"Loratadine 14 250mg","allopathy",165,"Tablet",5,20,"BCH1269",2027-12-31
+"Arnica Montana 14 500mg","homeopathy",143,"Dilution",5,150,"BCH1270",2027-12-31
+"Nux Vomica 14 250mg","homeopathy",190,"Dilution",5,140,"BCH1271",2027-12-31
+"Belladonna 14 500mg","homeopathy",96,"Dilution",5,130,"BCH1272",2027-12-31
+"Bryonia Album 14 250mg","homeopathy",45,"Dilution",5,145,"BCH1273",2027-12-31
+"Rhus Tox 14 500mg","homeopathy",183,"Dilution",5,155,"BCH1274",2027-12-31
+"Ashwagandha Churna 14 250mg","ayurveda",112,"Powder",5,200,"BCH1275",2027-12-31
+"Triphala Churna 14 500mg","ayurveda",40,"Powder",5,180,"BCH1276",2027-12-31
+"Chyawanprash 14 250mg","ayurveda",30,"Paste",5,350,"BCH1277",2027-12-31
+"Brahmi Vati 14 500mg","ayurveda",170,"Tablet",5,250,"BCH1278",2027-12-31
+"Shatavari 14 250mg","ayurveda",26,"Capsule",5,280,"BCH1279",2027-12-31
+"Paracetamol 14 500mg","allopathy",189,"Tablet",5,10,"BCH1280",2027-12-31
+"Amoxicillin 15 250mg","allopathy",182,"Capsule",5,45,"BCH1281",2027-12-31
+"Cetirizine 15 500mg","allopathy",92,"Tablet",5,15,"BCH1282",2027-12-31
+"Ibuprofen 15 250mg","allopathy",177,"Tablet",5,25,"BCH1283",2027-12-31
+"Pantoprazole 15 500mg","allopathy",146,"Tablet",5,60,"BCH1284",2027-12-31
+"Metformin 15 250mg","allopathy",52,"Tablet",5,30,"BCH1285",2027-12-31
+"Azithromycin 15 500mg","allopathy",100,"Tablet",5,120,"BCH1286",2027-12-31
+"Omeprazole 15 250mg","allopathy",159,"Capsule",5,40,"BCH1287",2027-12-31
+"Ciprofloxacin 15 500mg","allopathy",103,"Tablet",5,55,"BCH1288",2027-12-31
+"Loratadine 15 250mg","allopathy",109,"Tablet",5,20,"BCH1289",2027-12-31
+"Arnica Montana 15 500mg","homeopathy",134,"Dilution",5,150,"BCH1290",2027-12-31
+"Nux Vomica 15 250mg","homeopathy",34,"Dilution",5,140,"BCH1291",2027-12-31
+"Belladonna 15 500mg","homeopathy",85,"Dilution",5,130,"BCH1292",2027-12-31
+"Bryonia Album 15 250mg","homeopathy",50,"Dilution",5,145,"BCH1293",2027-12-31
+"Rhus Tox 15 500mg","homeopathy",113,"Dilution",5,155,"BCH1294",2027-12-31
+"Ashwagandha Churna 15 250mg","ayurveda",137,"Powder",5,200,"BCH1295",2027-12-31
+"Triphala Churna 15 500mg","ayurveda",177,"Powder",5,180,"BCH1296",2027-12-31
+"Chyawanprash 15 250mg","ayurveda",17,"Paste",5,350,"BCH1297",2027-12-31
+"Brahmi Vati 15 500mg","ayurveda",77,"Tablet",5,250,"BCH1298",2027-12-31
+"Shatavari 15 250mg","ayurveda",135,"Capsule",5,280,"BCH1299",2027-12-31
+"Paracetamol 15 500mg","allopathy",194,"Tablet",5,10,"BCH1300",2027-12-31
+"Amoxicillin 16 250mg","allopathy",149,"Capsule",5,45,"BCH1301",2027-12-31
+"Cetirizine 16 500mg","allopathy",175,"Tablet",5,15,"BCH1302",2027-12-31
+"Ibuprofen 16 250mg","allopathy",130,"Tablet",5,25,"BCH1303",2027-12-31
+"Pantoprazole 16 500mg","allopathy",196,"Tablet",5,60,"BCH1304",2027-12-31
+"Metformin 16 250mg","allopathy",43,"Tablet",5,30,"BCH1305",2027-12-31
+"Azithromycin 16 500mg","allopathy",165,"Tablet",5,120,"BCH1306",2027-12-31
+"Omeprazole 16 250mg","allopathy",28,"Capsule",5,40,"BCH1307",2027-12-31
+"Ciprofloxacin 16 500mg","allopathy",44,"Tablet",5,55,"BCH1308",2027-12-31
+"Loratadine 16 250mg","allopathy",38,"Tablet",5,20,"BCH1309",2027-12-31
+"Arnica Montana 16 500mg","homeopathy",45,"Dilution",5,150,"BCH1310",2027-12-31
+"Nux Vomica 16 250mg","homeopathy",110,"Dilution",5,140,"BCH1311",2027-12-31
+"Belladonna 16 500mg","homeopathy",174,"Dilution",5,130,"BCH1312",2027-12-31
+"Bryonia Album 16 250mg","homeopathy",11,"Dilution",5,145,"BCH1313",2027-12-31
+"Rhus Tox 16 500mg","homeopathy",136,"Dilution",5,155,"BCH1314",2027-12-31
+"Ashwagandha Churna 16 250mg","ayurveda",99,"Powder",5,200,"BCH1315",2027-12-31
+"Triphala Churna 16 500mg","ayurveda",128,"Powder",5,180,"BCH1316",2027-12-31
+"Chyawanprash 16 250mg","ayurveda",68,"Paste",5,350,"BCH1317",2027-12-31
+"Brahmi Vati 16 500mg","ayurveda",116,"Tablet",5,250,"BCH1318",2027-12-31
+"Shatavari 16 250mg","ayurveda",105,"Capsule",5,280,"BCH1319",2027-12-31
+"Paracetamol 16 500mg","allopathy",106,"Tablet",5,10,"BCH1320",2027-12-31
+"Amoxicillin 17 250mg","allopathy",109,"Capsule",5,45,"BCH1321",2027-12-31
+"Cetirizine 17 500mg","allopathy",192,"Tablet",5,15,"BCH1322",2027-12-31
+"Ibuprofen 17 250mg","allopathy",136,"Tablet",5,25,"BCH1323",2027-12-31
+"Pantoprazole 17 500mg","allopathy",77,"Tablet",5,60,"BCH1324",2027-12-31
+"Metformin 17 250mg","allopathy",73,"Tablet",5,30,"BCH1325",2027-12-31
+"Azithromycin 17 500mg","allopathy",179,"Tablet",5,120,"BCH1326",2027-12-31
+"Omeprazole 17 250mg","allopathy",20,"Capsule",5,40,"BCH1327",2027-12-31
+"Ciprofloxacin 17 500mg","allopathy",201,"Tablet",5,55,"BCH1328",2027-12-31
+"Loratadine 17 250mg","allopathy",168,"Tablet",5,20,"BCH1329",2027-12-31
+"Arnica Montana 17 500mg","homeopathy",198,"Dilution",5,150,"BCH1330",2027-12-31
+"Nux Vomica 17 250mg","homeopathy",97,"Dilution",5,140,"BCH1331",2027-12-31
+"Belladonna 17 500mg","homeopathy",15,"Dilution",5,130,"BCH1332",2027-12-31
+"Bryonia Album 17 250mg","homeopathy",190,"Dilution",5,145,"BCH1333",2027-12-31
+"Rhus Tox 17 500mg","homeopathy",140,"Dilution",5,155,"BCH1334",2027-12-31
+"Ashwagandha Churna 17 250mg","ayurveda",103,"Powder",5,200,"BCH1335",2027-12-31
+"Triphala Churna 17 500mg","ayurveda",160,"Powder",5,180,"BCH1336",2027-12-31
+"Chyawanprash 17 250mg","ayurveda",23,"Paste",5,350,"BCH1337",2027-12-31
+"Brahmi Vati 17 500mg","ayurveda",155,"Tablet",5,250,"BCH1338",2027-12-31
+"Shatavari 17 250mg","ayurveda",93,"Capsule",5,280,"BCH1339",2027-12-31
+"Paracetamol 17 500mg","allopathy",189,"Tablet",5,10,"BCH1340",2027-12-31
+"Amoxicillin 18 250mg","allopathy",136,"Capsule",5,45,"BCH1341",2027-12-31
+"Cetirizine 18 500mg","allopathy",31,"Tablet",5,15,"BCH1342",2027-12-31
+"Ibuprofen 18 250mg","allopathy",66,"Tablet",5,25,"BCH1343",2027-12-31
+"Pantoprazole 18 500mg","allopathy",68,"Tablet",5,60,"BCH1344",2027-12-31
+"Metformin 18 250mg","allopathy",114,"Tablet",5,30,"BCH1345",2027-12-31
+"Azithromycin 18 500mg","allopathy",12,"Tablet",5,120,"BCH1346",2027-12-31
+"Omeprazole 18 250mg","allopathy",17,"Capsule",5,40,"BCH1347",2027-12-31
+"Ciprofloxacin 18 500mg","allopathy",83,"Tablet",5,55,"BCH1348",2027-12-31
+"Loratadine 18 250mg","allopathy",188,"Tablet",5,20,"BCH1349",2027-12-31
+"Arnica Montana 18 500mg","homeopathy",200,"Dilution",5,150,"BCH1350",2027-12-31
+"Nux Vomica 18 250mg","homeopathy",84,"Dilution",5,140,"BCH1351",2027-12-31
+"Belladonna 18 500mg","homeopathy",102,"Dilution",5,130,"BCH1352",2027-12-31
+"Bryonia Album 18 250mg","homeopathy",190,"Dilution",5,145,"BCH1353",2027-12-31
+"Rhus Tox 18 500mg","homeopathy",89,"Dilution",5,155,"BCH1354",2027-12-31
+"Ashwagandha Churna 18 250mg","ayurveda",120,"Powder",5,200,"BCH1355",2027-12-31
+"Triphala Churna 18 500mg","ayurveda",177,"Powder",5,180,"BCH1356",2027-12-31
+"Chyawanprash 18 250mg","ayurveda",149,"Paste",5,350,"BCH1357",2027-12-31
+"Brahmi Vati 18 500mg","ayurveda",23,"Tablet",5,250,"BCH1358",2027-12-31
+"Shatavari 18 250mg","ayurveda",50,"Capsule",5,280,"BCH1359",2027-12-31
+"Paracetamol 18 500mg","allopathy",119,"Tablet",5,10,"BCH1360",2027-12-31
+"Amoxicillin 19 250mg","allopathy",83,"Capsule",5,45,"BCH1361",2027-12-31
+"Cetirizine 19 500mg","allopathy",149,"Tablet",5,15,"BCH1362",2027-12-31
+"Ibuprofen 19 250mg","allopathy",119,"Tablet",5,25,"BCH1363",2027-12-31
+"Pantoprazole 19 500mg","allopathy",158,"Tablet",5,60,"BCH1364",2027-12-31
+"Metformin 19 250mg","allopathy",167,"Tablet",5,30,"BCH1365",2027-12-31
+"Azithromycin 19 500mg","allopathy",123,"Tablet",5,120,"BCH1366",2027-12-31
+"Omeprazole 19 250mg","allopathy",141,"Capsule",5,40,"BCH1367",2027-12-31
+"Ciprofloxacin 19 500mg","allopathy",124,"Tablet",5,55,"BCH1368",2027-12-31
+"Loratadine 19 250mg","allopathy",64,"Tablet",5,20,"BCH1369",2027-12-31
+"Arnica Montana 19 500mg","homeopathy",189,"Dilution",5,150,"BCH1370",2027-12-31
+"Nux Vomica 19 250mg","homeopathy",178,"Dilution",5,140,"BCH1371",2027-12-31
+"Belladonna 19 500mg","homeopathy",79,"Dilution",5,130,"BCH1372",2027-12-31
+"Bryonia Album 19 250mg","homeopathy",145,"Dilution",5,145,"BCH1373",2027-12-31
+"Rhus Tox 19 500mg","homeopathy",67,"Dilution",5,155,"BCH1374",2027-12-31
+"Ashwagandha Churna 19 250mg","ayurveda",21,"Powder",5,200,"BCH1375",2027-12-31
+"Triphala Churna 19 500mg","ayurveda",39,"Powder",5,180,"BCH1376",2027-12-31
+"Chyawanprash 19 250mg","ayurveda",170,"Paste",5,350,"BCH1377",2027-12-31
+"Brahmi Vati 19 500mg","ayurveda",183,"Tablet",5,250,"BCH1378",2027-12-31
+"Shatavari 19 250mg","ayurveda",80,"Capsule",5,280,"BCH1379",2027-12-31
+"Paracetamol 19 500mg","allopathy",90,"Tablet",5,10,"BCH1380",2027-12-31
+"Amoxicillin 20 250mg","allopathy",165,"Capsule",5,45,"BCH1381",2027-12-31
+"Cetirizine 20 500mg","allopathy",133,"Tablet",5,15,"BCH1382",2027-12-31
+"Ibuprofen 20 250mg","allopathy",138,"Tablet",5,25,"BCH1383",2027-12-31
+"Pantoprazole 20 500mg","allopathy",27,"Tablet",5,60,"BCH1384",2027-12-31
+"Metformin 20 250mg","allopathy",207,"Tablet",5,30,"BCH1385",2027-12-31
+"Azithromycin 20 500mg","allopathy",160,"Tablet",5,120,"BCH1386",2027-12-31
+"Omeprazole 20 250mg","allopathy",173,"Capsule",5,40,"BCH1387",2027-12-31
+"Ciprofloxacin 20 500mg","allopathy",86,"Tablet",5,55,"BCH1388",2027-12-31
+"Loratadine 20 250mg","allopathy",151,"Tablet",5,20,"BCH1389",2027-12-31
+"Arnica Montana 20 500mg","homeopathy",91,"Dilution",5,150,"BCH1390",2027-12-31
+"Nux Vomica 20 250mg","homeopathy",78,"Dilution",5,140,"BCH1391",2027-12-31
+"Belladonna 20 500mg","homeopathy",94,"Dilution",5,130,"BCH1392",2027-12-31
+"Bryonia Album 20 250mg","homeopathy",79,"Dilution",5,145,"BCH1393",2027-12-31
+"Rhus Tox 20 500mg","homeopathy",68,"Dilution",5,155,"BCH1394",2027-12-31
+"Ashwagandha Churna 20 250mg","ayurveda",45,"Powder",5,200,"BCH1395",2027-12-31
+"Triphala Churna 20 500mg","ayurveda",79,"Powder",5,180,"BCH1396",2027-12-31
+"Chyawanprash 20 250mg","ayurveda",164,"Paste",5,350,"BCH1397",2027-12-31
+"Brahmi Vati 20 500mg","ayurveda",96,"Tablet",5,250,"BCH1398",2027-12-31
+"Shatavari 20 250mg","ayurveda",156,"Capsule",5,280,"BCH1399",2027-12-31
+"Paracetamol 20 500mg","allopathy",146,"Tablet",5,10,"BCH1400",2027-12-31
+"Amoxicillin 21 250mg","allopathy",33,"Capsule",5,45,"BCH1401",2027-12-31
+"Cetirizine 21 500mg","allopathy",57,"Tablet",5,15,"BCH1402",2027-12-31
+"Ibuprofen 21 250mg","allopathy",117,"Tablet",5,25,"BCH1403",2027-12-31
+"Pantoprazole 21 500mg","allopathy",50,"Tablet",5,60,"BCH1404",2027-12-31
+"Metformin 21 250mg","allopathy",126,"Tablet",5,30,"BCH1405",2027-12-31
+"Azithromycin 21 500mg","allopathy",164,"Tablet",5,120,"BCH1406",2027-12-31
+"Omeprazole 21 250mg","allopathy",54,"Capsule",5,40,"BCH1407",2027-12-31
+"Ciprofloxacin 21 500mg","allopathy",139,"Tablet",5,55,"BCH1408",2027-12-31
+"Loratadine 21 250mg","allopathy",209,"Tablet",5,20,"BCH1409",2027-12-31
+"Arnica Montana 21 500mg","homeopathy",37,"Dilution",5,150,"BCH1410",2027-12-31
+"Nux Vomica 21 250mg","homeopathy",124,"Dilution",5,140,"BCH1411",2027-12-31
+"Belladonna 21 500mg","homeopathy",47,"Dilution",5,130,"BCH1412",2027-12-31
+"Bryonia Album 21 250mg","homeopathy",206,"Dilution",5,145,"BCH1413",2027-12-31
+"Rhus Tox 21 500mg","homeopathy",137,"Dilution",5,155,"BCH1414",2027-12-31
+"Ashwagandha Churna 21 250mg","ayurveda",57,"Powder",5,200,"BCH1415",2027-12-31
+"Triphala Churna 21 500mg","ayurveda",18,"Powder",5,180,"BCH1416",2027-12-31
+"Chyawanprash 21 250mg","ayurveda",24,"Paste",5,350,"BCH1417",2027-12-31
+"Brahmi Vati 21 500mg","ayurveda",98,"Tablet",5,250,"BCH1418",2027-12-31
+"Shatavari 21 250mg","ayurveda",125,"Capsule",5,280,"BCH1419",2027-12-31
+"Paracetamol 21 500mg","allopathy",150,"Tablet",5,10,"BCH1420",2027-12-31
+"Amoxicillin 22 250mg","allopathy",42,"Capsule",5,45,"BCH1421",2027-12-31
+"Cetirizine 22 500mg","allopathy",119,"Tablet",5,15,"BCH1422",2027-12-31
+"Ibuprofen 22 250mg","allopathy",125,"Tablet",5,25,"BCH1423",2027-12-31
+"Pantoprazole 22 500mg","allopathy",65,"Tablet",5,60,"BCH1424",2027-12-31
+"Metformin 22 250mg","allopathy",121,"Tablet",5,30,"BCH1425",2027-12-31
+"Azithromycin 22 500mg","allopathy",50,"Tablet",5,120,"BCH1426",2027-12-31
+"Omeprazole 22 250mg","allopathy",159,"Capsule",5,40,"BCH1427",2027-12-31
+"Ciprofloxacin 22 500mg","allopathy",178,"Tablet",5,55,"BCH1428",2027-12-31
+"Loratadine 22 250mg","allopathy",46,"Tablet",5,20,"BCH1429",2027-12-31
+"Arnica Montana 22 500mg","homeopathy",89,"Dilution",5,150,"BCH1430",2027-12-31
+"Nux Vomica 22 250mg","homeopathy",197,"Dilution",5,140,"BCH1431",2027-12-31
+"Belladonna 22 500mg","homeopathy",12,"Dilution",5,130,"BCH1432",2027-12-31
+"Bryonia Album 22 250mg","homeopathy",119,"Dilution",5,145,"BCH1433",2027-12-31
+"Rhus Tox 22 500mg","homeopathy",167,"Dilution",5,155,"BCH1434",2027-12-31
+"Ashwagandha Churna 22 250mg","ayurveda",21,"Powder",5,200,"BCH1435",2027-12-31
+"Triphala Churna 22 500mg","ayurveda",33,"Powder",5,180,"BCH1436",2027-12-31
+"Chyawanprash 22 250mg","ayurveda",60,"Paste",5,350,"BCH1437",2027-12-31
+"Brahmi Vati 22 500mg","ayurveda",193,"Tablet",5,250,"BCH1438",2027-12-31
+"Shatavari 22 250mg","ayurveda",186,"Capsule",5,280,"BCH1439",2027-12-31
+"Paracetamol 22 500mg","allopathy",188,"Tablet",5,10,"BCH1440",2027-12-31
+"Amoxicillin 23 250mg","allopathy",88,"Capsule",5,45,"BCH1441",2027-12-31
+"Cetirizine 23 500mg","allopathy",185,"Tablet",5,15,"BCH1442",2027-12-31
+"Ibuprofen 23 250mg","allopathy",182,"Tablet",5,25,"BCH1443",2027-12-31
+"Pantoprazole 23 500mg","allopathy",88,"Tablet",5,60,"BCH1444",2027-12-31
+"Metformin 23 250mg","allopathy",57,"Tablet",5,30,"BCH1445",2027-12-31
+"Azithromycin 23 500mg","allopathy",101,"Tablet",5,120,"BCH1446",2027-12-31
+"Omeprazole 23 250mg","allopathy",148,"Capsule",5,40,"BCH1447",2027-12-31
+"Ciprofloxacin 23 500mg","allopathy",97,"Tablet",5,55,"BCH1448",2027-12-31
+"Loratadine 23 250mg","allopathy",170,"Tablet",5,20,"BCH1449",2027-12-31
+"Arnica Montana 23 500mg","homeopathy",155,"Dilution",5,150,"BCH1450",2027-12-31
+"Nux Vomica 23 250mg","homeopathy",176,"Dilution",5,140,"BCH1451",2027-12-31
+"Belladonna 23 500mg","homeopathy",48,"Dilution",5,130,"BCH1452",2027-12-31
+"Bryonia Album 23 250mg","homeopathy",76,"Dilution",5,145,"BCH1453",2027-12-31
+"Rhus Tox 23 500mg","homeopathy",149,"Dilution",5,155,"BCH1454",2027-12-31
+"Ashwagandha Churna 23 250mg","ayurveda",88,"Powder",5,200,"BCH1455",2027-12-31
+"Triphala Churna 23 500mg","ayurveda",200,"Powder",5,180,"BCH1456",2027-12-31
+"Chyawanprash 23 250mg","ayurveda",45,"Paste",5,350,"BCH1457",2027-12-31
+"Brahmi Vati 23 500mg","ayurveda",21,"Tablet",5,250,"BCH1458",2027-12-31
+"Shatavari 23 250mg","ayurveda",61,"Capsule",5,280,"BCH1459",2027-12-31
+"Paracetamol 23 500mg","allopathy",71,"Tablet",5,10,"BCH1460",2027-12-31
+"Amoxicillin 24 250mg","allopathy",205,"Capsule",5,45,"BCH1461",2027-12-31
+"Cetirizine 24 500mg","allopathy",92,"Tablet",5,15,"BCH1462",2027-12-31
+"Ibuprofen 24 250mg","allopathy",82,"Tablet",5,25,"BCH1463",2027-12-31
+"Pantoprazole 24 500mg","allopathy",177,"Tablet",5,60,"BCH1464",2027-12-31
+"Metformin 24 250mg","allopathy",150,"Tablet",5,30,"BCH1465",2027-12-31
+"Azithromycin 24 500mg","allopathy",114,"Tablet",5,120,"BCH1466",2027-12-31
+"Omeprazole 24 250mg","allopathy",73,"Capsule",5,40,"BCH1467",2027-12-31
+"Ciprofloxacin 24 500mg","allopathy",44,"Tablet",5,55,"BCH1468",2027-12-31
+"Loratadine 24 250mg","allopathy",174,"Tablet",5,20,"BCH1469",2027-12-31
+"Arnica Montana 24 500mg","homeopathy",28,"Dilution",5,150,"BCH1470",2027-12-31
+"Nux Vomica 24 250mg","homeopathy",68,"Dilution",5,140,"BCH1471",2027-12-31
+"Belladonna 24 500mg","homeopathy",151,"Dilution",5,130,"BCH1472",2027-12-31
+"Bryonia Album 24 250mg","homeopathy",200,"Dilution",5,145,"BCH1473",2027-12-31
+"Rhus Tox 24 500mg","homeopathy",156,"Dilution",5,155,"BCH1474",2027-12-31
+"Ashwagandha Churna 24 250mg","ayurveda",174,"Powder",5,200,"BCH1475",2027-12-31
+"Triphala Churna 24 500mg","ayurveda",152,"Powder",5,180,"BCH1476",2027-12-31
+"Chyawanprash 24 250mg","ayurveda",102,"Paste",5,350,"BCH1477",2027-12-31
+"Brahmi Vati 24 500mg","ayurveda",94,"Tablet",5,250,"BCH1478",2027-12-31
+"Shatavari 24 250mg","ayurveda",64,"Capsule",5,280,"BCH1479",2027-12-31
+"Paracetamol 24 500mg","allopathy",169,"Tablet",5,10,"BCH1480",2027-12-31
+"Amoxicillin 25 250mg","allopathy",23,"Capsule",5,45,"BCH1481",2027-12-31
+"Cetirizine 25 500mg","allopathy",160,"Tablet",5,15,"BCH1482",2027-12-31
+"Ibuprofen 25 250mg","allopathy",192,"Tablet",5,25,"BCH1483",2027-12-31
+"Pantoprazole 25 500mg","allopathy",33,"Tablet",5,60,"BCH1484",2027-12-31
+"Metformin 25 250mg","allopathy",58,"Tablet",5,30,"BCH1485",2027-12-31
+"Azithromycin 25 500mg","allopathy",62,"Tablet",5,120,"BCH1486",2027-12-31
+"Omeprazole 25 250mg","allopathy",197,"Capsule",5,40,"BCH1487",2027-12-31
+"Ciprofloxacin 25 500mg","allopathy",38,"Tablet",5,55,"BCH1488",2027-12-31
+"Loratadine 25 250mg","allopathy",129,"Tablet",5,20,"BCH1489",2027-12-31
+"Arnica Montana 25 500mg","homeopathy",156,"Dilution",5,150,"BCH1490",2027-12-31
+"Nux Vomica 25 250mg","homeopathy",94,"Dilution",5,140,"BCH1491",2027-12-31
+"Belladonna 25 500mg","homeopathy",91,"Dilution",5,130,"BCH1492",2027-12-31
+"Bryonia Album 25 250mg","homeopathy",19,"Dilution",5,145,"BCH1493",2027-12-31
+"Rhus Tox 25 500mg","homeopathy",98,"Dilution",5,155,"BCH1494",2027-12-31
+"Ashwagandha Churna 25 250mg","ayurveda",42,"Powder",5,200,"BCH1495",2027-12-31
+"Triphala Churna 25 500mg","ayurveda",92,"Powder",5,180,"BCH1496",2027-12-31
+"Chyawanprash 25 250mg","ayurveda",118,"Paste",5,350,"BCH1497",2027-12-31
+"Brahmi Vati 25 500mg","ayurveda",151,"Tablet",5,250,"BCH1498",2027-12-31
+"Shatavari 25 250mg","ayurveda",109,"Capsule",5,280,"BCH1499",2027-12-31
+"Paracetamol 25 500mg","allopathy",52,"Tablet",5,10,"BCH1500",2027-12-31

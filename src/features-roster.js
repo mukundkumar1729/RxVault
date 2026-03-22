@@ -100,7 +100,6 @@ function renderRosterView(container) {
       '<div style="font-size:14px;font-weight:700;flex:1;text-align:center">' + weekLabel + '</div>' +
       '<button onclick="_rosterWeekOffset++;renderRosterView(document.getElementById(\'rosterView\'))" class="btn-sm btn-outline-teal">Next →</button>' +
       '<button onclick="exportRoster()" class="btn-sm btn-outline-teal">📤 Export</button>' +
-      '<button onclick="openAddStaffToRoster()" class="btn-sm btn-teal">➕ Add Staff</button>' +
     '</div>' +
 
     // Grid
@@ -115,11 +114,12 @@ function renderRosterView(container) {
           (onCallToday[i] === 0 ? '<br><span style="font-size:9px;color:var(--red);font-weight:700">No on-call!</span>' : '') +
         '</th>';
       }).join('') +
+      '<th style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);min-width:70px">Status</th>' +
       '<th style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border)">Total</th>' +
     '</tr></thead>' +
     '<tbody>' +
     (staffList.length === 0
-      ? '<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--text-muted)">No staff registered. Add staff via Administration → Staff Management.</td></tr>'
+      ? '<tr><td colspan="10" style="padding:32px;text-align:center;color:var(--text-muted)">No staff registered. Add staff via Administration → Staff Management.</td></tr>'
       : staffList.map(function(staff) {
           var shifts = rosterData[staff.id] || {};
           var nightCount = 0, onCallCount = 0, workDays = 0;
@@ -149,6 +149,14 @@ function renderRosterView(container) {
                 (onCallCount > 0 ? '<span style="background:var(--ayurveda-bg);color:var(--ayurveda);padding:1px 5px;border-radius:6px">📞 ' + onCallCount + 'OC</span>' : '') +
               '</div>' +
             '</td>' + cells +
+            '<td style="padding:6px 4px;text-align:center;border-bottom:1px solid var(--border)">' +
+              (function() {
+                var sts = staff.status || 'available';
+                var cls = sts.includes('_') ? sts.split('_')[0] : 'custom';
+                if (sts.startsWith('on_')) cls = sts.split('_')[1];
+                return '<small class="status-badge status-' + cls + '" style="font-size:8.5px">' + formatStatusLabel(sts) + '</small>';
+              })() +
+            '</td>' +
             '<td style="padding:6px 10px;text-align:center;font-weight:700;border-bottom:1px solid var(--border);color:var(--teal)">' + workDays + '/7</td>' +
           '</tr>';
         }).join('')

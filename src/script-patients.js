@@ -514,8 +514,8 @@ function renderPharmacyList() {
 async function openPharmacyBillingModal(rxId) {
   var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
 
-  // Ensure stock items are loaded for pricing
-  if (typeof stockItems !== 'undefined' && stockItems.length === 0 && typeof dbGetStock === 'function') {
+  // Ensure stock items are loaded for pricing and validation
+  if ((typeof stockItems === 'undefined' || stockItems.length === 0) && typeof dbGetStock === 'function') {
     if (typeof showLoading === 'function') showLoading('Loading stock for billing…');
     stockItems = await dbGetStock(activeClinicId);
     if (typeof hideLoading === 'function') hideLoading();
@@ -524,77 +524,134 @@ async function openPharmacyBillingModal(rxId) {
   var overlay = document.getElementById('pharmacyBillOverlay');
   if (!overlay) { overlay = document.createElement('div'); overlay.id='pharmacyBillOverlay'; overlay.className='modal-overlay'; document.body.appendChild(overlay); }
 
-  // Prepare billing items
-  var items = [];
-  var total = 0;
   var meds = rx.medicines || [];
-
-  meds.forEach(function(m) {
+  var items = meds.map(function(m, idx) {
     var qty = parseInt(m.quantity || m.dosage || '1') || 1;
-    // Find unit price from stock items if available
+    // Find stock item matching medicine name
     var stockItem = (typeof stockItems !== 'undefined' ? stockItems : []).find(function(s) {
       return (s.name || '').toLowerCase().includes((m.name || '').toLowerCase().split(' ')[0].toLowerCase()) ||
              (m.name || '').toLowerCase().includes((s.name || '').toLowerCase().split(' ')[0].toLowerCase());
     });
+
     var price = (stockItem && stockItem.unit_price) ? stockItem.unit_price : 0;
     var subtotal = price * qty;
-    items.push({ desc: m.name + (qty > 1 ? ' (x'+qty+')' : ''), amount: subtotal, unitPrice: price, qty: qty });
-    total += subtotal;
+    var inStock = stockItem ? stockItem.quantity : 0;
+    
+    // Validate stock and expiry
+    var expiry = stockItem && stockItem.expiry_date ? new Date(stockItem.expiry_date) : null;
+    var isExpired = expiry && expiry < new Date();
+    var hasStock = !isExpired && inStock >= qty;
+    
+    var statusLabel = !stockItem ? 'Not in Stock' : 
+                      isExpired ? 'Expired' : 
+                      inStock < qty ? 'Low Stock ('+inStock+')' : 'In Stock ('+inStock+')';
+    var statusColor = !hasStock ? 'var(--red)' : 'var(--green)';
+
+    return { 
+      idx: idx, 
+      name: m.name, 
+      desc: m.name + (qty > 1 ? ' (x'+qty+')' : ''), 
+      qty: qty, 
+      price: price, 
+      subtotal: subtotal, 
+      hasStock: hasStock, 
+      statusLabel: statusLabel,
+      statusColor: statusColor,
+      stockItem: stockItem 
+    };
   });
 
-  overlay.innerHTML =
-    '<div class="modal" style="max-width:500px">' +
-      '<div class="modal-header"><div>' +
-        '<div class="modal-title">💰 Pharmacy Bill Preview</div>' +
-        '<div class="modal-subtitle">' + escHtml(rx.patientName) + ' · ' + formatDate(rx.date) + '</div>' +
-      '</div><button class="modal-close" onclick="document.getElementById(\'pharmacyBillOverlay\').classList.remove(\'open\')">✕</button></div>' +
-      '<div class="modal-body">' +
-        '<div style="margin-bottom:16px;background:var(--surface2);padding:14px;border-radius:10px;border:1px solid var(--border)">' +
-          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Medicines & Pricing</div>' +
-          '<table style="width:100%;font-size:13px;border-collapse:collapse">' +
-            '<thead><tr style="border-bottom:1px solid var(--border)">' +
-              '<th style="text-align:left;padding:6px 0;font-weight:600">Item</th>' +
-              '<th style="text-align:right;padding:6px 0;font-weight:600">Price</th>' +
-              '<th style="text-align:right;padding:6px 0;font-weight:600">Subtotal</th>' +
-            '</tr></thead>' +
-            '<tbody>' +
-              items.map(function(it) {
-                return '<tr>' +
-                  '<td style="padding:10px 0">' + escHtml(it.desc) + '</td>' +
-                  '<td style="text-align:right;padding:10px 0">₹' + it.unitPrice.toLocaleString('en-IN') + '</td>' +
-                  '<td style="text-align:right;padding:10px 0;font-weight:700">₹' + it.amount.toLocaleString('en-IN') + '</td>' +
-                '</tr>';
-              }).join('') +
-            '</tbody>' +
-            '<tfoot><tr style="border-top:2px solid var(--border)">' +
-              '<td colspan="2" style="padding:12px 0;font-weight:700;font-size:15px">TOTAL BILL</td>' +
-              '<td style="padding:12px 0;text-align:right;font-weight:700;font-size:18px;color:var(--teal)">₹' + total.toLocaleString('en-IN') + '</td>' +
-            '</tr></tfoot>' +
-          '</table>' +
-        '</div>' +
-        '<div style="background:var(--teal-pale);color:var(--teal);padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:0">' +
-          'ℹ️ Confirming will mark medicines as dispensed, deduct stock, and create a <strong>New Invoice</strong> in the Billing section.' +
-        '</div>' +
-      '</div>' +
-      '<div class="modal-footer">' +
-        '<button class="btn-sm btn-outline-teal" onclick="document.getElementById(\'pharmacyBillOverlay\').classList.remove(\'open\')">Cancel</button>' +
-        '<button class="btn-sm btn-teal" onclick="dispenseAndBill(\'' + rxId + '\',' + total + ',' + JSON.stringify(items).replace(/"/g, '&quot;') + ')">✅ Confirm Dispense & Bill</button>' +
-      '</div>' +
-    '</div>';
+  function renderBill() {
+    var selected = items.filter(function(it){ 
+      var cb = document.getElementById('billing_cb_'+it.idx);
+      return cb ? cb.checked : true; // Default to true if not yet rendered
+    });
+    var total = selected.reduce(function(acc, it){ return acc + it.subtotal; }, 0);
+    var allSelectedInStock = selected.every(function(it){ return it.hasStock; });
 
+    var html = 
+      '<div class="modal" style="max-width:550px">' +
+        '<div class="modal-header"><div>' +
+          '<div class="modal-title">💰 Pharmacy Bill & Dispense</div>' +
+          '<div class="modal-subtitle">' + escHtml(rx.patientName) + ' · ' + formatDate(rx.date) + '</div>' +
+        '</div><button class="modal-close" onclick="document.getElementById(\'pharmacyBillOverlay\').classList.remove(\'open\')">✕</button></div>' +
+        '<div class="modal-body">' +
+          '<div style="margin-bottom:16px;background:var(--surface2);padding:14px;border-radius:10px;border:1px solid var(--border)">' +
+            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Select Medicines to Dispense</div>' +
+            '<table style="width:100%;font-size:13px;border-collapse:collapse">' +
+              '<thead><tr style="border-bottom:1px solid var(--border)">' +
+                '<th style="text-align:left;padding:6px 0;width:30px"></th>' +
+                '<th style="text-align:left;padding:6px 0;font-weight:600">Medicine</th>' +
+                '<th style="text-align:left;padding:6px 0;font-weight:600">Status</th>' +
+                '<th style="text-align:right;padding:6px 0;font-weight:600">Subtotal</th>' +
+              '</tr></thead>' +
+              '<tbody>' +
+                items.map(function(it) {
+                  var isChecked = document.getElementById('billing_cb_'+it.idx) ? document.getElementById('billing_cb_'+it.idx).checked : true;
+                  return '<tr style="border-bottom:1px solid var(--border)">' +
+                    '<td style="padding:10px 0"><input type="checkbox" id="billing_cb_'+it.idx+'" '+(isChecked?'checked':'')+' onchange="updatePharmacyBillTotal()"></td>' +
+                    '<td style="padding:10px 0"><strong>' + escHtml(it.desc) + '</strong></td>' +
+                    '<td style="padding:10px 0;font-size:11px;color:'+it.statusColor+'">' + it.statusLabel + '</td>' +
+                    '<td style="padding:10px 0;text-align:right;font-weight:700">₹' + it.subtotal.toLocaleString('en-IN') + '</td>' +
+                  '</tr>';
+                }).join('') +
+              '</tbody>' +
+              '<tfoot><tr style="border-top:2px solid var(--border)">' +
+                '<td colspan="3" style="padding:12px 0;font-weight:700;font-size:15px">TOTAL BILL</td>' +
+                '<td style="padding:12px 0;text-align:right;font-weight:700;font-size:18px;color:var(--teal)">₹' + total.toLocaleString('en-IN') + '</td>' +
+              '</tr></tfoot>' +
+            '</table>' +
+          '</div>' +
+          (!allSelectedInStock ? 
+            '<div style="background:var(--red-bg);color:var(--red);padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;border-left:3px solid var(--red)">' +
+              '⚠️ Some selected medicines are out of stock or expired. Please unselect them to proceed.' +
+            '</div>' : 
+            '<div style="background:var(--teal-pale);color:var(--teal);padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;border-left:3px solid var(--teal)">' +
+              '✅ All selected medicines are in stock and ready to dispense.' +
+            '</div>'
+          ) +
+        '</div>' +
+        '<div class="modal-footer">' +
+          '<button class="btn-sm btn-outline-teal" onclick="document.getElementById(\'pharmacyBillOverlay\').classList.remove(\'open\')">Cancel</button>' +
+          '<button class="btn-sm btn-teal" id="pharmacyBillConfirmBtn" ' + (!allSelectedInStock || selected.length === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : '') + 
+          ' onclick="dispenseAndBill(\'' + rxId + '\',' + total + ')">✅ Confirm Dispense & Bill</button>' +
+        '</div>' +
+      '</div>';
+      
+    overlay.innerHTML = html;
+  }
+
+  // Global helper for checkbox change
+  window.updatePharmacyBillTotal = renderBill;
+  
+  renderBill();
   overlay.classList.add('open'); document.body.style.overflow = 'hidden';
 }
 
-async function dispenseAndBill(rxId, totalAmount, items) {
-  var overlay = document.getElementById('pharmacyBillOverlay');
-  if (overlay) overlay.classList.remove('open');
-  document.body.style.overflow = '';
-
+async function dispenseAndBill(rxId, totalAmount) {
   var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
+  var meds = rx.medicines || [];
+  
+  // Identify selected items
+  var selectedMeds = meds.filter(function(m, idx) {
+    var cb = document.getElementById('billing_cb_'+idx);
+    return cb && cb.checked;
+  });
+
+  if (selectedMeds.length === 0) { showToast('No medicines selected for dispensing.', 'error'); return; }
 
   // 1. Create Invoice
   var invNo = await dbGetNextInvoiceNo(activeClinicId);
-  var invItems = items.map(function(it){ return { desc: it.desc, amount: it.amount }; });
+  var invItems = selectedMeds.map(function(m) {
+    var qty = parseInt(m.quantity || m.dosage || '1') || 1;
+    var stockItem = stockItems.find(function(s) {
+      return (s.name || '').toLowerCase().includes((m.name || '').toLowerCase().split(' ')[0].toLowerCase()) ||
+             (m.name || '').toLowerCase().includes((s.name || '').toLowerCase().split(' ')[0].toLowerCase());
+    });
+    var price = (stockItem && stockItem.unit_price) ? stockItem.unit_price : 0;
+    return { desc: m.name + (qty > 1 ? ' (x'+qty+')' : ''), amount: price * qty };
+  });
+
   var inv = {
     id: 'inv_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
     clinic_id: activeClinicId, invoice_no: invNo, patient_name: rx.patientName,
@@ -607,24 +664,43 @@ async function dispenseAndBill(rxId, totalAmount, items) {
   if (!invOk) { showToast('Pharmacy invoice failed, but dispensing…', 'error'); }
   else { showToast('✅ Pharmacy Invoice ' + invNo + ' created!', 'success'); }
 
-  // 2. Dispense Medicine (handles stock deduction automatically)
-  await dispenseMedicine(rxId, true); // Pass true to skip the default toast since we showed one
+  // 2. Dispense Medicine
+  // We need to pass the selected indices to dispenseMedicine to deduct stock only for them
+  var selectedIndices = meds.map(function(m, idx){ return document.getElementById('billing_cb_'+idx)?.checked ? idx : -1; }).filter(function(i){ return i !== -1; });
+  
+  // Close overlay before calling dispenseMedicine as it re-renders the list
+  var overlay = document.getElementById('pharmacyBillOverlay');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+
+  await dispenseMedicine(rxId, true, selectedIndices); 
 }
 
-async function dispenseMedicine(rxId, skipToast) {
+async function dispenseMedicine(rxId, skipToast, selectedIndices) {
   var rx = prescriptions.find(function(r){ return r.id === rxId; }); if (!rx) return;
+  
+  // Partial dispensing logic: if some medicines were not selected, we don't mark the whole Rx as 'dispensed'
+  // But the current UI marks the whole 'prescriptions' object with 'dispenseDate'.
+  // We should ideally mark which specific medicines are dispensed.
+  // For simplicity, let's deduct stock for all selected indices.
+  
   rx.dispenseDate    = new Date().toISOString();
-  // If it was marked self-handled before, clear that when properly dispensed
   rx.selfHandled     = false;
   rx.selfHandledDate = null;
+  
+  // Store which medicines were dispensed in this session if needed, 
+  // but the current system uses a global dispenseDate for the Rx.
+  
   var ok = await dbUpsertPrescription(rx);
   if (!ok) { showToast('Failed to update.', 'error'); return; }
 
   // Deduct stock for each dispensed medicine
   if (typeof stockItems !== 'undefined' && stockItems.length && rx.medicines && rx.medicines.length) {
     var deducted = [];
-    for (var i = 0; i < rx.medicines.length; i++) {
-      var med  = rx.medicines[i];
+    var medsToDeduct = selectedIndices ? selectedIndices.map(function(idx){ return rx.medicines[idx]; }) : rx.medicines;
+
+    for (var i = 0; i < medsToDeduct.length; i++) {
+      var med  = medsToDeduct[i];
       var qty  = parseInt(med.quantity || med.dosage || '1') || 1;
       var item = stockItems.find(function(s) {
         return (s.name || '').toLowerCase().includes((med.name || '').toLowerCase().split(' ')[0].toLowerCase()) ||

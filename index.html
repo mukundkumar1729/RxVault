@@ -112,6 +112,7 @@
                 <div class="topbar-stat" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.25)">
                     <span style="color:#f78c6c">Ayur:</span> <strong id="statAyur">0</strong>
                 </div>
+                <button id="btnRingBell" onclick="ringBell()" class="no-print" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); border-radius:20px; color:#fff; padding:6px 14px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:none; align-items:center; gap:6px;">🔔 Call Staff</button>
                 <div style="position:relative">
                     <div class="topbar-user-menu" onclick="toggleUserMenu(event)" id="topbarUserBtn">
                         <span class="topbar-user-avatar" id="topbarUserAvatar">👤</span>
@@ -119,6 +120,7 @@
                             <div class="topbar-user-name" id="topbarUserName">Loading…</div>
                             <div class="topbar-user-role" id="topbarUserRole"></div>
                         </div>
+                        <span id="topbarUserStatus" class="status-badge status-available no-print" style="margin-right:8px; display:none;">Available</span>
                         <span style="font-size:10px;opacity:0.7">▾</span>
                     </div>
                     <div class="user-dropdown" id="userDropdown">
@@ -127,7 +129,37 @@
                             <div class="user-dropdown-email" id="ddUserEmail">—</div>
                         </div>
                         <button onclick="openChangePassword()">🔑 Change Password</button>
-                        <button data-perm="manageStaff" onclick="openStaffModal()">👥 Manage Staff</button>
+                        <div class="user-dropdown-divider"></div>
+                        <div class="user-status-widget">
+                            <div class="status-widget-label">Set My Status</div>
+                            <div style="margin-bottom:10px;">
+                                <select id="statusPresetSelect" onchange="document.getElementById('customStatusWrapper').style.display=this.value==='custom'?'block':'none'" style="width:100%; padding:8px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text-primary);">
+                                    <option value="available">✅ Available</option>
+                                    <option value="on_round">🩺 On Round</option>
+                                    <option value="on_lunch">🥣 On Lunch</option>
+                                    <option value="busy_ot">🚑 In OT</option>
+                                    <option value="busy_opd">🏨 In OPD</option>
+                                    <option value="outside">🚶 Outside</option>
+                                    <option value="not_in">🏠 Off-Duty</option>
+                                    <option value="custom">✏️ Custom Status...</option>
+                                </select>
+                            </div>
+                            <div id="customStatusWrapper" style="margin-bottom:10px; display:none;">
+                                <input type="text" id="customStatusInput" placeholder="e.g. In Meeting" style="width:100%; padding:8px 12px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                                <label style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Duration:</label>
+                                <select id="statusDurationSelect" style="flex:1; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+                                    <option value="0">No Limit</option>
+                                    <option value="1">1 Hour</option>
+                                    <option value="2" selected>2 Hours</option>
+                                    <option value="4">4 Hours</option>
+                                    <option value="8">8 Hours</option>
+                                    <option value="24">24 Hours</option>
+                                </select>
+                            </div>
+                            <button onclick="updateUserStatusFromUI()" class="btn-sm btn-teal" style="width:100%; justify-content:center; padding:10px; font-weight:700;">Update Status</button>
+                        </div>
                         <div class="user-dropdown-divider"></div>
                         <button class="logout-btn" onclick="authLogout()">🚪 Sign Out</button>
                     </div>
@@ -135,7 +167,10 @@
             </div>
         </header>
 
-        <!-- ─── SIDEBAR ─── -->
+        <!-- ─── Clinic Notifications ─── -->
+    <div id="clinicCallNotifications" style="position:fixed; bottom:24px; right:24px; z-index:10000; pointer-events:none; display:flex; flex-direction:column; gap:12px; align-items:flex-end; max-width:320px;"></div>
+    
+    <!-- ─── SCRIPTS ─── -->
         <aside class="sidebar no-print">
 
             <!-- ── NAVIGATION ── -->
@@ -330,8 +365,11 @@
                     <span class="sidebar-toggle-chevron">▼</span>
                 </div>
                 <div class="sidebar-nav-items">
-                    <button class="nav-item" id="adminNavBtn" data-perm="manage_staff" onclick="openAdminPanel()">
+                    <button class="nav-item" id="adminNavBtn" data-perm="manageStaff" onclick="openAdminPanel()">
                         <span class="nav-icon">🔐</span> Admin Panel
+                    </button>
+                    <button class="nav-item" data-perm="manageStaff" onclick="openStaffModal()">
+                        <span class="nav-icon">👥</span> Manage Staff
                     </button>
                     <button class="nav-item" onclick="openClinicSwitcher()">
                         <span class="nav-icon">🏥</span> Switch Clinic

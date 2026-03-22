@@ -243,6 +243,11 @@ async function dbGetClinicStaff(clinicId) {
   if (error) { dbErr('getClinicStaff', error); return []; }
   return data || [];
 }
+async function dbGetStaffMember(clinicId, userId) {
+  const { data, error } = await db.from('clinic_staff').select('*').eq('clinic_id', clinicId).eq('user_id', userId).maybeSingle();
+  if (error) { dbErr('getStaffMember', error); return null; }
+  return data;
+}
 async function dbCreateStaffUser(name, email, password, role, clinicId, assignedBy) {
   var existing;
   try {
@@ -268,6 +273,32 @@ async function dbCreateStaffUser(name, email, password, role, clinicId, assigned
 
   if (staffErr) { dbErr('assignStaff', staffErr); return { success: false, error: staffErr.message }; }
   return { success: true, userId };
+}
+// ─── Clinic Calls (Digital Bell) ──────────────────────────
+async function dbRingBell(clinicId, callerName, message) {
+  var { data, error } = await db.from('clinic_calls').insert({ clinic_id: clinicId, caller_name: callerName, message: message || 'Staff requested at OPD', status: 'active' });
+  return !error;
+}
+async function dbGetActiveCalls(clinicId) {
+  var { data, error } = await db.from('clinic_calls').select('*').eq('clinic_id', clinicId).eq('status', 'active').order('created_at', { ascending: false });
+  return data || [];
+}
+async function dbClearCall(callId) {
+  var { data, error } = await db.from('clinic_calls').update({ status: 'cleared' }).eq('id', callId);
+  return !error;
+}
+async function dbUpdateStaffStatus(clinicId, userId, status, until) {
+  const { error } = await db.from('clinic_staff').update({
+    status: status,
+    status_until: until,
+    updated_at: new Date().toISOString()
+  }).eq('clinic_id', clinicId).eq('user_id', userId);
+  if (error) { 
+    console.error('[dbUpdateStaffStatus] failed:', error);
+    dbErr('updateStaffStatus', error); 
+    return false; 
+  }
+  return true;
 }
 async function dbUpdateStaffRole(clinicId, userId, newRole) {
   const { error } = await db.from('clinic_staff').update({ role: newRole, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);

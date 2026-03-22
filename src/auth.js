@@ -30,6 +30,7 @@ function loadSession() {
     if (ageHrs > 12) { clearSession(); return false; }
     currentUser = s.user;
     currentRole = s.clinicRole || null;
+    updateStatusUI();
     return true;
   } catch(e) { return false; }
 }
@@ -215,6 +216,7 @@ function toggleUserMenu(e) {
       document.addEventListener('click', function closeDd(ev) {
         var btn = document.getElementById('topbarUserBtn');
         if (btn && btn.contains(ev.target)) return;
+        if (dd && dd.contains(ev.target)) return; // Don't close if clicking inside dropdown
         dd.classList.remove('open');
         document.removeEventListener('click', closeDd);
       });
@@ -242,7 +244,12 @@ function showStaffTab(tab) {
     if (btn) btn.classList.toggle('active', t === tab);
     if (pnl) pnl.style.display = t === tab ? '' : 'none';
   });
-  if (tab === 'audit') loadAuditLog();
+  var bell = document.getElementById('btnRingBell');
+  if (bell) bell.style.display = (getEffectiveRole() === 'doctor') ? 'flex' : 'none';
+
+  if (tab === 'audit') {
+    loadAuditLog();
+  }
 }
 
 async function loadStaffList() {
@@ -251,7 +258,14 @@ async function loadStaffList() {
   container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)">Loading staff…</div>';
 
   var staffData = await dbGetClinicStaff(activeClinicId);
-
+  window.staffStatusMap = {};
+  if (staffData) {
+    staffData.forEach(function(s) {
+      if (s.status && s.status !== 'available') {
+        window.staffStatusMap[s.name] = { status: s.status, until: s.status_until };
+      }
+    });
+  }
   if (!staffData || !staffData.length) {
     container.innerHTML =
       '<div style="padding:32px;text-align:center;color:var(--text-muted)">' +
@@ -259,7 +273,6 @@ async function loadStaffList() {
       '</div>';
     return;
   }
-
   var roleIcon = { admin:'🔐', doctor:'🩺', receptionist:'🧑‍💼', pharmacist:'💊', viewer:'👁️' };
   var roleBg   = { admin:'var(--red-bg)', doctor:'var(--allopathy-bg)', receptionist:'var(--teal-pale)', pharmacist:'var(--homeopathy-bg)', viewer:'var(--bg)' };
   var roleClr  = { admin:'var(--red)', doctor:'var(--allopathy)', receptionist:'var(--teal)', pharmacist:'var(--homeopathy)', viewer:'var(--text-muted)' };
@@ -278,8 +291,9 @@ async function loadStaffList() {
             uname +
             (isMe ? ' <span class="staff-you-badge">You</span>' : '') +
             ' <span style="background:'+(roleBg[s.role]||'var(--bg)')+';color:'+(roleClr[s.role]||'var(--text-muted)')+';font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600">' +
-              (roleIcon[s.role]||'') + ' ' + capitalize(s.role) +
+              (roleIcon[s.role]||'👤') + ' ' + capitalize(s.role) +
             '</span>' +
+            (s.status && s.status !== 'available' ? ' <span class="status-badge status-'+s.status.split('_')[0]+'" style="font-size:9px; margin-left:4px">'+formatStatusLabel(s.status)+'</span>' : '') +
             (!s.is_active ? '<span style="background:var(--red-bg);color:var(--red);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-left:4px">Inactive</span>' : '') +
           '</div>' +
           '<div class="admin-dr-sub">' + escHtml(s.email) + ' &nbsp;·&nbsp; Last login: ' + lastLogin + '</div>' +
@@ -443,4 +457,124 @@ async function submitChangePassword() {
   if (!ok) { if(errEl) errEl.textContent='Current password is incorrect.'; return; }
   closeModal('changePassModal');
   showToast('Password changed successfully.', 'success');
+}
+
+// ─── Staff Busy Status ────────────────────────────────────
+async function setUserStatus(status, hours) {
+  if (!currentUser || !activeClinicId) return;
+
+  var until = null;
+  var hrs = parseInt(hours) || 0;
+  if (hrs > 0) {
+    until = new Date(Date.now() + hrs * 3600000).toISOString();
+  }
+
+  // Fallback to localStorage for immediate persistence
+  localStorage.setItem('userStatus_' + activeClinicId + '_' + currentUser.id, JSON.stringify({ status: status, until: until }));
+  
+  // Update currentUser and UI immediately
+  currentUser.status = status;
+  currentUser.status_until = until;
+  saveSession(currentUser, currentRole);
+  updateStatusUI();
+
+  // Update DB
+  var ok = await dbUpdateStaffStatus(activeClinicId, currentUser.id, status, until);
+  if (ok) {
+    showToast('Status updated to: ' + formatStatusLabel(status), 'success');
+  } else {
+    showToast('Status saved locally (Sync failed)', 'info');
+  }
+
+  // Hide custom wrapper if it was open
+  var wrapper = document.getElementById('customStatusWrapper');
+  if (wrapper) wrapper.style.display = 'none';
+}
+
+function updateUserStatusFromUI() {
+  var preset = document.getElementById('statusPresetSelect').value;
+  var duration = document.getElementById('statusDurationSelect').value;
+  var finalStatus = preset;
+
+  if (preset === 'custom') {
+    finalStatus = document.getElementById('customStatusInput').value.trim();
+    if (!finalStatus) { showToast('Please enter a custom status.', 'error'); return; }
+  }
+
+  // Available always has 0 duration
+  if (preset === 'available') duration = 0;
+
+  setUserStatus(finalStatus, duration);
+}
+
+function updateStatusUI() {
+  var badge = document.getElementById('topbarUserStatus');
+  if (!badge || !currentUser) return;
+
+  // Restore from localStorage if needed (for fresh reloads before DB fetch)
+  if (!currentUser.status && activeClinicId) {
+    var saved = localStorage.getItem('userStatus_' + activeClinicId + '_' + currentUser.id);
+    if (saved) {
+      try {
+        var parsed = JSON.parse(saved);
+        if (new Date(parsed.until) > new Date() || parsed.status === 'available') {
+          currentUser.status = parsed.status;
+          currentUser.status_until = parsed.until;
+        }
+      } catch(e){}
+    }
+  }
+
+  var status = currentUser.status || 'available';
+  var until  = currentUser.status_until;
+
+  // Check if status expired
+  if (until && new Date() > new Date(until)) {
+    status = 'available';
+    currentUser.status = 'available';
+    currentUser.status_until = null;
+    saveSession(currentUser, currentRole);
+  }
+
+  var label = formatStatusLabel(status);
+  if (until && status !== 'available') {
+    var minLeft = Math.round((new Date(until) - new Date()) / 60000);
+    if (minLeft > 0) {
+      label += ' (' + (minLeft > 60 ? Math.floor(minLeft/60)+'h' : minLeft+'m') + ')';
+    }
+  }
+
+  badge.textContent = label;
+  badge.className   = 'status-badge status-' + (status.includes('_') ? status.split('_')[0] : 'custom') + ' no-print';
+  if (status === 'on_round' || status === 'on_lunch') badge.className = 'status-badge status-' + status.split('_')[1] + ' no-print';
+  badge.style.display = 'inline-block';
+
+  // Update dropdown selection
+  var sel = document.getElementById('statusPresetSelect');
+  if (sel) {
+    var presets = ['available','on_round','on_lunch','busy_ot','busy_opd','outside','not_in'];
+    if (presets.includes(status)) {
+      sel.value = status;
+    } else if (status !== 'available') {
+      sel.value = 'custom';
+      var inp = document.getElementById('customStatusInput');
+      if (inp) inp.value = status;
+      var wrap = document.getElementById('customStatusWrapper');
+      if (wrap) wrap.style.display = 'block';
+    } else {
+      sel.value = 'available';
+    }
+  }
+}
+
+function formatStatusLabel(status) {
+  if (!status || status === 'available') return 'Available';
+  if (status === 'on_round')  return 'On Round';
+  if (status === 'on_lunch')  return 'On Lunch';
+  if (status === 'busy_ot')   return 'In OT';
+  if (status === 'busy_opd')  return 'In OPD';
+  if (status === 'outside')   return 'Outside';
+  if (status === 'not_in')    return 'Off-Duty';
+  // Handle custom status
+  return status.split('_').map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
 }

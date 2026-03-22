@@ -56,7 +56,14 @@ function renderAdminDoctorList() {
     return '<div class="admin-doctor-row">' +
       '<div class="admin-dr-info">' +
         '<div class="admin-dr-name">Dr. ' + escHtml(d.name) + ' <span class="admin-dr-reg">' + escHtml(d.regNo) + '</span>' +
-          '<span style="background:' + (typeBg[d.type]||'#eee') + ';color:' + (typeClr[d.type]||'#555') + ';font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600">' + capitalize(d.type||'') + '</span>' +
+          '<span style="background:' + (typeBg[d.type]||'#eee') + ';color:' + (typeClr[d.type]||'#555') + ';font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-right:4px">' + capitalize(d.type||'') + '</span>' +
+          (function() {
+            var sts = d && d.status ? d.status : 'available';
+            if (sts === 'available') return '';
+            var cls = sts.includes('_') ? sts.split('_')[0] : 'custom';
+            if (sts.startsWith('on_')) cls = sts.split('_')[1];
+            return '<small class="status-badge status-' + cls + '" style="font-size:9px">' + formatStatusLabel(sts) + '</small>';
+          })() +
         '</div>' +
         '<div class="admin-dr-sub">' + escHtml(d.specialization||'') + (d.hospital ? ' · ' + escHtml(d.hospital) : '') + '</div>' +
         '<div class="admin-dr-sub">' + (d.phone ? '📞 ' + escHtml(d.phone) + '&nbsp; ' : '') + (d.email ? '✉️ ' + escHtml(d.email) : '') + '</div>' +
@@ -261,7 +268,9 @@ function renderDoctorsPage(list) {
     return '<div class="dr-card' + (availToday && !isUnavail ? ' dr-card-available' : '') + (isUnavail ? ' dr-card-unavailable' : '') + '">' +
       '<div class="dr-card-header">' +
         '<div class="dr-avatar" style="background:' + (typeBg[d.type]||'#eee') + ';color:' + (typeClr[d.type]||'#333') + '">' + (typeIcon[d.type]||'🩺') + '</div>' +
-        '<div class="dr-info"><div class="dr-name">Dr. ' + escHtml(d.name) + '</div><div class="dr-spec">' + escHtml(d.specialization||'') + '</div><div class="dr-reg-badge">' + escHtml(d.regNo) + '</div></div>' +
+        '<div class="dr-info"><div class="dr-name">Dr. ' + escHtml(d.name) + 
+          (d.status && d.status !== 'available' ? ' <small class="status-badge status-'+d.status.split('_')[0]+'" style="font-size:9px;vertical-align:middle;margin-left:4px">'+formatStatusLabel(d.status)+'</small>' : '') +
+          '</div><div class="dr-spec">' + escHtml(d.specialization||'') + '</div><div class="dr-reg-badge">' + escHtml(d.regNo) + '</div></div>' +
         (isUnavail ? '<div class="dr-unavail-badge">🔴 Not Available</div>' : (availToday ? '<div class="dr-today-badge">Today ✓<br><small>' + escHtml(availToday.time) + '</small></div>' : '')) +
       '</div>' +
       '<div class="dr-card-body">' +
