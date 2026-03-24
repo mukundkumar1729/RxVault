@@ -661,3 +661,27 @@ ADD COLUMN IF NOT EXISTS status_until TIMESTAMP WITH TIME ZONE;
 -- (Optional) Update existing staff to have a default status
 UPDATE clinic_staff SET status = 'available' WHERE status IS NULL;
 
+-- ═══════════════════════════════════════════════════════════
+--  RX VAULT — Services / Vitals Enhancement Migration
+--  Run in Supabase → SQL Editor
+--  Adds: prescription_id linkage to vitals
+-- ═══════════════════════════════════════════════════════════
+
+-- Link vitals to a specific prescription visit (optional)
+ALTER TABLE vitals
+ADD COLUMN IF NOT EXISTS prescription_id TEXT DEFAULT NULL;
+
+-- Index for fast lookup by prescription
+CREATE INDEX IF NOT EXISTS idx_vitals_prescription
+  ON vitals(prescription_id)
+  WHERE prescription_id IS NOT NULL;
+
+-- Verify
+SELECT
+  column_name,
+  data_type,
+  is_nullable
+FROM information_schema.columns
+WHERE table_name = 'vitals'
+ORDER BY ordinal_position;
+

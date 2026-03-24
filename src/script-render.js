@@ -96,6 +96,16 @@ function renderCard(p, q, allTerms) {
   var statusColor = statusColors[p.status] || 'var(--text-muted)';
   var statusIcon  = statusIcons[p.status]  || '';
 
+  // ── Services / Vitals badge (count shown after load) ──
+  var servicesBadge =
+    '<span id="svc_badge_' + p.id + '" style="' +
+      'display:none;align-items:center;justify-content:center;' +
+      'width:18px;height:18px;' +
+      'background:var(--teal);color:#fff;' +
+      'border-radius:50%;font-size:10px;font-weight:700;' +
+      'margin-left:4px;flex-shrink:0;' +
+    '">0</span>';
+
   return (
     '<div class="rx-card" id="card_' + p.id + '">' +
       '<div class="rx-card-header" onclick="toggleCard(\'' + p.id + '\')">' +
@@ -103,7 +113,7 @@ function renderCard(p, q, allTerms) {
         '<div class="rx-main">' +
           '<div class="rx-patient">' + hl(p.patientName) + '</div>' +
           '<div class="rx-meta">' +
-            '<span class="rx-meta-item">🩺 ' + hl(p.doctorName) + 
+            '<span class="rx-meta-item">🩺 ' + hl(p.doctorName) +
             (function(){
               if (typeof window === 'undefined' || !window.staffStatusMap) return '';
               var ss = window.staffStatusMap && window.staffStatusMap[p.doctorName];
@@ -121,6 +131,12 @@ function renderCard(p, q, allTerms) {
         '</div>' +
         '<div class="rx-date-badge">' + formatDate(p.date) + '</div>' +
         '<div class="rx-actions" onclick="event.stopPropagation()">' +
+          // ── Services button in header actions (quick access) ──
+          '<button class="icon-btn" title="Record Vitals / Services" ' +
+            'onclick="openServicesPanel(\'' + p.id + '\')" ' +
+            'style="position:relative">' +
+            '🩺' + servicesBadge +
+          '</button>' +
           '<button class="icon-btn print" title="Print"  onclick="printPrescription(\'' + p.id + '\')">🖨️</button>' +
           '<button class="icon-btn edit"  title="Edit"   onclick="openEditModal(\''    + p.id + '\')">✏️</button>' +
           (p.status === 'expired' ? '<button class="icon-btn" title="Renew" onclick="renewPrescription(\'' + p.id + '\')" style="color:var(--teal)">🔄</button>' : '') +
@@ -140,7 +156,24 @@ function renderCard(p, q, allTerms) {
         '<div class="rx-medicines"><div class="medicines-title">💊 Medicines (' + (p.medicines ? p.medicines.length : 0) + ')</div>' + medsTable + '</div>' +
         diagSection + notesSection +
         (historySection ? '<div class="rx-patient-history">' + historySection + '</div>' : '') +
+
+        // ── SERVICES / VITALS INLINE SECTION ──
+        '<div class="rx-vitals-inline" id="vitals_inline_' + p.id + '">' +
+          _renderVitalsInlineSummary(p) +
+        '</div>' +
+
         '<div class="rx-footer-actions">' +
+          // ── Services button — prominent in footer ──
+          '<button class="btn-sm" ' +
+            'onclick="openServicesPanel(\'' + p.id + '\')" ' +
+            'style="border:1.5px solid var(--teal);color:var(--teal);background:transparent;' +
+              'border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;' +
+              'display:flex;align-items:center;gap:6px;font-family:DM Sans,sans-serif;' +
+              'transition:all 0.15s" ' +
+            'onmouseenter="this.style.background=\'var(--teal-pale)\'" ' +
+            'onmouseleave="this.style.background=\'transparent\'">' +
+            '🩺 Services &amp; Vitals' +
+          '</button>' +
           '<button class="btn-sm btn-outline-teal" onclick="printPrescription(\'' + p.id + '\')">🖨️ Print</button>' +
           '<button class="btn-sm btn-outline-teal" onclick="openEditModal(\''    + p.id + '\')">✏️ Edit</button>' +
           (p.email
@@ -153,6 +186,13 @@ function renderCard(p, q, allTerms) {
       '</div>' +
     '</div>'
   );
+}
+
+// ── Renders a compact "vitals recorded" strip inside the card body ──
+// This is a placeholder until async data loads — JS patches it after badge load
+function _renderVitalsInlineSummary(p) {
+  // Will be replaced by loadAllRxVitalsBadges() after data fetch
+  return '';
 }
 
 function toggleCard(id) { document.getElementById('card_' + id).classList.toggle('expanded'); }

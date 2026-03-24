@@ -95,6 +95,7 @@ async function initClinicGate() {
     hideClinicGate();
     renderTopbarClinic();
     renderTopbarUser();
+    updateCallStaffBellVisibility();
     if (typeof applyPermissionUI === 'function') applyPermissionUI();
     return false;
   }
@@ -127,6 +128,7 @@ function hideClinicGate() {
   var gate = document.getElementById('clinicGate');
   if (gate) gate.classList.remove('open');
   document.body.style.overflow = '';
+  updateCallStaffBellVisibility();
 }
 
 function openClinicSwitcher() {

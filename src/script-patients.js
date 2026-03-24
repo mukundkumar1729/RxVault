@@ -132,7 +132,7 @@ function openFeePaymentModal(patient) {
       '</div>' +
       '<div class="modal-footer">' +
         '<button class="btn-sm btn-outline-teal" onclick="document.getElementById(\'feePaymentOverlay\').classList.remove(\'open\')">Cancel</button>' +
-        '<button class="btn-sm btn-teal" id="feeCollectBtn" onclick="collectFeeAndProceed(' + JSON.stringify(patient.id) + ')">✅ Collect &amp; Proceed</button>' +
+        '<button class="btn-sm btn-teal" id="feeCollectBtn" onclick="collectFeeAndProceed(\'' + patient.id + '\')">✅ Collect &amp; Proceed</button>' +
       '</div>' +
     '</div>';
   overlay.classList.add('open'); document.body.style.overflow = 'hidden';
@@ -195,7 +195,14 @@ function renderPatientsPage(list) {
 
     // Header
     var header = document.createElement('div'); header.className = 'rx-card-header'; header.style.cursor = 'pointer';
-    header.addEventListener('click', function(e){ if (!e.target.closest('button')) card.classList.toggle('expanded'); });
+    header.addEventListener('click', function(e){ 
+      if (!e.target.closest('button')) {
+        card.classList.toggle('expanded');
+        if (card.classList.contains('expanded')) {
+          setTimeout(() => renderVitalsChart(p.id, 'chart_' + p.id), 100);
+        }
+      }
+    });
 
     var badge = document.createElement('div'); badge.className = 'rx-type-badge'; badge.style.cssText = 'background:#e8f0fe;color:#1a6fdb'; badge.textContent = '👤 Patient'; header.appendChild(badge);
 
@@ -239,6 +246,14 @@ function renderPatientsPage(list) {
       g2.appendChild(grp);
     });
     body.appendChild(g2);
+    
+    // Vitals Chart Section
+    var chartSection = document.createElement('div');
+    chartSection.className = 'vitals-chart-section';
+    chartSection.style.cssText = 'margin-top:20px; padding:16px; background:var(--surface2); border:1px solid var(--border); border-radius:12px;';
+    chartSection.innerHTML = '<div style="font-weight:700; font-size:13px; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">📈 Health Trends <span style="font-size:10px; font-weight:400; color:var(--text-muted);">(Last 10 records)</span></div>' +
+                             '<div style="height:220px; position:relative;"><canvas id="chart_' + p.id + '"></canvas></div>';
+    body.appendChild(chartSection);
 
     var histDiv = document.createElement('div'); histDiv.className = 'rx-medicines'; histDiv.style.marginTop = '14px';
     if (rxCount > 0) {

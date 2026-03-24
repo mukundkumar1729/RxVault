@@ -1,0 +1,60 @@
+ <div class="modal" style="max-width:620px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">👤 Register New Patient</div>
+                    <div class="modal-subtitle">Enter patient details and complete fee payment to register</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-section-title">🪪 Patient Information</div>
+                    <div class="pid-display-row">
+                        <span class="pid-label">Patient ID:</span>
+                        <span class="pid-display" id="regPid">—</span>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Patient Name <span>*</span></label><input type="text" id="regName" placeholder="Full name"></div>
+                        <div class="field"><label>Age</label><input type="number" id="regAge" placeholder="Years" min="0" max="150"></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Gender</label>
+                            <select id="regGender"><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+                        </div>
+                        <div class="field"><label>Blood Group</label>
+                            <select id="regBloodGroup"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Phone</label><input type="tel" id="regPhone" placeholder="+91 XXXXX XXXXX"></div>
+                        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="patient@email.com"></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="regAddress" placeholder="Patient's address"></div>
+                    </div>
+                </div>
+                <div class="form-section" style="margin-bottom:0">
+                    <div class="form-section-title">🩺 Consultant &amp; Fee Payment</div>
+                    <div class="form-row">
+                        <div class="field"><label>Consultant Doctor <span>*</span></label><select id="regDoctor"><option value="">— Select Doctor —</option></select></div>
+                        <div class="field"><label>Consultation Fee (₹) <span>*</span></label><input type="number" id="regFee" placeholder="e.g. 500" min="0"></div>
+                    </div>
+                    <div class="fee-payment-row" style="margin-top:14px">
+                        <span class="fee-payment-label">Payment Method:</span>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Cash" checked> 💵 Cash</label>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Card"> 💳 Card</label>
+                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="UPI"> 📲 UPI</label>
+                    </div>
+                    <div class="reg-date-row" style="margin-top:12px">
+                        <div class="field" style="max-width:200px">
+                            <label>Registration Date</label>
+                            <input type="date" id="regDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm btn-outline-teal" onclick="closeModal('registerModal')">Cancel</button>
+                <button class="btn-sm btn-teal" onclick="registerPatient()">✅ Pay &amp; Register</button>
+            </div>
+        </div>

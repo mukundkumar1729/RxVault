@@ -1,0 +1,105 @@
+/* ════════════════════════════════════════════════════════════
+   SERVICES & VITALS — styles to append to css/style.css
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Services panel overlay (reuses .modal-overlay) ─── */
+#servicesPanelOverlay .modal {
+  max-width: 680px;
+}
+
+/* ─── Service tab buttons ─── */
+.svc-tab-btn {
+  user-select: none;
+}
+.svc-tab-btn:hover {
+  background: var(--teal-pale) !important;
+  color: var(--teal) !important;
+}
+
+/* ─── Service panel sections ─── */
+.svc-panel {
+  animation: slideIn 0.18s ease;
+}
+
+/* ─── Vitals badge on Rx card header icon button ─── */
+.rx-actions .icon-btn[title="Record Vitals / Services"] {
+  position: relative;
+}
+
+/* ─── Inline vitals strip on expanded Rx card body ─── */
+.rx-vitals-inline {
+  /* empty placeholder, shown after async load */
+}
+
+.rx-vitals-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0 4px;
+  border-top: 1px dashed var(--border);
+  margin-top: 14px;
+}
+
+.rx-vitals-strip-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 6px;
+  width: 100%;
+}
+
+.rx-vital-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--teal-pale);
+  border: 1px solid rgba(10,124,110,0.18);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.rx-vital-chip.flag-red {
+  background: var(--red-bg);
+  border-color: rgba(220,38,38,0.25);
+  color: var(--red);
+}
+.rx-vital-chip.flag-orange {
+  background: var(--ayurveda-bg);
+  border-color: rgba(180,83,9,0.25);
+  color: var(--ayurveda);
+}
+
+/* ─── BMI display ─── */
+.svc-bmi-wrap {
+  background: linear-gradient(135deg, var(--teal-pale), #f0fdf4);
+  border: 1px solid rgba(10,124,110,0.2);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  text-align: center;
+}
+
+/* ─── Vitals history table scroll ─── */
+#servicesPanelOverlay .modal-body > div:last-child {
+  /* history section */
+}
+
+/* ─── Print: vitals grid ─── */
+@media print {
+  .vitals-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3,1fr) !important;
+    gap: 10px !important;
+  }
+  .vital-cell {
+    background: #f7fafc !important;
+    border-radius: 6px !important;
+    padding: 9px 12px !important;
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+  }
+}

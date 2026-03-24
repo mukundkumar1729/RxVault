@@ -6,12 +6,14 @@
 // ─── Admin panel ──────────────────────────────────────────
 function openAdminPanel() {
   var hasAccess  = (typeof can !== 'undefined') ? can.accessAdminPanel() : false;
+  if (!hasAccess) { showToast('Access denied.', 'error'); return; }
+
   var pinView    = document.getElementById('adminPinView');
   var doctorView = document.getElementById('adminDoctorView');
   if (!pinView || !doctorView) { showToast('Admin panel not found.', 'error'); return; }
 
-  if (hasAccess) {
-    isAdminUnlocked = true;
+  if (isAdminUnlocked) {
+    // Already unlocked in this session — skip PIN
     pinView.style.display    = 'none';
     doctorView.style.display = '';
     renderAdminDoctorList();
@@ -19,6 +21,7 @@ function openAdminPanel() {
     if (ps && typeof renderPremiumUpgradeSection === 'function') ps.innerHTML = renderPremiumUpgradeSection();
     openModal('adminModal');
   } else {
+    // Always ask for PIN on first open
     isAdminUnlocked = false;
     pinView.style.display    = '';
     doctorView.style.display = 'none';

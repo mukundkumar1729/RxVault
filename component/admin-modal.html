@@ -1,0 +1,39 @@
+<div class="modal admin-modal">
+            <div id="adminPinView">
+                <div class="modal-header">
+                    <div>
+                        <div class="modal-title">🔐 Admin Panel</div>
+                        <div class="modal-subtitle">Enter admin PIN to manage the doctor registry</div>
+                    </div>
+                    <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
+                </div>
+                <div class="modal-body pin-gate-body">
+                    <div class="pin-lock-icon">🔒</div>
+                    <div class="pin-label">Admin PIN Required</div>
+                    <input type="password" id="adminPinInput" class="pin-input" placeholder="Enter PIN" maxlength="20"
+                        onkeydown="if(event.key==='Enter')checkAdminPin()">
+                    <div id="adminPinError" class="pin-error"></div>
+                    <button class="btn-sm btn-teal pin-unlock-btn" onclick="checkAdminPin()">🔓 Unlock</button>
+                    <div class="pin-hint">PIN is set per-clinic during clinic setup.</div>
+                </div>
+            </div>
+            <div id="adminDoctorView" style="display:none">
+                <div class="modal-header">
+                    <div>
+                        <div class="modal-title">👨‍⚕️ Doctor Registry</div>
+                        <div class="modal-subtitle">Admin — add, edit or remove registered doctors</div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="btn-sm btn-teal" onclick="openAddDoctorForm()">＋ Add Doctor</button>
+                        <button class="btn-sm btn-outline-red admin-lock-btn" onclick="lockAdmin()">🔒 Lock</button>
+                        <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding:0;max-height:60vh;overflow-y:auto">
+                    <div id="adminDoctorList"></div>
+                </div>
+                <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2)">
+                    <div id="adminPremiumSection"></div>
+                </div>
+            </div>
+        </div>

@@ -1,4 +1,3 @@
-// ════════════════════════════════════════════════════════════
 //  SCRIPT-CORE.JS — State, data loading, app init & boot
 //  Depends on: script-utils.js, supabase.js, auth.js, clinic.js
 // ════════════════════════════════════════════════════════════
@@ -24,12 +23,12 @@ var QUICK_CHIPS_DATA    = null;
 var NOTE_TEMPLATES_DATA = null;
 
 async function loadQuickChips() {
-  try { QUICK_CHIPS_DATA = await fetch('../data/quick-chips.json').then(function(r){ return r.json(); }); }
+  try { QUICK_CHIPS_DATA = await fetch('data/quick-chips.json').then(function(r){ return r.json(); }); }
   catch(e) { QUICK_CHIPS_DATA = null; }
 }
 async function loadNoteTemplates() {
   try {
-    NOTE_TEMPLATES_DATA = await fetch('../data/note-templates.json').then(function(r){ return r.json(); });
+    NOTE_TEMPLATES_DATA = await fetch('data/note-templates.json').then(function(r){ return r.json(); });
     var sel = document.getElementById('noteTemplate');
     if (sel && NOTE_TEMPLATES_DATA) {
       sel.innerHTML = '<option value="">— Choose a template —</option>' +
@@ -250,10 +249,15 @@ function playBellSound() {
   } catch(e) {}
 }
 
-setInterval(checkClinicCalls, 10000);
+setInterval(function() {
+  if (typeof activeClinicId !== 'undefined' && activeClinicId) checkClinicCalls();
+}, 10000);
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(checkClinicCalls, 2000);
+  setTimeout(function() {
+    if (typeof activeClinicId !== 'undefined' && activeClinicId) checkClinicCalls();
+  }, 2000);
 });
+
 
 // ─── Boot ─────────────────────────────────────────────────
 (async function boot() {

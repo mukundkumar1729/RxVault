@@ -143,9 +143,93 @@ function renderLoginForm() {
       '</div>' +
       '<div id="loginError" class="login-error"></div>' +
       '<button class="login-btn" id="loginBtn" onclick="submitLogin()">🔓 Sign In</button>' +
+      '<button type="button" class="login-forgot-link" onclick="renderForgotForm()">🔑 Forgot Password?</button>' +
     '</div>' +
     '<div class="login-footer">Rx Vault · Secure Medical Records</div>';
   setTimeout(function(){ document.getElementById('loginEmail')?.focus(); }, 100);
+}
+
+function renderForgotForm() {
+  var body = document.getElementById('loginGateBody');
+  if (!body) return;
+  body.innerHTML =
+    '<div class="login-logo">🔑</div>' +
+    '<div class="login-brand">Reset Password</div>' +
+    '<div class="login-sub">Enter the reset token provided by your admin</div>' +
+    '<div class="login-form">' +
+      '<div class="field">' +
+        '<label>Your Email</label>' +
+        '<input type="email" id="fpEmail" placeholder="you@clinic.in" autocomplete="email"' +
+          ' onkeydown="if(event.key===\'Enter\')document.getElementById(\'fpToken\').focus()">' +
+      '</div>' +
+      '<div class="field" style="margin-top:12px">' +
+        '<label>6-Digit Reset Token</label>' +
+        '<input type="text" id="fpToken" placeholder="e.g. 482051" maxlength="6" autocomplete="off"' +
+          ' style="letter-spacing:0.25em;font-size:18px;text-align:center;font-family:monospace"' +
+          ' onkeydown="if(event.key===\'Enter\')document.getElementById(\'fpNew\').focus()">' +
+      '</div>' +
+      '<div class="field" style="margin-top:12px">' +
+        '<label>New Password</label>' +
+        '<input type="password" id="fpNew" placeholder="Min 8 chars, include uppercase + number"' +
+          ' onkeydown="if(event.key===\'Enter\')document.getElementById(\'fpConfirm\').focus()">' +
+      '</div>' +
+      '<div class="field" style="margin-top:12px">' +
+        '<label>Confirm New Password</label>' +
+        '<input type="password" id="fpConfirm" placeholder="Repeat new password"' +
+          ' onkeydown="if(event.key===\'Enter\')submitForgotPassword()">' +
+      '</div>' +
+      '<div id="fpError" class="login-error"></div>' +
+      '<button class="login-btn" id="fpBtn" onclick="submitForgotPassword()">✅ Reset Password</button>' +
+      '<button type="button" class="login-forgot-link" onclick="renderLoginForm()">← Back to Sign In</button>' +
+    '</div>' +
+    '<div class="login-footer">Rx Vault · Secure Medical Records</div>';
+  setTimeout(function(){ document.getElementById('fpEmail')?.focus(); }, 100);
+}
+
+function renderForgotSuccess() {
+  var body = document.getElementById('loginGateBody');
+  if (!body) return;
+  body.innerHTML =
+    '<div class="login-logo">✅</div>' +
+    '<div class="login-brand" style="color:var(--green)">Password Reset!</div>' +
+    '<div class="login-sub">Your password has been updated successfully.</div>' +
+    '<div class="login-form">' +
+      '<button class="login-btn" style="background:var(--teal)" onclick="renderLoginForm()">🔓 Sign In Now</button>' +
+    '</div>' +
+    '<div class="login-footer">Rx Vault · Secure Medical Records</div>';
+}
+
+async function submitForgotPassword() {
+  var email   = (document.getElementById('fpEmail')?.value   || '').trim();
+  var token   = (document.getElementById('fpToken')?.value   || '').trim();
+  var newPass = (document.getElementById('fpNew')?.value     || '');
+  var confirm = (document.getElementById('fpConfirm')?.value || '');
+  var errEl   = document.getElementById('fpError');
+  var btn     = document.getElementById('fpBtn');
+  if (errEl) errEl.textContent = '';
+
+  if (!email)          { if(errEl) errEl.textContent='Please enter your email address.'; return; }
+  if (!token || token.length < 4) { if(errEl) errEl.textContent='Please enter the reset token.'; return; }
+  if (newPass.length < 8)   { if(errEl) errEl.textContent='Password must be at least 8 characters.'; return; }
+  if (!/[A-Z]/.test(newPass)) { if(errEl) errEl.textContent='Password must include at least one uppercase letter.'; return; }
+  if (!/[0-9]/.test(newPass)) { if(errEl) errEl.textContent='Password must include at least one number.'; return; }
+  if (newPass !== confirm)  { if(errEl) errEl.textContent='Passwords do not match.'; return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verifying…'; }
+
+  var result = await dbConsumeResetToken(email, token, newPass);
+
+  if (btn) { btn.disabled = false; btn.textContent = '✅ Reset Password'; }
+
+  if (result === 'ok') {
+    renderForgotSuccess();
+  } else if (result === 'expired') {
+    if(errEl) errEl.textContent = 'Token has expired. Ask your admin to generate a new one.';
+  } else if (result === 'used') {
+    if(errEl) errEl.textContent = 'This token has already been used.';
+  } else {
+    if(errEl) errEl.textContent = 'Invalid email or token. Please check and try again.';
+  }
 }
 
 function togglePasswordVisibility() {
@@ -244,8 +328,7 @@ function showStaffTab(tab) {
     if (btn) btn.classList.toggle('active', t === tab);
     if (pnl) pnl.style.display = t === tab ? '' : 'none';
   });
-  var bell = document.getElementById('btnRingBell');
-  if (bell) bell.style.display = (getEffectiveRole() === 'doctor') ? 'flex' : 'none';
+  updateCallStaffBellVisibility();
 
   if (tab === 'audit') {
     loadAuditLog();
@@ -312,8 +395,8 @@ async function loadStaffList() {
             (isMe ? ' disabled' : '') + '>' +
             (s.is_active ? '🔴 Deactivate' : '🟢 Activate') +
           '</button>' +
-          '<button class="btn-sm btn-outline-teal" data-uid="'+uid+'" data-name="'+uname+'"' +
-            ' onclick="resetStaffPassword(this.dataset.uid, this.dataset.name)">🔑 Reset</button>' +
+          '<button class="btn-sm btn-outline-teal reset-token-btn" data-uid="'+uid+'" data-name="'+uname+'" data-email="'+escHtml(s.email)+'"' +
+            ' onclick="generateResetTokenForStaff(this.dataset.uid, this.dataset.name, this.dataset.email)">🔑 Reset</button>' +
           '<button class="btn-sm btn-outline-red" data-uid="'+uid+'" data-name="'+uname+'"' +
             ' onclick="removeStaffMember(this.dataset.uid, this.dataset.name)"' +
             (isMe ? ' disabled' : '') + '>🗑️</button>' +
@@ -375,6 +458,7 @@ async function toggleStaffActive(userId, makeActive) {
 }
 
 async function resetStaffPassword(userId, name) {
+  // Legacy — kept for compatibility. Use generateResetTokenForStaff instead.
   var newPass = prompt('Enter new password for ' + name + '\n(min 8 chars, must include uppercase + number):');
   if (!newPass || newPass.length < 8)  { showToast('Password too short — minimum 8 characters.', 'error'); return; }
   if (!/[A-Z]/.test(newPass)) { showToast('Password must contain at least one uppercase letter.', 'error'); return; }
@@ -382,6 +466,44 @@ async function resetStaffPassword(userId, name) {
   var ok = await dbAdminResetPassword(userId, newPass);
   if (ok) showToast('Password reset for ' + name, 'success');
   else    showToast('Failed to reset password.', 'error');
+}
+
+async function generateResetTokenForStaff(userId, name, email) {
+  var btn = document.querySelector('[data-uid="'+userId+'"].reset-token-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳…'; }
+
+  var result = await dbGenerateResetToken(email);
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔑 Reset'; }
+
+  if (!result || !result.token) {
+    showToast('Could not generate token. Check email is correct.', 'error');
+    return;
+  }
+
+  // Show a token dialog
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,34,64,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:var(--surface);border-radius:16px;max-width:380px;width:100%;box-shadow:0 12px 48px rgba(0,0,0,0.25);padding:32px 28px;text-align:center;position:relative;animation:slideIn 0.2s ease">' +
+      '<div style="font-size:40px;margin-bottom:12px">🔑</div>' +
+      '<div style="font-family:\'DM Serif Display\',serif;font-size:20px;color:var(--indian-red);margin-bottom:6px">Reset Token</div>' +
+      '<div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Share this token with <strong>' + escHtml(name) + '</strong>.<br>Valid for <strong>30 minutes</strong>.</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:20px">' +
+        '<div id="resetTokenDisplay" style="font-family:monospace;font-size:32px;font-weight:800;letter-spacing:0.3em;background:var(--teal-pale);color:var(--teal);border:2px solid rgba(10,124,110,0.25);border-radius:12px;padding:14px 24px">' + escHtml(result.token) + '</div>' +
+      '</div>' +
+      '<button onclick="' +
+        'var t=document.getElementById(\'resetTokenDisplay\');' +
+        'navigator.clipboard.writeText(t.textContent.trim()).then(function(){' +
+          'var b=this;' +
+        '}).catch(function(){});' +
+        'this.textContent=\'✅ Copied!\';setTimeout(function(){this.textContent=\'📋 Copy Token\';}.bind(this),1500)' +
+      '" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;width:100%">📋 Copy Token</button>' +
+      '<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:18px">User enters this token on the <strong>Forgot Password</strong> screen.</div>' +
+      '<button onclick="this.closest(\'div[style*=position\\:fixed]\').remove()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 22px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;width:100%">Close</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
 async function removeStaffMember(userId, name) {
@@ -577,4 +699,12 @@ function formatStatusLabel(status) {
   if (status === 'not_in')    return 'Off-Duty';
   // Handle custom status
   return status.split('_').map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+}
+function updateCallStaffBellVisibility() {
+  var bell = document.getElementById('btnRingBell');
+  if (!bell) return;
+  var role = getEffectiveRole();
+  // Allow doctors, admins, and superadmins to ring the digital bell
+  var allowed = ['doctor', 'admin', 'superadmin'].includes(role);
+  bell.style.display = allowed ? 'flex' : 'none';
 }

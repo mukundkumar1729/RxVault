@@ -1,0 +1,59 @@
+ <div class="modal" style="max-width:620px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="doctorFormTitle">Add Doctor</div>
+                    <div class="modal-subtitle">Fill doctor details and availability schedule</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('doctorFormModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-section-title">🪪 Registration</div>
+                    <div class="form-row">
+                        <div class="field"><label>Reg. Number <span>*</span></label><input type="text" id="dfRegNo" placeholder="e.g. MCI/2045"></div>
+                        <div class="field"><label>Medicine System</label>
+                            <select id="dfType">
+                                <option value="allopathy">💉 Allopathy</option>
+                                <option value="homeopathy">🌿 Homeopathy</option>
+                                <option value="ayurveda">🌱 Ayurveda</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">👤 Doctor Details</div>
+                    <div class="form-row">
+                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="dfName" placeholder="Dr. Full Name"></div>
+                        <div class="field"><label>Qualification</label><input type="text" id="dfQualification" placeholder="e.g. MBBS, MD"></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Specialization</label><input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist"></div>
+                        <div class="field"><label>Hospital / Clinic</label><select id="dfHospital"><option value="">— Select Clinic —</option></select></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field"><label>Phone</label><input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX"></div>
+                        <div class="field"><label>Email</label><input type="email" id="dfEmail" placeholder="doctor@hospital.com"></div>
+                    </div>
+                    <div class="form-row" style="margin-top:12px">
+                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" placeholder="Clinic / hospital address"></div>
+                    </div>
+                </div>
+                <div class="form-section" style="margin-bottom:0">
+                    <div class="form-section-title">📅 Availability Schedule</div>
+                    <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
+                    <div id="availEditor"></div>
+                    <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
+                    <div class="unavail-toggle-row">
+                        <label class="unavail-toggle-label">
+                            <input type="checkbox" id="dfUnavailable">
+                            <span class="unavail-toggle-text">🔴 Mark Doctor as Currently Unavailable</span>
+                        </label>
+                        <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the Doctors view.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm btn-outline-teal" onclick="closeModal('doctorFormModal')">Cancel</button>
+                <button class="btn-sm btn-teal" onclick="saveDoctor()">💾 Save Doctor</button>
+            </div>
+        </div>

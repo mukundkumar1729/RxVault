@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="css/clinic.css">
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="css/sidebar-collapsible.css">
+    <link rel="icon" href="data:,">
 </head>
+
 
 <body>
 
@@ -22,67 +24,7 @@
     </div>
 
     <!-- ─── CLINIC GATE OVERLAY ─── -->
-    <div class="clinic-gate-overlay no-print" id="clinicGate">
-        <div class="clinic-gate-panel">
-            <div class="clinic-gate-header">
-                <div class="clinic-gate-brand">
-                    <div class="clinic-gate-logo">💊</div>
-                    <div>
-                        <div class="clinic-gate-brand-name">Rx Vault</div>
-                        <div class="clinic-gate-brand-tag">Medical Record Manager</div>
-                    </div>
-                </div>
-                <button class="clinic-gate-close" id="clinicGateCloseBtn" onclick="hideClinicGate()" title="Close" style="display:none">✕</button>
-            </div>
-            <div class="clinic-gate-body">
-                <div id="clinicGateList" style="display:none"></div>
-                <div id="clinicGateForm" style="display:none">
-                    <div class="clinic-form-title" id="clinicFormTitle">🏥 Create Your First Clinic</div>
-                    <div class="clinic-form-sub" id="clinicFormSub">Set up your clinic to get started with Rx Vault.</div>
-                    <div class="clinic-form-grid">
-                        <div class="clinic-field full">
-                            <label>Clinic Name <span>*</span></label>
-                            <input type="text" id="cgName" placeholder="e.g. Apollo Clinic, Patna" autocomplete="off">
-                        </div>
-                        <div class="clinic-field">
-                            <label>Medicine System</label>
-                            <select id="cgType">
-                                <option value="multispecialty">🏥 Multispecialty</option>
-                                <option value="allopathy">💉 Allopathy</option>
-                                <option value="homeopathy">🌿 Homeopathy</option>
-                                <option value="ayurveda">🌱 Ayurveda</option>
-                            </select>
-                        </div>
-                        <div class="clinic-field">
-                            <label>Clinic Logo / Icon</label>
-                            <input type="text" id="cgLogo" placeholder="e.g. 🏥 💊 🌿" maxlength="4">
-                        </div>
-                        <div class="clinic-field full">
-                            <label>Address</label>
-                            <input type="text" id="cgAddress" placeholder="Clinic address">
-                        </div>
-                        <div class="clinic-field">
-                            <label>Phone</label>
-                            <input type="tel" id="cgPhone" placeholder="+91 XXXXX XXXXX">
-                        </div>
-                        <div class="clinic-field">
-                            <label>Email</label>
-                            <input type="email" id="cgEmail" placeholder="clinic@email.com">
-                        </div>
-                        <div class="clinic-field full">
-                            <label>Admin PIN <span>*</span></label>
-                            <input type="password" id="cgPin" placeholder="e.g. admin1234 (default)">
-                            <div class="clinic-hint-row">⚠️ This PIN is used to access the Admin Panel. Default is <strong>admin1234</strong>.</div>
-                        </div>
-                    </div>
-                    <div class="clinic-form-actions">
-                        <button class="btn-sm btn-outline-teal" onclick="cancelNewClinic()" id="cgCancelBtn">Cancel</button>
-                        <button class="btn-sm btn-teal" onclick="saveClinicForm()" id="cgSaveBtn" data-edit-id="">🏥 Save &amp; Enter</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="clinic-gate-overlay no-print" id="clinicGate"></div>
 
     <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
@@ -112,7 +54,9 @@
                 <div class="topbar-stat" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.25)">
                     <span style="color:#f78c6c">Ayur:</span> <strong id="statAyur">0</strong>
                 </div>
-                <button id="btnRingBell" onclick="ringBell()" class="no-print" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); border-radius:20px; color:#fff; padding:6px 14px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:none; align-items:center; gap:6px;">🔔 Call Staff</button>
+                <button id="btnRingBell" onclick="ringBell()" class="no-print" style="position:relative;background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.3); border-radius:50%; width:36px; height:36px; color:#ef4444; cursor:pointer; display:none; align-items:center; justify-content:center; font-size:16px; transition:all 0.15s;" title="🆘 Call Medical Staff (Digital Bell)">
+                    🔔
+                </button>
                 <div style="position:relative">
                     <div class="topbar-user-menu" onclick="toggleUserMenu(event)" id="topbarUserBtn">
                         <span class="topbar-user-avatar" id="topbarUserAvatar">👤</span>
@@ -615,393 +559,13 @@
          ════════════════════════════════════════════ -->
 
     <!-- ─── ADD / EDIT RX MODAL ─── -->
-    <div class="modal-overlay no-print" id="formModal">
-        <div class="modal">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title" id="modalTitle">New Rx</div>
-                    <div class="modal-subtitle">Fill in all required fields marked with *</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('formModal')">✕</button>
-            </div>
-            <div class="modal-body">
-
-                <!-- Medicine Type -->
-                <div class="form-section">
-                    <div class="form-section-title">🏥 Medicine System</div>
-                    <div class="type-selector">
-                        <div class="type-option allo">
-                            <input type="radio" name="medType" id="typeAllo" value="allopathy" checked>
-                            <label for="typeAllo"><span class="type-option-icon">💉</span>Allopathy</label>
-                        </div>
-                        <div class="type-option homo">
-                            <input type="radio" name="medType" id="typeHomo" value="homeopathy">
-                            <label for="typeHomo"><span class="type-option-icon">🌿</span>Homeopathy</label>
-                        </div>
-                        <div class="type-option ayur">
-                            <input type="radio" name="medType" id="typeAyur" value="ayurveda">
-                            <label for="typeAyur"><span class="type-option-icon">🌱</span>Ayurveda</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Patient Info -->
-                <div class="form-section collapsible-section collapsed" id="patientSection">
-                    <div class="collapsible-header" onclick="toggleSection('patientSection')">
-                        <span>👤 Patient Information</span>
-                        <span class="collapse-chevron">▼</span>
-                    </div>
-                    <div class="collapsible-body">
-                        <div class="form-row">
-                            <div class="field">
-                                <label>Patient Name <span>*</span></label>
-                                <input type="text" id="fPatientName" placeholder="Full name">
-                            </div>
-                            <div class="field">
-                                <label>Age</label>
-                                <input type="number" id="fAge" placeholder="Years" min="0" max="150">
-                            </div>
-                        </div>
-                        <div class="form-row" style="margin-top:12px">
-                            <div class="field">
-                                <label>Gender</label>
-                                <select id="fGender">
-                                    <option value="">Select gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>Blood Group</label>
-                                <select id="fBloodGroup">
-                                    <option value="">Select blood group</option>
-                                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                                    <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row" style="margin-top:12px">
-                            <div class="field">
-                                <label>Phone</label>
-                                <input type="tel" id="fPhone" placeholder="+91 XXXXX XXXXX">
-                            </div>
-                            <div class="field">
-                                <label>Email</label>
-                                <input type="email" id="fEmail" placeholder="patient@email.com">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Doctor Info -->
-                <div class="form-section collapsible-section collapsed" id="doctorSection">
-                    <div class="collapsible-header" onclick="toggleSection('doctorSection')">
-                        <span>🩺 Doctor Information</span>
-                        <span class="collapse-chevron">▼</span>
-                    </div>
-                    <div class="collapsible-body">
-                        <div class="reg-lookup-row">
-                            <div class="field" style="position:relative;flex:1">
-                                <label>Reg. Number <em class="auto-hint">— type to auto-fill doctor details</em></label>
-                                <input type="text" id="fRegNo" placeholder="e.g. MCI/2045"
-                                    oninput="onRegNoInput(this.value)" autocomplete="off" onblur="hideRegDropdown()">
-                                <div id="regNoDropdown" class="reg-dropdown"></div>
-                            </div>
-                            <div id="doctorAutoStatus" class="doctor-auto-status hidden">
-                                <span>✅</span>
-                                <span id="doctorAutoMsg">Doctor auto-filled</span>
-                                <button type="button" onclick="clearDoctorFields()" class="auto-clear-btn">✕ Clear</button>
-                            </div>
-                        </div>
-                        <div class="form-row" style="margin-top:12px">
-                            <div class="field">
-                                <label>Doctor Name <span>*</span></label>
-                                <input type="text" id="fDoctorName" placeholder="Dr. Full Name">
-                            </div>
-                            <div class="field">
-                                <label>Specialization</label>
-                                <input type="text" id="fSpecialization" placeholder="e.g. Cardiologist">
-                            </div>
-                        </div>
-                        <div class="form-row" style="margin-top:12px">
-                            <div class="field">
-                                <label>Hospital / Clinic</label>
-                                <input type="text" id="fHospital" placeholder="Hospital or clinic name">
-                            </div>
-                            <div class="field">
-                                <label>Doctor Contact</label>
-                                <input type="text" id="fDoctorPhone" placeholder="Doctor's phone / contact">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inline Doctor Availability -->
-                <div id="doctorAvailPanel" class="doctor-avail-inline hidden">
-                    <div class="avail-inline-header">
-                        <span class="avail-inline-icon">📅</span>
-                        <span class="avail-inline-title">Availability Schedule</span>
-                        <span id="availInlineDoctorName" class="avail-inline-name"></span>
-                    </div>
-                    <div class="avail-inline-slots" id="availInlineSlots"></div>
-                </div>
-
-                <!-- Prescription Details -->
-                <div class="form-section">
-                    <div class="form-section-title">📋 Rx Details</div>
-                    <div class="form-row">
-                        <div class="field">
-                            <label>Date Issued <span>*</span></label>
-                            <input type="date" id="fDate" onchange="var v=document.getElementById('fValidUntil');if(v&&!v.value)v.value=addDays(this.value,30)">
-                        </div>
-                        <div class="field">
-                            <label>Valid Until</label>
-                            <input type="date" id="fValidUntil">
-                        </div>
-                    </div>
-                    <div class="field diag-field-full" style="margin-top:12px">
-                        <label>🔬 Diagnosis / Condition</label>
-                        <div class="diag-chips-bar">
-                            <span class="diag-chips-label">Quick:</span>
-                            <div class="diag-chips-scroll">
-                                <button type="button" class="diag-chip" onclick="appendDiag('Viral Fever')">🌡️ Viral Fever</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('URTI')">🤧 URTI</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Type 2 Diabetes Mellitus')">🩸 Diabetes</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Hypertension')">❤️ Hypertension</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Bronchial Asthma')">🫁 Asthma</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Hypothyroidism')">🦋 Hypothyroidism</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Acute Gastritis')">🫃 Gastritis</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Migraine')">🧠 Migraine</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Rheumatoid Arthritis')">🦴 Arthritis</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Anxiety Disorder')">😰 Anxiety</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Iron Deficiency Anaemia')">💉 Anaemia</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Dengue Fever')">🦟 Dengue</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Typhoid Fever')">🦠 Typhoid</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Urinary Tract Infection')">🚱 UTI</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Eczema / Dermatitis')">🩹 Eczema</button>
-                                <button type="button" class="diag-chip" onclick="appendDiag('Vata Imbalance')">🌿 Vata Imb.</button>
-                            </div>
-                        </div>
-                        <div class="diag-toolbar">
-                            <div class="diag-toolbar-group">
-                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('• ')">• Bullet</button>
-                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('[ICD: ]')">🏷️ ICD</button>
-                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('\nComorbidity: ')">➕ Comorbidity</button>
-                                <button type="button" class="diag-tb-btn" onclick="insertDiagText(' (Mild)')">Severity</button>
-                                <button type="button" class="diag-tb-btn" onclick="insertDiagText('\nOnset: ')">📅 Onset</button>
-                            </div>
-                            <button type="button" class="diag-tb-btn diag-tb-clear" onclick="clearDiag()">✕ Clear</button>
-                        </div>
-                        <textarea id="fDiagnosis"
-                            placeholder="e.g. Viral Fever &amp; URTI&#10;Comorbidity: Type 2 Diabetes Mellitus&#10;Onset: 3 days ago • Severity: Moderate"
-                            rows="3" oninput="updateDiagCounter(this); autoDiagResize(this)"></textarea>
-                        <div class="diag-counter-row">
-                            <span class="diag-hint">Separate multiple conditions with commas or new lines</span>
-                            <span class="diag-counter" id="diagCounter">0 words</span>
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field">
-                            <label>Status</label>
-                            <select id="fStatus">
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                                <option value="expired">Expired</option>
-                            </select>
-                        </div>
-                        <div class="field"></div>
-                    </div>
-                </div>
-
-                <!-- Medicines -->
-                <div class="form-section">
-                    <div class="form-section-title">💊 Medicines Prescribed</div>
-                    <div class="med-col-labels">
-                        <span>Medicine Name</span><span>Dosage</span><span>Frequency</span>
-                        <span>Duration</span><span>Route</span><span></span>
-                    </div>
-                    <div class="medicines-editor" id="medicinesEditor"></div>
-                    <button class="btn-add-medicine" onclick="addMedicineRow()">＋ Add Medicine</button>
-                </div>
-
-                <!-- Tests -->
-                <div class="form-section">
-                    <div class="form-section-title">🔬 Diagnosis &amp; Tests</div>
-                    <div class="diag-col-labels">
-                        <span>Test / Investigation</span><span>Observation / Notes</span><span></span>
-                    </div>
-                    <datalist id="testNameList">
-                        <option value="CBC (Complete Blood Count)"><option value="MRI"><option value="CT Scan">
-                        <option value="X-Ray"><option value="Ultrasound"><option value="ECG"><option value="2D Echo">
-                        <option value="Blood Sugar (Fasting)"><option value="Blood Sugar (PP)"><option value="HbA1c">
-                        <option value="Thyroid (TSH, T3, T4)"><option value="Lipid Profile">
-                        <option value="LFT (Liver Function Test)"><option value="KFT (Kidney Function Test)">
-                        <option value="Urine Routine"><option value="Stool Examination">
-                    </datalist>
-                    <div class="diagnostic-editor" id="diagnosticEditor"></div>
-                    <button class="btn-add-medicine" onclick="addDiagnosticRow()">＋ Add Test</button>
-                </div>
-
-                <!-- Notes -->
-                <div class="form-section notes-section" style="margin-bottom:0">
-                    <div class="form-section-title">📝 Additional Notes</div>
-                    <div class="notes-categories">
-                        <span class="notes-cat-label">Tag:</span>
-                        <button type="button" class="note-cat-chip" data-cat="dietary" onclick="toggleNoteCategory(this)">🥗 Dietary</button>
-                        <button type="button" class="note-cat-chip" data-cat="lifestyle" onclick="toggleNoteCategory(this)">🏃 Lifestyle</button>
-                        <button type="button" class="note-cat-chip" data-cat="warning" onclick="toggleNoteCategory(this)">⚠️ Warning</button>
-                        <button type="button" class="note-cat-chip" data-cat="followup" onclick="toggleNoteCategory(this)">📅 Follow-up</button>
-                        <button type="button" class="note-cat-chip" data-cat="medication" onclick="toggleNoteCategory(this)">💊 Medication</button>
-                        <button type="button" class="note-cat-chip" data-cat="rest" onclick="toggleNoteCategory(this)">😴 Rest</button>
-                    </div>
-                    <div class="notes-toolbar">
-                        <div class="notes-toolbar-group">
-                            <span class="toolbar-label">Templates:</span>
-                            <select id="noteTemplate" class="note-template-select" onchange="applyNoteTemplate(this.value)">
-                                <option value="">— Choose a template —</option>
-                            </select>
-                        </div>
-                        <div class="notes-toolbar-group">
-                            <span class="toolbar-label">Insert:</span>
-                            <button type="button" class="toolbar-btn" onclick="insertNoteText('• ')">• List</button>
-                            <button type="button" class="toolbar-btn" onclick="insertNoteText('\n')">↵ Line</button>
-                            <button type="button" class="toolbar-btn" onclick="insertNoteText('Follow-up: ')">📅 F/U</button>
-                            <button type="button" class="toolbar-btn" onclick="insertNoteText('⚠️ Warning: ')">⚠️ Warn</button>
-                            <button type="button" class="toolbar-btn" onclick="insertNoteText('Take ')">💊 Dose</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-clear" onclick="clearNotes()">✕ Clear</button>
-                        </div>
-                    </div>
-                    <div class="quick-chips-bar">
-                        <span class="toolbar-label" style="flex-shrink:0">Quick:</span>
-                        <input type="text" id="chipsFilterInput" class="chips-filter-input"
-                            placeholder="Filter chips..." oninput="renderQuickChips(this.value)">
-                        <div class="quick-chips-scroll" id="quickChipsScroll"></div>
-                    </div>
-                    <div class="field" style="margin-top:10px">
-                        <textarea id="fNotes"
-                            placeholder="Dietary advice, lifestyle instructions, warnings, follow-up date, etc."
-                            rows="4" oninput="updateNotesCounter(this); autoResizeTextarea(this)"></textarea>
-                        <div class="notes-counter-row">
-                            <div id="notesCategoryDisplay" class="notes-cat-display"></div>
-                            <div class="notes-counter" id="notesCounter">0 words · 0 chars</div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('formModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="savePrescription()" id="saveBtn">💾 Save Rx</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="rxFormModal"></div>
 
     <!-- ─── ADMIN MODAL ─── -->
-    <div class="modal-overlay no-print" id="adminModal">
-        <div class="modal admin-modal">
-            <div id="adminPinView">
-                <div class="modal-header">
-                    <div>
-                        <div class="modal-title">🔐 Admin Panel</div>
-                        <div class="modal-subtitle">Enter admin PIN to manage the doctor registry</div>
-                    </div>
-                    <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
-                </div>
-                <div class="modal-body pin-gate-body">
-                    <div class="pin-lock-icon">🔒</div>
-                    <div class="pin-label">Admin PIN Required</div>
-                    <input type="password" id="adminPinInput" class="pin-input" placeholder="Enter PIN" maxlength="20"
-                        onkeydown="if(event.key==='Enter')checkAdminPin()">
-                    <div id="adminPinError" class="pin-error"></div>
-                    <button class="btn-sm btn-teal pin-unlock-btn" onclick="checkAdminPin()">🔓 Unlock</button>
-                    <div class="pin-hint">PIN is set per-clinic during clinic setup.</div>
-                </div>
-            </div>
-            <div id="adminDoctorView" style="display:none">
-                <div class="modal-header">
-                    <div>
-                        <div class="modal-title">👨‍⚕️ Doctor Registry</div>
-                        <div class="modal-subtitle">Admin — add, edit or remove registered doctors</div>
-                    </div>
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <button class="btn-sm btn-teal" onclick="openAddDoctorForm()">＋ Add Doctor</button>
-                        <button class="btn-sm btn-outline-red admin-lock-btn" onclick="lockAdmin()">🔒 Lock</button>
-                        <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
-                    </div>
-                </div>
-                <div class="modal-body" style="padding:0;max-height:60vh;overflow-y:auto">
-                    <div id="adminDoctorList"></div>
-                </div>
-                <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2)">
-                    <div id="adminPremiumSection"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="adminModal"></div>
 
     <!-- ─── DOCTOR FORM MODAL ─── -->
-    <div class="modal-overlay no-print" id="doctorFormModal">
-        <div class="modal" style="max-width:620px">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title" id="doctorFormTitle">Add Doctor</div>
-                    <div class="modal-subtitle">Fill doctor details and availability schedule</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('doctorFormModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-section">
-                    <div class="form-section-title">🪪 Registration</div>
-                    <div class="form-row">
-                        <div class="field"><label>Reg. Number <span>*</span></label><input type="text" id="dfRegNo" placeholder="e.g. MCI/2045"></div>
-                        <div class="field"><label>Medicine System</label>
-                            <select id="dfType">
-                                <option value="allopathy">💉 Allopathy</option>
-                                <option value="homeopathy">🌿 Homeopathy</option>
-                                <option value="ayurveda">🌱 Ayurveda</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <div class="form-section-title">👤 Doctor Details</div>
-                    <div class="form-row">
-                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="dfName" placeholder="Dr. Full Name"></div>
-                        <div class="field"><label>Qualification</label><input type="text" id="dfQualification" placeholder="e.g. MBBS, MD"></div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Specialization</label><input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist"></div>
-                        <div class="field"><label>Hospital / Clinic</label><select id="dfHospital"><option value="">— Select Clinic —</option></select></div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Phone</label><input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX"></div>
-                        <div class="field"><label>Email</label><input type="email" id="dfEmail" placeholder="doctor@hospital.com"></div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" placeholder="Clinic / hospital address"></div>
-                    </div>
-                </div>
-                <div class="form-section" style="margin-bottom:0">
-                    <div class="form-section-title">📅 Availability Schedule</div>
-                    <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
-                    <div id="availEditor"></div>
-                    <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
-                    <div class="unavail-toggle-row">
-                        <label class="unavail-toggle-label">
-                            <input type="checkbox" id="dfUnavailable">
-                            <span class="unavail-toggle-text">🔴 Mark Doctor as Currently Unavailable</span>
-                        </label>
-                        <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the Doctors view.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('doctorFormModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="saveDoctor()">💾 Save Doctor</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="doctorFormModal"></div>
 
     <!-- ─── DELETE CONFIRM MODAL ─── -->
     <div class="modal-overlay no-print" id="confirmModal">
@@ -1017,140 +581,13 @@
     </div>
 
     <!-- ─── PATIENT REGISTRATION MODAL ─── -->
-    <div class="modal-overlay no-print" id="registerModal">
-        <div class="modal" style="max-width:620px">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title">👤 Register New Patient</div>
-                    <div class="modal-subtitle">Enter patient details and complete fee payment to register</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-section">
-                    <div class="form-section-title">🪪 Patient Information</div>
-                    <div class="pid-display-row">
-                        <span class="pid-label">Patient ID:</span>
-                        <span class="pid-display" id="regPid">—</span>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Patient Name <span>*</span></label><input type="text" id="regName" placeholder="Full name"></div>
-                        <div class="field"><label>Age</label><input type="number" id="regAge" placeholder="Years" min="0" max="150"></div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Gender</label>
-                            <select id="regGender"><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
-                        </div>
-                        <div class="field"><label>Blood Group</label>
-                            <select id="regBloodGroup"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Phone</label><input type="tel" id="regPhone" placeholder="+91 XXXXX XXXXX"></div>
-                        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="patient@email.com"></div>
-                    </div>
-                    <div class="form-row" style="margin-top:12px">
-                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="regAddress" placeholder="Patient's address"></div>
-                    </div>
-                </div>
-                <div class="form-section" style="margin-bottom:0">
-                    <div class="form-section-title">🩺 Consultant &amp; Fee Payment</div>
-                    <div class="form-row">
-                        <div class="field"><label>Consultant Doctor <span>*</span></label><select id="regDoctor"><option value="">— Select Doctor —</option></select></div>
-                        <div class="field"><label>Consultation Fee (₹) <span>*</span></label><input type="number" id="regFee" placeholder="e.g. 500" min="0"></div>
-                    </div>
-                    <div class="fee-payment-row" style="margin-top:14px">
-                        <span class="fee-payment-label">Payment Method:</span>
-                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Cash" checked> 💵 Cash</label>
-                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="Card"> 💳 Card</label>
-                        <label class="fee-radio-label"><input type="radio" name="regPayment" value="UPI"> 📲 UPI</label>
-                    </div>
-                    <div class="reg-date-row" style="margin-top:12px">
-                        <div class="field" style="max-width:200px">
-                            <label>Registration Date</label>
-                            <input type="date" id="regDate">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('registerModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="registerPatient()">✅ Pay &amp; Register</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="registerModal"></div>
 
     <!-- ─── STAFF MANAGEMENT MODAL ─── -->
-    <div class="modal-overlay no-print" id="staffModal">
-        <div class="modal" style="max-width:700px">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title">👥 Staff Management</div>
-                    <div class="modal-subtitle" id="staffModalSubtitle">Manage clinic staff and their roles</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
-            </div>
-            <div class="modal-body" style="padding:0">
-                <div class="staff-tabs">
-                    <button class="staff-tab active" id="tabStaffList" onclick="showStaffTab('list')">👥 Staff List</button>
-                    <button class="staff-tab" id="tabAddStaff" onclick="showStaffTab('add')">➕ Add Staff</button>
-                    <button class="staff-tab" id="tabAuditLog" onclick="showStaffTab('audit')">📋 Audit Log</button>
-                </div>
-                <div id="staffTabList" style="max-height:55vh;overflow-y:auto">
-                    <div id="staffListContent" style="padding:0"></div>
-                </div>
-                <div id="staffTabAdd" style="display:none;padding:20px">
-                    <div class="form-section-title">➕ Add New Staff Member</div>
-                    <div class="form-row" style="margin-bottom:12px">
-                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="staffName" placeholder="Dr. Full Name"></div>
-                        <div class="field"><label>Email <span>*</span></label><input type="email" id="staffEmail" placeholder="staff@clinic.com"></div>
-                    </div>
-                    <div class="form-row" style="margin-bottom:12px">
-                        <div class="field"><label>Password <span>*</span></label><input type="password" id="staffPassword" placeholder="Min 8 characters"></div>
-                        <div class="field"><label>Clinic Role <span>*</span></label>
-                            <select id="staffRole">
-                                <option value="doctor">🩺 Doctor</option>
-                                <option value="receptionist">🧑‍💼 Receptionist</option>
-                                <option value="pharmacist">💊 Pharmacist</option>
-                                <option value="admin">🔐 Admin</option>
-                                <option value="viewer">👁️ Viewer</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="staffAddError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:8px"></div>
-                    <button class="btn-sm btn-teal" onclick="addStaffMember()" style="width:100%;justify-content:center;padding:10px">
-                        ✅ Create Account &amp; Add to Clinic
-                    </button>
-                </div>
-                <div id="staffTabAudit" style="display:none;max-height:55vh;overflow-y:auto">
-                    <div id="auditLogContent" style="padding:0"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="staffModal"></div>
 
     <!-- ─── CHANGE PASSWORD MODAL ─── -->
-    <div class="modal-overlay no-print" id="changePassModal">
-        <div class="modal" style="max-width:400px">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title">🔑 Change Password</div>
-                    <div class="modal-subtitle" id="changePassSubtitle">Update your account password</div>
-                </div>
-                <button class="modal-close" onclick="closeModal('changePassModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="field" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="cpOldPass" placeholder="Current password"></div>
-                <div class="field" style="margin-bottom:12px"><label>New Password</label><input type="password" id="cpNewPass" placeholder="New password"></div>
-                <div class="field" style="margin-bottom:12px"><label>Confirm New Password</label><input type="password" id="cpConfirmPass" placeholder="Confirm new password"></div>
-                <div id="changePassError" style="color:var(--red);font-size:12.5px;min-height:18px"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-sm btn-outline-teal" onclick="closeModal('changePassModal')">Cancel</button>
-                <button class="btn-sm btn-teal" onclick="submitChangePassword()">🔑 Update Password</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay no-print" id="changePassModal"></div>
 
     <!-- ─── VITALS MODAL (static shell, content rendered by JS) ─── -->
     <div class="modal-overlay no-print" id="vitalsModal">
@@ -1190,7 +627,9 @@
     <!-- ════════════════════════════════════════════
          SCRIPTS — load order matters
          ════════════════════════════════════════════ -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="src/supabase.js"></script>
     <script src="src/auth.js"></script>
@@ -1213,8 +652,12 @@
     <script src="src/features-opd.js"></script>
     <script src="src/features-lab.js"></script>
     <script src="src/features-roster.js"></script>
+    <script src="src/vitals-chart.js"></script>
+    <script src="src/body-map.js"></script>
+    <script src="src/features-vitals.js"></script>  
     <script src="src/bulk-import.js"></script>
     <script src="src/sidebar-collapsible.js"></script>
+    <script src="src/render-html.js"></script>
 
 </body>
 </html>

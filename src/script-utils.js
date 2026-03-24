@@ -239,7 +239,7 @@ function clearDoctorAvailPanel() {
 
 // ─── Keyboard shortcuts ───────────────────────────────────
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeModal('formModal'); closeModal('confirmModal'); }
+  if (e.key === 'Escape') { closeModal('rxFormModal'); closeModal('confirmModal'); }
   if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openAddModal(); }
 });
 

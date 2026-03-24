@@ -16,12 +16,27 @@ function openAddModal() {
   document.getElementById('medicinesEditor').innerHTML  = '';
   document.getElementById('diagnosticEditor').innerHTML = '';
   expandSection('patientSection'); expandSection('doctorSection');
-  addMedicineRow(); addDiagnosticRow(); renderQuickChips(); openModal('formModal');
+  addMedicineRow(); addDiagnosticRow(); renderQuickChips(); openModal('rxFormModal');
 }
 
 // ─── Open edit modal ──────────────────────────────────────
 function openEditModal(id) {
   var p = prescriptions.find(function(x){ return x.id === id; }); if (!p) return;
+  
+  // Enforce fee check on edit if patient exists and fee logic is available
+  if (typeof getPatientFeeStatus === 'function' && typeof patientRegistry !== 'undefined') {
+    var patient = patientRegistry.find(function(pat){ 
+      return (pat.name || '').trim().toLowerCase() === (p.patientName || '').trim().toLowerCase(); 
+    });
+    if (patient && getPatientFeeStatus(patient) === 'expired') {
+      showToast('⚠️ Fee expired for ' + patient.name + '. Please collect fee before editing.', 'error');
+      if (typeof openFeePaymentModal === 'function') {
+        openFeePaymentModal(patient);
+        return;
+      }
+    }
+  }
+
   editingId = id; resetForm();
   document.getElementById('modalTitle').textContent = 'Edit Rx';
   document.getElementById('saveBtn').textContent    = '💾 Update Rx';
@@ -46,7 +61,7 @@ function openEditModal(id) {
   if (p.medicines && p.medicines.length) p.medicines.forEach(addMedicineRow); else addMedicineRow();
   var diagEditor = document.getElementById('diagnosticEditor'); diagEditor.innerHTML = '';
   if (p.diagnostics && p.diagnostics.length) p.diagnostics.forEach(addDiagnosticRow); else addDiagnosticRow();
-  renderQuickChips(); openModal('formModal');
+  renderQuickChips(); openModal('rxFormModal');
 }
 
 // ─── Save prescription ────────────────────────────────────
@@ -88,7 +103,7 @@ async function savePrescription() {
   var ok = await dbUpsertPrescription(rx);
   if (!ok) { showToast('DB save failed — check console', 'error'); return; }
   if (typeof storeEmbeddingForRx === 'function') storeEmbeddingForRx(rx).catch(function(){});
-  closeModal('formModal'); render();
+  closeModal('rxFormModal'); render();
 }
 
 // ─── Medicine rows ────────────────────────────────────────
@@ -146,7 +161,7 @@ function getDiagnostics() {
 
 // ─── Form reset ───────────────────────────────────────────
 function resetForm() {
-  document.querySelectorAll('#formModal input:not([type=radio]), #formModal select, #formModal textarea')
+  document.querySelectorAll('#rxFormModal input:not([type=radio]), #rxFormModal select, #rxFormModal textarea')
     .forEach(function(el){ el.value = ''; });
   document.querySelector('input[name="medType"][value="allopathy"]').checked = true;
   document.getElementById('fStatus').value = 'active';
@@ -162,6 +177,7 @@ function resetForm() {
   var diagEditor = document.getElementById('diagnosticEditor'); if (diagEditor) diagEditor.innerHTML = '';
   var diagTa = document.getElementById('fDiagnosis');
   if (diagTa) { diagTa.style.height = ''; updateDiagCounter(diagTa); }
+  if (typeof resetBodyMap === 'function') resetBodyMap();
 }
 
 // ─── Doctor auto-populate from reg no ────────────────────

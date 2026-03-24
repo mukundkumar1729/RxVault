@@ -268,10 +268,16 @@ function openUploadResult(orderId) {
         '<div class="field" style="margin-bottom:0"><label>Lab / Reference Range Notes</label>' +
           '<input type="text" id="lrLabNotes" placeholder="e.g. Values from Dr. Lal PathLabs, report date 18 Mar 2026"></div>' +
         '<div id="lrError" style="color:var(--red);font-size:12.5px;min-height:16px;margin-top:8px"></div>' +
+        '<div id="smartParseLoader" style="display:none; margin-top:10px; padding:10px; background:var(--teal-pale); border-radius:8px; font-size:12px; color:var(--teal);">' +
+          '✨ AI is parsing your report... Please wait.' +
+        '</div>' +
       '</div>' +
-      '<div class="modal-footer">' +
-        '<button class="btn-sm btn-outline-teal" onclick="closeOverlay(\'labResultOverlay\')">Cancel</button>' +
-        '<button class="btn-sm btn-teal" onclick="saveLabResult(\'' + orderId + '\')">💾 Save Result</button>' +
+      '<div class="modal-footer" style="justify-content:space-between">' +
+        '<button class="btn-sm" onclick="smartParseLabReport()" style="background:var(--indigo); color:#fff; border:none; border-radius:7px; padding:8px 16px; cursor:pointer; font-weight:600; font-size:12px;">✨ Smart Parse (AI)</button>' +
+        '<div>' +
+          '<button class="btn-sm btn-outline-teal" onclick="closeOverlay(\'labResultOverlay\')">Cancel</button>' +
+          '<button class="btn-sm btn-teal" onclick="saveLabResult(\'' + orderId + '\')">💾 Save Result</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   overlay.classList.add('open'); document.body.style.overflow = 'hidden';
@@ -405,3 +411,43 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 });
+async function smartParseLabReport() {
+  var text = document.getElementById('lrResultText')?.value || '';
+  if (!text && !_lrFileBase64) {
+    showToast('Please paste report text or attach a file first.', 'error');
+    return;
+  }
+
+  var loader = document.getElementById('smartParseLoader');
+  if (loader) loader.style.display = 'block';
+
+  try {
+    var proxyUrl = typeof AI_PROXY_URL !== 'undefined' ? AI_PROXY_URL : 'https://wavakcolrtrwmjcjkdfc.supabase.co/functions/v1/claude-proxy';
+    var resp = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        messages: [{
+          role: 'user',
+          content: 'Extract lab test values from this report text/data. Return ONLY a structured plain text list.\n' +
+            'Format: Test Name: Value Unit (Reference Range)\n' +
+            'Example: Hemoglobin: 13.5 g/dL (12-16)\n\n' +
+            'Data:\n' + text + (_lrFileBase64 ? '\n[IMAGE DATA ATTACHED]' : '')
+        }]
+      })
+    });
+    var data = await resp.json();
+    var result = (data.content||[]).map(b => b.text || '').join('').trim();
+    
+    if (result) {
+      document.getElementById('lrResultText').value = result;
+      showToast('✨ Smart Parse successful!', 'success');
+    }
+  } catch(e) {
+    console.error('[SmartParse]', e);
+    showToast('AI Parsing failed. Please enter manually.', 'error');
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+}

@@ -1,0 +1,59 @@
+<div class="clinic-gate-panel">
+            <div class="clinic-gate-header">
+                <div class="clinic-gate-brand">
+                    <div class="clinic-gate-logo">💊</div>
+                    <div>
+                        <div class="clinic-gate-brand-name">Rx Vault</div>
+                        <div class="clinic-gate-brand-tag">Medical Record Manager</div>
+                    </div>
+                </div>
+                <button class="clinic-gate-close" id="clinicGateCloseBtn" onclick="hideClinicGate()" title="Close" style="display:none">✕</button>
+            </div>
+            <div class="clinic-gate-body">
+                <div id="clinicGateList" style="display:none"></div>
+                <div id="clinicGateForm" style="display:none">
+                    <div class="clinic-form-title" id="clinicFormTitle">🏥 Create Your First Clinic</div>
+                    <div class="clinic-form-sub" id="clinicFormSub">Set up your clinic to get started with Rx Vault.</div>
+                    <div class="clinic-form-grid">
+                        <div class="clinic-field full">
+                            <label>Clinic Name <span>*</span></label>
+                            <input type="text" id="cgName" placeholder="e.g. Apollo Clinic, Patna" autocomplete="off">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Medicine System</label>
+                            <select id="cgType">
+                                <option value="multispecialty">🏥 Multispecialty</option>
+                                <option value="allopathy">💉 Allopathy</option>
+                                <option value="homeopathy">🌿 Homeopathy</option>
+                                <option value="ayurveda">🌱 Ayurveda</option>
+                            </select>
+                        </div>
+                        <div class="clinic-field">
+                            <label>Clinic Logo / Icon</label>
+                            <input type="text" id="cgLogo" placeholder="e.g. 🏥 💊 🌿" maxlength="4">
+                        </div>
+                        <div class="clinic-field full">
+                            <label>Address</label>
+                            <input type="text" id="cgAddress" placeholder="Clinic address">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Phone</label>
+                            <input type="tel" id="cgPhone" placeholder="+91 XXXXX XXXXX">
+                        </div>
+                        <div class="clinic-field">
+                            <label>Email</label>
+                            <input type="email" id="cgEmail" placeholder="clinic@email.com">
+                        </div>
+                        <div class="clinic-field full">
+                            <label>Admin PIN <span>*</span></label>
+                            <input type="password" id="cgPin" placeholder="e.g. admin1234 (default)">
+                            <div class="clinic-hint-row">⚠️ This PIN is used to access the Admin Panel. Default is <strong>admin1234</strong>.</div>
+                        </div>
+                    </div>
+                    <div class="clinic-form-actions">
+                        <button class="btn-sm btn-outline-teal" onclick="cancelNewClinic()" id="cgCancelBtn">Cancel</button>
+                        <button class="btn-sm btn-teal" onclick="saveClinicForm()" id="cgSaveBtn" data-edit-id="">🏥 Save &amp; Enter</button>
+                    </div>
+                </div>
+            </div>
+        </div>

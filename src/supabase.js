@@ -175,7 +175,7 @@ async function dbGetPatients(clinicId) {
 }
 async function dbInsertPatient(patient) {
   const row = patientToDb(patient);
-  const { error } = await db.from('patients').insert(row);
+  const { error } = await db.from('patients').upsert(row, { onConflict: 'id' });
   if (error) { dbErr('insertPatient', error); return false; }
   return true;
 }
@@ -281,8 +281,13 @@ async function dbRingBell(clinicId, callerName, message) {
 }
 async function dbGetActiveCalls(clinicId) {
   var { data, error } = await db.from('clinic_calls').select('*').eq('clinic_id', clinicId).eq('status', 'active').order('created_at', { ascending: false });
+  if (error) {
+    dbErr('getActiveCalls', error);
+    return [];
+  }
   return data || [];
 }
+
 async function dbClearCall(callId) {
   var { data, error } = await db.from('clinic_calls').update({ status: 'cleared' }).eq('id', callId);
   return !error;
@@ -320,6 +325,19 @@ async function dbChangePassword(userId, oldPassword, newPassword) {
   if (error) { dbErr('changePassword', error); return false; }
   return data === true;
 }
+async function dbGenerateResetToken(email) {
+  const { data, error } = await db.rpc('generate_reset_token', { p_email: email.toLowerCase().trim() });
+  if (error) { dbErr('generateResetToken', error); return null; }
+  return (data && data.length > 0) ? data[0] : null; // { token, user_name }
+}
+async function dbConsumeResetToken(email, token, newPassword) {
+  const { data, error } = await db.rpc('consume_reset_token', {
+    p_email: email.toLowerCase().trim(), p_token: token.trim(), p_new_pass: newPassword
+  });
+  if (error) { dbErr('consumeResetToken', error); return 'error'; }
+  return data; // 'ok' | 'invalid' | 'expired' | 'used'
+}
+
 async function dbCreateUserWithPassword(name, email, password, role) {
   const { data, error } = await db.rpc('create_staff_user', {
     p_name: name, p_email: email.toLowerCase().trim(), p_password: password, p_role: role||'staff'

@@ -24,10 +24,11 @@ async function deletePrescription(id) {
 }
 
 // ─── Print ────────────────────────────────────────────────
-function printPrescription(id) {
+async function printPrescription(id) {
   var p = prescriptions.find(function(x){ return x.id === id; }); if (!p) return;
   var clinic = getActiveClinic();
   var tl = {allopathy:'Allopathy', homeopathy:'Homeopathy', ayurveda:'Ayurveda'};
+
   var medsRows = (p.medicines || []).map(function(m) {
     return '<tr style="border-bottom:1px solid #eee">' +
       '<td style="padding:6px 8px"><strong>' + escHtml(m.name) + '</strong></td>' +
@@ -36,14 +37,27 @@ function printPrescription(id) {
       '<td style="padding:6px 8px">' + escHtml(m.duration) + '</td>' +
       '<td style="padding:6px 8px">' + escHtml(m.route||'') + '</td></tr>';
   }).join('');
+
   var diagRows = (p.diagnostics || []).map(function(d) {
     return '<tr style="border-bottom:1px solid #eee">' +
       '<td style="padding:6px 8px"><strong>' + escHtml(d.test) + '</strong></td>' +
       '<td style="padding:6px 8px">' + escHtml(d.notes||'—') + '</td></tr>';
   }).join('');
+
   var clinicHeader = clinic
     ? '<div style="margin-bottom:4px;font-size:13px;color:#555">' + escHtml(clinic.logo||'🏥') + ' ' + escHtml(clinic.name) + (clinic.address ? ' · ' + escHtml(clinic.address) : '') + '</div>'
     : '';
+
+  // ── Load vitals for this prescription ──
+  var vitalsHtml = '';
+  if (typeof getVitalsPrintBlock === 'function') {
+    try {
+      vitalsHtml = await getVitalsPrintBlock(id);
+    } catch(e) {
+      console.warn('[Print] Could not load vitals:', e);
+    }
+  }
+
   var html =
     '<!DOCTYPE html><html><head><title>Prescription — ' + escHtml(p.patientName) + '</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;600&family=DM+Serif+Display&display=swap" rel="stylesheet">' +
@@ -54,7 +68,12 @@ function printPrescription(id) {
     'h2{font-family:"DM Serif Display",serif;font-size:17px;color:#0f2240;margin:20px 0 10px;border-bottom:1px solid #eee;padding-bottom:6px}' +
     '.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}' +
     '.info-item label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;color:#888;margin-bottom:2px}' +
-    '.info-item span{font-size:13px;font-weight:500}table{width:100%;border-collapse:collapse}' +
+    '.info-item span{font-size:13px;font-weight:500}' +
+    '.vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}' +
+    '.vital-cell{background:#f7fafc;border-radius:6px;padding:9px 12px;border:1px solid #eee}' +
+    '.vital-cell .v-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8fa0b3;margin-bottom:3px}' +
+    '.vital-cell .v-value{font-size:14px;font-weight:700;color:#1a1a2e}' +
+    'table{width:100%;border-collapse:collapse}' +
     'thead{background:#f0f4f8}th{text-align:left;padding:8px;font-size:11px;font-weight:600;text-transform:uppercase;color:#666}' +
     '.notes-box{background:#f7fafc;border-left:3px solid #0a7c6e;padding:12px 16px;border-radius:4px;margin-top:16px}' +
     '.footer{margin-top:40px;display:flex;justify-content:space-between;border-top:1px solid #eee;padding-top:16px}' +
@@ -69,6 +88,7 @@ function printPrescription(id) {
       '<div style="margin-top:6px;font-size:12px;color:#555">Date: ' + formatDate(p.date) + '</div>' +
       (p.validUntil ? '<div style="font-size:11px;color:#888">Valid until: ' + formatDate(p.validUntil) + '</div>' : '') +
     '</div></div>' +
+
     '<h2>Patient Details</h2>' +
     '<div class="info-grid">' +
       '<div class="info-item"><label>Name</label><span>' + escHtml(p.patientName) + '</span></div>' +
@@ -78,6 +98,7 @@ function printPrescription(id) {
       '<div class="info-item"><label>Phone</label><span>' + (p.phone||'—') + '</span></div>' +
       '<div class="info-item"><label>Diagnosis</label><span>' + (p.diagnosis||'—') + '</span></div>' +
     '</div>' +
+
     '<h2>Doctor / Practitioner</h2>' +
     '<div class="info-grid">' +
       '<div class="info-item"><label>Name</label><span>Dr. ' + escHtml(p.doctorName) + '</span></div>' +
@@ -85,13 +106,21 @@ function printPrescription(id) {
       '<div class="info-item"><label>Reg. No.</label><span>' + (p.regNo||'—') + '</span></div>' +
       '<div class="info-item"><label>Hospital/Clinic</label><span>' + (p.hospital||'—') + '</span></div>' +
     '</div>' +
+
+    // ── VITALS SECTION (injected from DB) ──
+    vitalsHtml +
+
     '<h2>Prescribed Medicines</h2>' +
     '<table><thead><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Route</th></tr></thead>' +
     '<tbody>' + (medsRows || '<tr><td colspan="5" style="padding:10px;color:#888;text-align:center">No medicines recorded</td></tr>') + '</tbody></table>' +
+
     (diagRows ? '<h2>🔬 Diagnosis &amp; Tests</h2><table><thead><tr><th>Test / Investigation</th><th>Observation / Notes</th></tr></thead><tbody>' + diagRows + '</tbody></table>' : '') +
+
     (p.notes ? '<div class="notes-box"><strong style="font-size:11px;text-transform:uppercase;color:#0a7c6e">Clinical Notes</strong><br><br>' + escHtml(p.notes) + '</div>' : '') +
+
     '<div class="footer"><div style="font-size:11px;color:#888">Generated by Rx Vault · ' + new Date().toLocaleDateString() + '</div><div class="sig-line">Doctor\'s Signature</div></div>' +
     '</body></html>';
+
   var w = window.open('', '_blank', 'width=800,height=700');
   w.document.write(html); w.document.close();
 }
@@ -132,6 +161,21 @@ function importData(e) {
 function renewPrescription(id) {
   var original = prescriptions.find(function(x){ return x.id === id; });
   if (!original) return;
+
+  // Enforce fee check on renew
+  if (typeof getPatientFeeStatus === 'function' && typeof patientRegistry !== 'undefined') {
+    var patient = patientRegistry.find(function(pat){ 
+      return (pat.name || '').trim().toLowerCase() === (original.patientName || '').trim().toLowerCase(); 
+    });
+    if (patient && getPatientFeeStatus(patient) === 'expired') {
+      showToast('⚠️ Fee expired for ' + patient.name + '. Please collect fee before renewing.', 'error');
+      if (typeof openFeePaymentModal === 'function') {
+        openFeePaymentModal(patient);
+        return;
+      }
+    }
+  }
+
   if (!confirm('Renew prescription for ' + original.patientName + '?\n\nA new prescription will be created with today\'s date, pre-filled with the same medicines.\nYou can review and edit before saving.')) return;
   if (typeof can !== 'undefined' && !can.addPrescription()) { showToast('Permission denied.', 'error'); return; }
 
@@ -172,6 +216,6 @@ function renewPrescription(id) {
   renderQuickChips();
   expandSection('patientSection');
   expandSection('doctorSection');
-  openModal('formModal');
+  openModal('rxFormModal');
   showToast('📋 Pre-filled from original · Review and save', 'info');
 }

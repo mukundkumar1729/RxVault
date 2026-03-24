@@ -1,0 +1,45 @@
+ <div class="modal" style="max-width:700px">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">👥 Staff Management</div>
+                    <div class="modal-subtitle" id="staffModalSubtitle">Manage clinic staff and their roles</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0">
+                <div class="staff-tabs">
+                    <button class="staff-tab active" id="tabStaffList" onclick="showStaffTab('list')">👥 Staff List</button>
+                    <button class="staff-tab" id="tabAddStaff" onclick="showStaffTab('add')">➕ Add Staff</button>
+                    <button class="staff-tab" id="tabAuditLog" onclick="showStaffTab('audit')">📋 Audit Log</button>
+                </div>
+                <div id="staffTabList" style="max-height:55vh;overflow-y:auto">
+                    <div id="staffListContent" style="padding:0"></div>
+                </div>
+                <div id="staffTabAdd" style="display:none;padding:20px">
+                    <div class="form-section-title">➕ Add New Staff Member</div>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="staffName" placeholder="Dr. Full Name"></div>
+                        <div class="field"><label>Email <span>*</span></label><input type="email" id="staffEmail" placeholder="staff@clinic.com"></div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="field"><label>Password <span>*</span></label><input type="password" id="staffPassword" placeholder="Min 8 characters"></div>
+                        <div class="field"><label>Clinic Role <span>*</span></label>
+                            <select id="staffRole">
+                                <option value="doctor">🩺 Doctor</option>
+                                <option value="receptionist">🧑‍💼 Receptionist</option>
+                                <option value="pharmacist">💊 Pharmacist</option>
+                                <option value="admin">🔐 Admin</option>
+                                <option value="viewer">👁️ Viewer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="staffAddError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:8px"></div>
+                    <button class="btn-sm btn-teal" onclick="addStaffMember()" style="width:100%;justify-content:center;padding:10px">
+                        ✅ Create Account &amp; Add to Clinic
+                    </button>
+                </div>
+                <div id="staffTabAudit" style="display:none;max-height:55vh;overflow-y:auto">
+                    <div id="auditLogContent" style="padding:0"></div>
+                </div>
+            </div>
+        </div>
