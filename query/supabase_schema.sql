@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS clinic_staff (
   clinic_id   TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
   user_id     UUID        NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
   role        TEXT        NOT NULL DEFAULT 'viewer'
-              CHECK (role IN ('admin','doctor','receptionist','pharmacist','viewer')),
+              CHECK (role IN ('admin','doctor','receptionist','pharmacist','viewer','medical_assistant','lab_technician','billing_manager','inventory_manager','clinic_supervisor','medical_support_aide')),
+  staff_type  TEXT        NOT NULL DEFAULT 'permanent'
+              CHECK (staff_type IN ('permanent','adhoc')),
   is_active   BOOLEAN     DEFAULT TRUE,
   assigned_by UUID        REFERENCES users(id),
   created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -178,16 +180,18 @@ END;
 $$;
 
 -- Get all staff for a clinic
+DROP FUNCTION IF EXISTS get_clinic_staff(TEXT);
 CREATE OR REPLACE FUNCTION get_clinic_staff(p_clinic_id TEXT)
 RETURNS TABLE (
   user_id    UUID,
   name       TEXT,
   email      TEXT,
   role       TEXT,
+  staff_type TEXT,
   is_active  BOOLEAN,
   last_login TIMESTAMPTZ
 ) LANGUAGE sql AS $$
-  SELECT u.id, u.name, u.email, cs.role, cs.is_active, u.last_login
+  SELECT u.id, u.name, u.email, cs.role, cs.staff_type, cs.is_active, u.last_login
   FROM clinic_staff cs
   JOIN users u ON cs.user_id = u.id
   WHERE cs.clinic_id = p_clinic_id

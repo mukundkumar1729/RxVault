@@ -248,7 +248,7 @@ async function dbGetStaffMember(clinicId, userId) {
   if (error) { dbErr('getStaffMember', error); return null; }
   return data;
 }
-async function dbCreateStaffUser(name, email, password, role, clinicId, assignedBy) {
+async function dbCreateStaffUser(name, email, password, role, clinicId, assignedBy, staffType) {
   var existing;
   try {
     const res = await db.from('users').select('id,email').eq('email', email.toLowerCase().trim()).maybeSingle();
@@ -268,6 +268,7 @@ async function dbCreateStaffUser(name, email, password, role, clinicId, assigned
 
   const { error: staffErr } = await db.from('clinic_staff').upsert({
     clinic_id: clinicId, user_id: userId, role: role,
+    staff_type: staffType || 'permanent',
     is_active: true, assigned_by: assignedBy||null
   }, { onConflict: 'clinic_id,user_id' });
 
@@ -308,6 +309,11 @@ async function dbUpdateStaffStatus(clinicId, userId, status, until) {
 async function dbUpdateStaffRole(clinicId, userId, newRole) {
   const { error } = await db.from('clinic_staff').update({ role: newRole, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);
   if (error) { dbErr('updateStaffRole', error); return false; }
+  return true;
+}
+async function dbUpdateStaffType(clinicId, userId, newType) {
+  const { error } = await db.from('clinic_staff').update({ staff_type: newType, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);
+  if (error) { dbErr('updateStaffType', error); return false; }
   return true;
 }
 async function dbToggleStaffActive(clinicId, userId, isActive) {

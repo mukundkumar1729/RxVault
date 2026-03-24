@@ -10,9 +10,9 @@
                 <div class="form-section">
                     <div class="form-section-title">🪪 Registration</div>
                     <div class="form-row">
-                        <div class="field"><label>Reg. Number <span>*</span></label><input type="text" id="dfRegNo" placeholder="e.g. MCI/2045"></div>
-                        <div class="field"><label>Medicine System</label>
-                            <select id="dfType">
+                        <div class="premium-field" style="flex:1"><label>Reg. Number <span>*</span></label><input type="text" id="dfRegNo" class="premium-input" placeholder="e.g. MCI/2045"></div>
+                        <div class="premium-field" style="flex:1"><label>Medicine System</label>
+                            <select id="dfType" class="premium-input" style="appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L7%207L13%201%22%20stroke%3D%22%23A4ADBA%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right%2018px%20center;">
                                 <option value="allopathy">💉 Allopathy</option>
                                 <option value="homeopathy">🌿 Homeopathy</option>
                                 <option value="ayurveda">🌱 Ayurveda</option>
@@ -23,19 +23,23 @@
                 <div class="form-section">
                     <div class="form-section-title">👤 Doctor Details</div>
                     <div class="form-row">
-                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="dfName" placeholder="Dr. Full Name"></div>
-                        <div class="field"><label>Qualification</label><input type="text" id="dfQualification" placeholder="e.g. MBBS, MD"></div>
+                        <div class="premium-field" style="flex:1"><label>Full Name <span>*</span></label><input type="text" id="dfName" class="premium-input" placeholder="Dr. Full Name"></div>
+                        <div class="premium-field" style="flex:1"><label>Qualification</label><input type="text" id="dfQualification" class="premium-input" placeholder="e.g. MBBS, MD"></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Specialization</label><input type="text" id="dfSpecialization" placeholder="e.g. Cardiologist"></div>
-                        <div class="field"><label>Hospital / Clinic</label><select id="dfHospital"><option value="">— Select Clinic —</option></select></div>
+                        <div class="premium-field" style="flex:1"><label>Specialization</label><input type="text" id="dfSpecialization" class="premium-input" placeholder="e.g. Cardiologist"></div>
+                        <div class="premium-field" style="flex:1"><label>Hospital / Clinic</label>
+                            <select id="dfHospital" class="premium-input" style="appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L7%207L13%201%22%20stroke%3D%22%23A4ADBA%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right%2018px%20center;">
+                                <option value="">— Select Clinic —</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field"><label>Phone</label><input type="tel" id="dfPhone" placeholder="+91 XXXXX XXXXX"></div>
-                        <div class="field"><label>Email</label><input type="email" id="dfEmail" placeholder="doctor@hospital.com"></div>
+                        <div class="premium-field" style="flex:1"><label>Phone <span>*</span></label><input type="tel" id="dfPhone" class="premium-input" placeholder="+91 XXXXX XXXXX"></div>
+                        <div class="premium-field" style="flex:1"><label>Email</label><input type="email" id="dfEmail" class="premium-input" placeholder="doctor@hospital.com"></div>
                     </div>
                     <div class="form-row" style="margin-top:12px">
-                        <div class="field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" placeholder="Clinic / hospital address"></div>
+                        <div class="premium-field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" class="premium-input" placeholder="Clinic / hospital address"></div>
                     </div>
                 </div>
                 <div class="form-section" style="margin-bottom:0">
@@ -50,6 +54,7 @@
                         </label>
                         <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the Doctors view.</div>
                     </div>
+                    <div id="dfError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:12px"></div>
                 </div>
             </div>
             <div class="modal-footer">

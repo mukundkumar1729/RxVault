@@ -237,6 +237,16 @@ function togglePasswordVisibility() {
   if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
+function toggleStaffPasswordVisibility() {
+  var inp = document.getElementById('staffPassword');
+  if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function togglePasswordVisibilityByID(id) {
+  var inp = document.getElementById(id);
+  if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
 async function submitLogin() {
   var email    = (document.getElementById('loginEmail')?.value    || '').trim();
   var password = (document.getElementById('loginPassword')?.value || '');
@@ -356,9 +366,25 @@ async function loadStaffList() {
       '</div>';
     return;
   }
-  var roleIcon = { admin:'🔐', doctor:'🩺', receptionist:'🧑‍💼', pharmacist:'💊', viewer:'👁️' };
-  var roleBg   = { admin:'var(--red-bg)', doctor:'var(--allopathy-bg)', receptionist:'var(--teal-pale)', pharmacist:'var(--homeopathy-bg)', viewer:'var(--bg)' };
-  var roleClr  = { admin:'var(--red)', doctor:'var(--allopathy)', receptionist:'var(--teal)', pharmacist:'var(--homeopathy)', viewer:'var(--text-muted)' };
+  var roleIcon = { 
+    admin:'🔐', doctor:'🩺', receptionist:'🧑‍💼', pharmacist:'💊', viewer:'👁️',
+    medical_assistant:'🏥', lab_technician:'🧪', billing_manager:'💰', 
+    inventory_manager:'📦', clinic_supervisor:'⭐', medical_support_aide:'🛏️'
+  };
+  var roleBg   = { 
+    admin:'var(--red-bg)', doctor:'var(--allopathy-bg)', receptionist:'var(--teal-pale)', 
+    pharmacist:'var(--homeopathy-bg)', viewer:'var(--bg)',
+    medical_assistant:'var(--teal-pale)', lab_technician:'var(--bg)', 
+    billing_manager:'var(--bg)', inventory_manager:'var(--bg)', 
+    clinic_supervisor:'var(--teal-pale)', medical_support_aide:'var(--bg)'
+  };
+  var roleClr  = { 
+    admin:'var(--red)', doctor:'var(--allopathy)', receptionist:'var(--teal)', 
+    pharmacist:'var(--homeopathy)', viewer:'var(--text-muted)',
+    medical_assistant:'var(--teal)', lab_technician:'var(--text-primary)', 
+    billing_manager:'var(--text-primary)', inventory_manager:'var(--text-primary)', 
+    clinic_supervisor:'var(--teal)', medical_support_aide:'var(--text-primary)'
+  };
 
   container.innerHTML = staffData.map(function(s) {
     var lastLogin = s.last_login
@@ -374,19 +400,21 @@ async function loadStaffList() {
             uname +
             (isMe ? ' <span class="staff-you-badge">You</span>' : '') +
             ' <span style="background:'+(roleBg[s.role]||'var(--bg)')+';color:'+(roleClr[s.role]||'var(--text-muted)')+';font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600">' +
-              (roleIcon[s.role]||'👤') + ' ' + capitalize(s.role) +
+              (roleIcon[s.role]||'👤') + ' ' + capitalize(s.role.replace(/_/g, ' ')) +
             '</span>' +
+            (s.staff_type === 'adhoc' ? ' <span style="background:var(--bg);color:var(--text-muted);border:1px solid var(--border);font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px">Ad-hoc</span>' : '') +
             (s.status && s.status !== 'available' ? ' <span class="status-badge status-'+s.status.split('_')[0]+'" style="font-size:9px; margin-left:4px">'+formatStatusLabel(s.status)+'</span>' : '') +
             (!s.is_active ? '<span style="background:var(--red-bg);color:var(--red);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-left:4px">Inactive</span>' : '') +
           '</div>' +
           '<div class="admin-dr-sub">' + escHtml(s.email) + ' &nbsp;·&nbsp; Last login: ' + lastLogin + '</div>' +
         '</div>' +
         '<div class="admin-dr-actions">' +
+          (s.staff_type === 'adhoc' ? '<button class="btn-sm btn-outline-teal" onclick="convertStaffToPermanent(\''+uid+'\', \''+uname+'\')">⭐ Make Permanent</button>' : '') +
           '<select onchange="changeStaffRole(this.dataset.uid, this.value)" data-uid="' + uid + '"' +
             (isMe ? ' disabled' : '') +
             ' style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px">' +
-            ['admin','doctor','receptionist','pharmacist','viewer'].map(function(r) {
-              return '<option value="'+r+'"'+(r===s.role?' selected':'')+'>'+capitalize(r)+'</option>';
+            ['admin','doctor','receptionist','pharmacist','viewer','medical_assistant','lab_technician','billing_manager','inventory_manager','clinic_supervisor','medical_support_aide'].map(function(r) {
+              return '<option value="'+r+'"'+(r===s.role?' selected':'')+'>'+capitalize(r.replace(/_/g, ' '))+'</option>';
             }).join('') +
           '</select>' +
           '<button class="btn-sm '+(s.is_active?'btn-outline-red':'btn-outline-teal')+'"' +
@@ -411,6 +439,7 @@ async function addStaffMember() {
   var email    = (document.getElementById('staffEmail')?.value   || '').trim();
   var password = (document.getElementById('staffPassword')?.value|| '');
   var role     = document.getElementById('staffRole')?.value     || 'doctor';
+  var staffType = document.querySelector('input[name="staffType"]:checked')?.value || 'permanent';
   var errEl    = document.getElementById('staffAddError');
   if (errEl) errEl.textContent = '';
 
@@ -424,7 +453,7 @@ async function addStaffMember() {
   var btn = document.querySelector('#staffTabAdd .btn-teal');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating…'; }
 
-  var result = await dbCreateStaffUser(name, email, password, role, activeClinicId, currentUser.id);
+  var result = await dbCreateStaffUser(name, email, password, role, activeClinicId, currentUser.id, staffType);
 
   if (btn) { btn.disabled = false; btn.textContent = '✅ Create Account & Add to Clinic'; }
 
@@ -439,8 +468,22 @@ async function addStaffMember() {
   document.getElementById('staffName').value    = '';
   document.getElementById('staffEmail').value   = '';
   document.getElementById('staffPassword').value = '';
+  document.getElementById('staffRole').value     = 'doctor';
+  var pRadio = document.querySelector('input[name="staffType"][value="permanent"]');
+  if (pRadio) pRadio.checked = true;
   showStaffTab('list');
   loadStaffList();
+}
+
+async function convertStaffToPermanent(userId, name) {
+  if (!confirm('Convert ' + name + ' to a Permanent staff member?')) return;
+  var ok = await dbUpdateStaffType(activeClinicId, userId, 'permanent');
+  if (ok) {
+    showToast('✅ ' + name + ' is now a Permanent staff member.', 'success');
+    loadStaffList();
+  } else {
+    showToast('Failed to update staff type.', 'error');
+  }
 }
 
 async function changeStaffRole(userId, newRole) {

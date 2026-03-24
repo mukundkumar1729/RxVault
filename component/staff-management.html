@@ -9,7 +9,7 @@
             <div class="modal-body" style="padding:0">
                 <div class="staff-tabs">
                     <button class="staff-tab active" id="tabStaffList" onclick="showStaffTab('list')">👥 Staff List</button>
-                    <button class="staff-tab" id="tabAddStaff" onclick="showStaffTab('add')">➕ Add Staff</button>
+                    <button class="staff-tab" id="tabStaffAdd" onclick="showStaffTab('add')">➕ Add Staff</button>
                     <button class="staff-tab" id="tabAuditLog" onclick="showStaffTab('audit')">📋 Audit Log</button>
                 </div>
                 <div id="staffTabList" style="max-height:55vh;overflow-y:auto">
@@ -18,16 +18,39 @@
                 <div id="staffTabAdd" style="display:none;padding:20px">
                     <div class="form-section-title">➕ Add New Staff Member</div>
                     <div class="form-row" style="margin-bottom:12px">
-                        <div class="field"><label>Full Name <span>*</span></label><input type="text" id="staffName" placeholder="Dr. Full Name"></div>
-                        <div class="field"><label>Email <span>*</span></label><input type="email" id="staffEmail" placeholder="staff@clinic.com"></div>
+                        <div class="premium-field" style="flex:1"><label>Full Name <span>*</span></label><input type="text" id="staffName" class="premium-input" placeholder="Dr. Full Name"></div>
+                        <div class="premium-field" style="flex:1"><label>Email <span>*</span></label><input type="email" id="staffEmail" class="premium-input" placeholder="staff@clinic.com"></div>
                     </div>
                     <div class="form-row" style="margin-bottom:12px">
-                        <div class="field"><label>Password <span>*</span></label><input type="password" id="staffPassword" placeholder="Min 8 characters"></div>
-                        <div class="field"><label>Clinic Role <span>*</span></label>
-                            <select id="staffRole">
+                        <div class="premium-field" style="flex:1"><label>Password <span>*</span></label>
+                            <div class="premium-input-wrapper">
+                                <input type="password" id="staffPassword" class="premium-input" placeholder="Min 8 characters">
+                                <button type="button" onclick="toggleStaffPasswordVisibility()" class="premium-pwd-toggle" title="Show/hide">👁</button>
+                            </div>
+                        </div>
+                        <div class="premium-field" style="flex:1"><label>Staff Type <span>*</span></label>
+                            <div style="display:flex;gap:12px;margin-top:12px">
+                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#4e5d78;font-weight:500">
+                                    <input type="radio" name="staffType" value="permanent" checked style="accent-color:var(--teal);width:16px;height:16px"> Permanent
+                                </label>
+                                <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#4e5d78;font-weight:500">
+                                    <input type="radio" name="staffType" value="adhoc" style="accent-color:var(--teal);width:16px;height:16px"> Ad-hoc
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="premium-field" style="flex:1"><label>Clinic Role <span>*</span></label>
+                            <select id="staffRole" class="premium-input" style="appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L7%207L13%201%22%20stroke%3D%22%23A4ADBA%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right%2018px%20center;">
                                 <option value="doctor">🩺 Doctor</option>
                                 <option value="receptionist">🧑‍💼 Receptionist</option>
                                 <option value="pharmacist">💊 Pharmacist</option>
+                                <option value="medical_assistant">🏥 Medical Assistant (MA)</option>
+                                <option value="lab_technician">🧪 Lab Technician</option>
+                                <option value="billing_manager">💰 Billing / Finance Manager</option>
+                                <option value="inventory_manager">📦 Inventory Manager</option>
+                                <option value="clinic_supervisor">⭐ Clinic Supervisor</option>
+                                <option value="medical_support_aide">🛏️ Medical Support Aide</option>
                                 <option value="admin">🔐 Admin</option>
                                 <option value="viewer">👁️ Viewer</option>
                             </select>

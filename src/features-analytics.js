@@ -292,12 +292,10 @@ function renderOutbreakView(container) {
   // Aggregate diagnosis data by week
   var diagByWeek = {};
   var diagTotal  = {};
-  var now = new Date();
 
   prescriptions.forEach(function(p) {
     if (!p.diagnosis || !p.date) return;
-    var d    = new Date(p.date);
-    var week = getWeekLabel(d);
+    var week = getWeekLabel(new Date(p.date));
     var diag = p.diagnosis.split(/[,\n]/)[0].trim().toLowerCase();
     if (!diag) return;
     if (!diagByWeek[diag]) diagByWeek[diag] = {};
@@ -308,13 +306,13 @@ function renderOutbreakView(container) {
   // Top diagnoses
   var topDiags = Object.entries(diagTotal).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
 
-  // Detect spikes — diagnoses where last week count > 2x previous week
+  // Detect spikes — diagnoses where last week count > 1.5x previous week
   var weeks = getLast8Weeks();
   var spikes = [];
   topDiags.forEach(function(d) {
     var diag = d[0];
-    var lastW = diagByWeek[diag]?.[weeks[weeks.length-1]] || 0;
-    var prevW = diagByWeek[diag]?.[weeks[weeks.length-2]] || 0;
+    var lastW = (diagByWeek[diag] && diagByWeek[diag][weeks[weeks.length-1]]) || 0;
+    var prevW = (diagByWeek[diag] && diagByWeek[diag][weeks[weeks.length-2]]) || 0;
     if (lastW > 0 && (prevW === 0 || lastW > prevW * 1.5)) {
       spikes.push({ diag, lastW, prevW, change: prevW === 0 ? '🆕 New' : '+' + Math.round((lastW/prevW-1)*100) + '%' });
     }
@@ -365,25 +363,41 @@ function renderOutbreakView(container) {
     '</div>';
 }
 
-function getLast8Weeks() {
-  var weeks = [];
-  for (var i = 7; i >= 0; i--) {
-    var d = new Date(); d.setDate(d.getDate() - i*7);
-    weeks.push(getWeekLabel(d));
-  }
-  return weeks;
+// FIX: getWeekLabel — correctly handles Sunday (getDay()=0)
+// Old bug: d.getDate() - d.getDay() + 1 for Sunday gave d.getDate() + 1 (next day = next week's Monday)
+function getWeekLabel(date) {
+  var d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  var day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  // For Sunday (0), go back 6 days to previous Monday
+  // For Monday (1), diff = 0 (already Monday)
+  // For Tue-Sat (2-6), go back (day - 1) days
+  var diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMonday);
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
 }
 
-function getWeekLabel(date) {
-  var d   = new Date(date);
-  var mon = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-  return mon.toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
+// FIX: getLast8Weeks — anchored to this week's Monday for consistent key matching
+function getLast8Weeks() {
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Find this week's Monday using the same logic as getWeekLabel
+  var day = today.getDay();
+  var diffToMonday = day === 0 ? -6 : 1 - day;
+  var thisMonday = new Date(today.getTime() + diffToMonday * 86400000);
+
+  var weeks = [];
+  for (var i = 7; i >= 0; i--) {
+    var weekMonday = new Date(thisMonday.getTime() - i * 7 * 86400000);
+    weeks.push(weekMonday.toLocaleDateString('en-IN', {day:'2-digit', month:'short'}));
+  }
+  return weeks;
 }
 
 function renderHeatmap(topDiags, diagByWeek, weeks) {
   var maxVal = 0;
   topDiags.forEach(function(d) {
-    weeks.forEach(function(w) { var v = diagByWeek[d[0]]?.[w]||0; if(v>maxVal) maxVal=v; });
+    weeks.forEach(function(w) { var v = (diagByWeek[d[0]] && diagByWeek[d[0]][w]) || 0; if(v>maxVal) maxVal=v; });
   });
   if (maxVal === 0) maxVal = 1;
 
@@ -403,9 +417,8 @@ function renderHeatmap(topDiags, diagByWeek, weeks) {
       return '<tr>' +
         '<td style="padding:5px 10px;font-weight:600;color:var(--text-primary)">' + escHtml(capitalize(diag)) + '</td>' +
         weeks.map(function(w) {
-          var val  = diagByWeek[diag]?.[w] || 0;
+          var val  = (diagByWeek[diag] && diagByWeek[diag][w]) || 0;
           var pct  = val / maxVal;
-          var intensity = Math.round(pct * 100);
           var bg   = val === 0 ? 'var(--bg)' :
                      pct >= 0.8 ? '#dc2626' :
                      pct >= 0.5 ? '#d97706' :
@@ -430,7 +443,7 @@ function renderOutbreakTrends(topDiags, diagByWeek, weeks) {
   return '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">' +
     topDiags.map(function(d, i) {
       var diag   = d[0];
-      var values = weeks.map(function(w){ return diagByWeek[diag]?.[w]||0; });
+      var values = weeks.map(function(w){ return (diagByWeek[diag] && diagByWeek[diag][w]) || 0; });
       var maxV   = Math.max.apply(null, values) || 1;
       var clr    = colors[i % colors.length];
       var bars   = values.map(function(v) {
@@ -453,8 +466,6 @@ function renderOutbreakTrends(topDiags, diagByWeek, weeks) {
 }
 
 function filterOutbreak() {
-  var q = (document.getElementById('outbreakSearch')?.value||'').toLowerCase().trim();
-  // Simple re-render with filter — reuse full render
   renderOutbreakView(document.getElementById('outbreakView'));
 }
 
@@ -477,7 +488,7 @@ function exportOutbreakData() {
   var csv = 'Rx Vault Disease Trend Report\nClinic: ' + (clinic?.name||'') + '\nGenerated: ' + new Date().toLocaleString('en-IN') + '\n\n';
   csv += 'Diagnosis,' + weeks.join(',') + ',Total\n';
   Object.entries(diagCount).sort(function(a,b){return b[1]-a[1];}).forEach(function(d) {
-    var row = d[0] + ',' + weeks.map(function(w){ return diagByWeek[d[0]]?.[w]||0; }).join(',') + ',' + d[1];
+    var row = d[0] + ',' + weeks.map(function(w){ return (diagByWeek[d[0]] && diagByWeek[d[0]][w]) || 0; }).join(',') + ',' + d[1];
     csv += row + '\n';
   });
 

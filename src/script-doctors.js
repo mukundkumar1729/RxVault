@@ -87,6 +87,7 @@ function openAddDoctorForm() {
   document.getElementById('dfType').value        = 'allopathy';
   document.getElementById('dfUnavailable').checked = false;
   document.getElementById('availEditor').innerHTML = '';
+  var errEl = document.getElementById('dfError'); if (errEl) errEl.textContent = '';
   populateHospitalDropdown('dfHospital', '');
   addAvailRow(); closeModal('adminModal'); openModal('doctorFormModal');
 }
@@ -100,16 +101,38 @@ function openEditDoctorForm(idx) {
   document.getElementById('dfType').value           = d.type || 'allopathy';
   document.getElementById('dfUnavailable').checked  = !!d.unavailable;
   var editor = document.getElementById('availEditor'); editor.innerHTML = '';
+  var errEl  = document.getElementById('dfError'); if (errEl) errEl.textContent = '';
   (d.availability || []).forEach(addAvailRow); if (!d.availability?.length) addAvailRow();
   closeModal('adminModal'); openModal('doctorFormModal');
 }
 async function saveDoctor() {
   var regNo = getVal('dfRegNo'), name = getVal('dfName');
-  if (!regNo) { showToast('Reg. Number is required.', 'error'); return; }
-  if (!name)  { showToast('Doctor name is required.',  'error'); return; }
+  var phone = getVal('dfPhone'), email = getVal('dfEmail');
+  var errEl = document.getElementById('dfError'); if (errEl) errEl.textContent = '';
+
+  if (!regNo) { if (errEl) errEl.textContent = 'Reg. Number is required.'; return; }
+  if (!name)  { if (errEl) errEl.textContent = 'Doctor name is required.';  return; }
+  if (!phone) { if (errEl) errEl.textContent = 'Phone number is required.'; return; }
+
+  // Phone Validation: Numeric/Format check (10-15 chars, digits/spaces/hyphens)
+  var phoneRegex = /^\+?[\d\s-]{10,15}$/;
+  if (!phoneRegex.test(phone)) {
+    if (errEl) errEl.textContent = 'Please enter a valid phone number (10-15 digits).';
+    return;
+  }
+
+  // Email Validation: Basic regex
+  if (email) {
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      if (errEl) errEl.textContent = 'Please enter a valid email address.';
+      return;
+    }
+  }
+
   if (editingDoctorIdx === null) {
     var dup = doctorRegistry.find(function(d){ return d.regNo.toLowerCase() === regNo.toLowerCase(); });
-    if (dup) { showToast('Reg No "' + regNo + '" already exists.', 'error'); return; }
+    if (dup) { if (errEl) errEl.textContent = 'Reg No "' + regNo + '" already exists.'; return; }
   }
   var d = {
     regNo, name, qualification: getVal('dfQualification'), specialization: getVal('dfSpecialization'),

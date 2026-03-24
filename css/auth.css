@@ -98,6 +98,62 @@
   padding: 4px;
   transition: color 0.15s;
 }
+
+/* ─── Premium Input Style (Staff Management) ─── */
+.premium-field {
+  margin-bottom: 20px;
+}
+.premium-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4e5d78;
+  margin-bottom: 10px;
+}
+.premium-field label span {
+  color: var(--red);
+  margin-left: 2px;
+}
+.premium-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.premium-input {
+  width: 100%;
+  background: #eef4ff;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.premium-input:focus {
+  background: #fff;
+  border-color: var(--teal);
+  box-shadow: 0 4px 12px rgba(10,124,110,0.08);
+}
+.premium-pwd-toggle {
+  position: absolute;
+  right: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a4adba;
+  font-size: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+.premium-pwd-toggle:hover {
+  color: var(--teal);
+}
 .login-pwd-toggle:hover { color: var(--teal); }
 .login-error {
   color: var(--red);
