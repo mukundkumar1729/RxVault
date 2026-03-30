@@ -751,3 +751,120 @@ function updateCallStaffBellVisibility() {
   var allowed = ['doctor', 'admin', 'superadmin'].includes(role);
   bell.style.display = allowed ? 'flex' : 'none';
 }
+
+// ════════════════════════════════════════════════════════════
+//   Staff Profile Update
+// ════════════════════════════════════════════════════════════
+
+function openStaffProfileModal(userId, staffData) {
+  var overlay = document.getElementById('staffProfileOverlay');
+  if (!overlay) { overlay = document.createElement('div'); overlay.id='staffProfileOverlay'; overlay.className='modal-overlay'; document.body.appendChild(overlay); }
+  var s = staffData || {};
+  overlay.innerHTML =
+    '<div class="modal" style="max-width:500px">' +
+      '<div class="modal-header"><div>' +
+        '<div class="modal-title">👤 Update Staff Profile</div>' +
+        '<div class="modal-subtitle">'+escHtml(s.name||'')+'</div>' +
+      '</div><button class="modal-close" onclick="closeOverlay(\'staffProfileOverlay\')">✕</button></div>' +
+      '<div class="modal-body">' +
+        '<div class="premium-field"><label>Full Name</label>' +
+          '<input type="text" id="spName" class="premium-input" value="'+escAttr(s.name||'')+'" placeholder="Full Name"></div>' +
+        '<div class="premium-field"><label>Email</label>' +
+          '<input type="email" id="spEmail" class="premium-input" value="'+escAttr(s.email||'')+'" placeholder="Email"></div>' +
+        '<div class="premium-field"><label>Staff Role</label>' +
+          '<select id="spRole" class="premium-input" style="appearance:none;background-image:url(\'data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%228%22%20viewBox%3D%220%200%2014%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L7%207L13%201%22%20stroke%3D%22%23A4ADBA%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E\');background-repeat:no-repeat;background-position:right%2018px%20center;">' +
+            ['doctor','receptionist','pharmacist','medical_assistant','lab_technician','billing_manager','inventory_manager','clinic_supervisor','medical_support_aide','admin','viewer'].map(function(r){
+              return '<option value="'+r+'"'+(r===s.role?' selected':'')+'>'+capitalize(r.replace(/_/g,' '))+'</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div class="premium-field"><label>Staff Type</label>' +
+          '<div style="display:flex;gap:12px;margin-top:8px">' +
+            '<label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="radio" name="spStaffType" value="permanent"'+(s.staff_type!=='adhoc'?' checked':'')+' style="accent-color:var(--teal)"> Permanent</label>' +
+            '<label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="radio" name="spStaffType" value="adhoc"'+(s.staff_type==='adhoc'?' checked':'')+' style="accent-color:var(--teal)"> Ad-hoc</label>' +
+          '</div></div>' +
+        '<div style="padding:12px 14px;background:var(--teal-pale);border-radius:var(--radius);border-left:3px solid var(--teal);font-size:12.5px;color:var(--teal);margin-bottom:0">' +
+          '🔑 To change password, use <strong>Change Password</strong> from the top-right user menu.' +
+        '</div>' +
+        '<div id="spError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:8px"></div>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn-sm btn-outline-teal" onclick="closeOverlay(\'staffProfileOverlay\')">Cancel</button>' +
+        '<button class="btn-sm btn-teal" onclick="saveStaffProfile(\''+escAttr(userId)+'\')">💾 Update Profile</button>' +
+      '</div>' +
+    '</div>';
+  overlay.classList.add('open'); document.body.style.overflow = 'hidden';
+}
+
+async function saveStaffProfile(userId) {
+  var name     = (document.getElementById('spName')?.value  || '').trim();
+  var email    = (document.getElementById('spEmail')?.value || '').trim();
+  var role     = document.getElementById('spRole')?.value   || '';
+  var staffType= document.querySelector('input[name="spStaffType"]:checked')?.value || 'permanent';
+  var errEl    = document.getElementById('spError');
+  if (errEl) errEl.textContent = '';
+
+  if (!name)  { if(errEl) errEl.textContent='Name is required.';  return; }
+  if (!email) { if(errEl) errEl.textContent='Email is required.'; return; }
+
+  var btn = document.querySelector('#staffProfileOverlay .btn-teal');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ Saving…'; }
+
+  // Update name in users table
+  try {
+    await db.from('users').update({ name: name, email: email.toLowerCase() }).eq('id', userId);
+  } catch(e) { console.warn('[saveStaffProfile] users update:', e); }
+
+  // Update role and type in clinic_staff
+  var ok = await dbUpdateStaffRole(activeClinicId, userId, role);
+  await dbUpdateStaffType(activeClinicId, userId, staffType);
+
+  if (btn) { btn.disabled=false; btn.textContent='💾 Update Profile'; }
+
+  if (!ok) { if(errEl) errEl.textContent='Failed to update profile.'; return; }
+
+  closeOverlay('staffProfileOverlay');
+  showToast('✅ Profile updated successfully.', 'success');
+
+  // Refresh the staff list
+  if (typeof loadStaffList === 'function') loadStaffList();
+  if (typeof filterStaffListView === 'function') {
+    var staffData = await dbGetClinicStaff(activeClinicId);
+    window._staffListData = staffData;
+    filterStaffListView();
+  }
+}
+
+// Patch loadStaffList to add "Edit Profile" button
+var _origLoadStaffList = typeof loadStaffList === 'function' ? loadStaffList : null;
+if (_origLoadStaffList) {
+  loadStaffList = async function() {
+    await _origLoadStaffList();
+    // Add profile edit buttons after render
+    setTimeout(function() {
+      document.querySelectorAll('.admin-doctor-row').forEach(function(row) {
+        if (row.querySelector('.profile-edit-btn')) return;
+        var actionsDiv = row.querySelector('.admin-dr-actions');
+        if (!actionsDiv) return;
+        // Get user ID from existing buttons' data attributes
+        var existingBtn = actionsDiv.querySelector('[data-uid]');
+        if (!existingBtn) return;
+        var uid  = existingBtn.dataset.uid;
+        var name = row.querySelector('.admin-dr-name')?.textContent?.split('\n')[0]?.trim() || '';
+        var emailEl = row.querySelector('.admin-dr-sub');
+        var emailText = emailEl ? emailEl.textContent.split('·')[0]?.trim() : '';
+        var role = '';
+        var roleEl = actionsDiv.querySelector('select');
+        if (roleEl) role = roleEl.value;
+
+        var editBtn = document.createElement('button');
+        editBtn.className = 'btn-sm btn-outline-teal profile-edit-btn';
+        editBtn.textContent = '👤 Profile';
+        editBtn.style.fontSize = '11px';
+        editBtn.addEventListener('click', function() {
+          openStaffProfileModal(uid, { name: name, email: emailText, role: role, staff_type: 'permanent' });
+        });
+        actionsDiv.insertBefore(editBtn, actionsDiv.firstChild);
+      });
+    }, 200);
+  };
+}

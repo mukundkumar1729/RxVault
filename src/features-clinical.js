@@ -49,7 +49,7 @@ function openAllergyManager(patientName) {
   var patient = patientRegistry.find(function(p){
     return (p.name||'').trim().toLowerCase() === (patientName||'').trim().toLowerCase();
   });
-  if (!patient) { showToast('Patient not found in registry.', 'error'); return; }
+  if (!patient) { showToast('Patient allergies not found in registry. Please ensure the patient is registered.', 'error'); return; }
 
   var overlay = document.getElementById('allergyOverlay');
   if (!overlay) {

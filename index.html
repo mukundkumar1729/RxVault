@@ -332,10 +332,8 @@
     <!-- Toast container -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ════════════════════════════════════════════
-         SCRIPTS — load order matters
-         ════════════════════════════════════════════ -->
-
+    <div class="scripts">
+    <script src="src/render-html.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -351,6 +349,8 @@
     <script src="src/script-filters.js"></script>
     <script src="src/script-doctors.js"></script>
     <script src="src/script-patients.js"></script>
+    <script src="src/script-staff-view.js"></script>
+    <script src="src/location-directory.js"></script>
     <script src="src/features.js"></script>
     <script src="src/features-ai.js?v=2"></script>
     <script src="src/features-stock.js"></script>
@@ -365,7 +365,7 @@
     <script src="src/features-vitals.js"></script>  
     <script src="src/bulk-import.js"></script>
     <script src="src/sidebar-collapsible.js"></script>
-    <script src="src/render-html.js"></script>
-
+    <script src="src/fixes.js"></script>
+</div>
 </body>
 </html>

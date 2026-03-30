@@ -1,5 +1,4 @@
-
-            <!-- ── NAVIGATION ── -->
+<!-- ── NAVIGATION ── -->
             <div class="sidebar-section sidebar-collapsible" id="sidebarNav">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarNav')">
                     <span class="sidebar-active-dot" id="dotNav"></span>
@@ -33,7 +32,7 @@
 
             <div class="sidebar-divider"></div>
 
-            <!-- ── RECORDS (Doctors · Patients · Appointments) ── -->
+            <!-- ── RECORDS (Doctors · Patients · Appointments · Staff) ── -->
             <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarRecords">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarRecords')">
                     <span class="sidebar-active-dot" id="dotRecords"></span>
@@ -53,6 +52,13 @@
                         <span class="nav-icon">📅</span> Appointments
                         <span class="nav-badge" id="badgeAppointments">0</span>
                     </button>
+                    <button class="nav-item" id="navStaffList" onclick="showStaffListView()">
+                        <span class="nav-icon">👥</span> Staff Directory
+                        <span class="nav-badge" id="badgeStaffList">0</span>
+                    </button>
+                      <button class="nav-item" id="navLocationDir" onclick="showLocationDirectoryView()">
+                        <span class="nav-icon">🗺️</span> Location Directory
+                    </button>
                 </div>
             </div>
 
@@ -71,7 +77,7 @@
                         <span class="nav-badge" id="badgePharmacy">0</span>
                     </button>
                     <button class="nav-item" id="navStock" onclick="showStockView()">
-                        <span class="nav-icon">📦</span> Stock & Inventory
+                        <span class="nav-icon">📦</span> Stock &amp; Inventory
                     </button>
                 </div>
             </div>

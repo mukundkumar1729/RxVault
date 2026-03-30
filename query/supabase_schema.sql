@@ -689,3 +689,158 @@ FROM information_schema.columns
 WHERE table_name = 'vitals'
 ORDER BY ordinal_position;
 
+--------------------30th MARCH =---------------------------------
+-- ═══════════════════════════════════════════════════════════
+--  RX VAULT — FIXES MIGRATION SQL
+--  Run in Supabase → SQL Editor
+-- ═══════════════════════════════════════════════════════════
+
+-- ── 1. Location Directory Table ────────────────────────────
+CREATE TABLE IF NOT EXISTS location_directory (
+  id            TEXT        PRIMARY KEY DEFAULT ('loc_' || extract(epoch from now())::bigint::text || '_' || substr(md5(random()::text),1,4)),
+  clinic_id     TEXT        NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+  entity_type   TEXT        DEFAULT 'other'
+                CHECK (entity_type IN ('doctor','lab','pharmacy','ward','ot','admin','other')),
+  name          TEXT        NOT NULL,
+  specialization TEXT       DEFAULT '',
+  floor         TEXT        DEFAULT '',
+  block         TEXT        DEFAULT '',
+  cabin         TEXT        DEFAULT '',
+  phone         TEXT        DEFAULT '',
+  notes         TEXT        DEFAULT '',
+  updated_at    TIMESTAMPTZ DEFAULT NOW(),
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_locdir_clinic ON location_directory(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_locdir_type   ON location_directory(entity_type);
+
+ALTER TABLE location_directory ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_location" ON location_directory;
+CREATE POLICY "allow_all_location" ON location_directory
+  FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ── 2. Add is_registered and patient_id to appointments ─────
+ALTER TABLE appointments
+ADD COLUMN IF NOT EXISTS is_registered BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS patient_id    TEXT    DEFAULT '';
+
+-- Backfill: mark existing appointments as registered (assume old data was registered)
+UPDATE appointments SET is_registered = TRUE WHERE is_registered IS NULL OR is_registered = FALSE;
+
+-- ── 3. Password Reset Tokens Table (if not exists) ──────────
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token       TEXT        NOT NULL,
+  is_used     BOOLEAN     DEFAULT FALSE,
+  expires_at  TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '30 minutes'),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE password_reset_tokens 
+ADD COLUMN email text;
+
+CREATE INDEX IF NOT EXISTS idx_prt_email   ON password_reset_tokens(email);
+CREATE INDEX IF NOT EXISTS idx_prt_token   ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_prt_expires ON password_reset_tokens(expires_at);
+
+ALTER TABLE password_reset_tokens ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all_tokens" ON password_reset_tokens;
+CREATE POLICY "allow_all_tokens" ON password_reset_tokens
+  FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ── 4. Generate Reset Token Function ────────────────────────
+CREATE OR REPLACE FUNCTION generate_reset_token(p_email TEXT)
+RETURNS TABLE(token TEXT, user_name TEXT)
+LANGUAGE plpgsql AS $$
+DECLARE
+  v_user_id UUID;
+  v_name    TEXT;
+  v_token   TEXT;
+BEGIN
+  -- Find user
+  SELECT id, name INTO v_user_id, v_name
+  FROM users
+  WHERE LOWER(TRIM(email)) = LOWER(TRIM(p_email))
+    AND is_active = TRUE;
+
+  IF v_user_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Invalidate previous unused tokens for this user
+  UPDATE password_reset_tokens
+  SET is_used = TRUE
+  WHERE user_id = v_user_id AND is_used = FALSE;
+
+  -- Generate a 6-digit numeric token
+  v_token := LPAD((FLOOR(RANDOM() * 900000) + 100000)::TEXT, 6, '0');
+
+  -- Insert new token
+  INSERT INTO password_reset_tokens (user_id, email, token, expires_at)
+  VALUES (v_user_id, LOWER(TRIM(p_email)), v_token, NOW() + INTERVAL '30 minutes');
+
+  RETURN QUERY SELECT v_token, v_name;
+END;
+$$;
+
+-- ── 5. Consume Reset Token Function ─────────────────────────
+CREATE OR REPLACE FUNCTION consume_reset_token(
+  p_email    TEXT,
+  p_token    TEXT,
+  p_new_pass TEXT
+)
+RETURNS TEXT LANGUAGE plpgsql AS $$
+DECLARE
+  v_record RECORD;
+BEGIN
+  -- Find matching token
+  SELECT prt.*, u.id as u_id INTO v_record
+  FROM password_reset_tokens prt
+  JOIN users u ON prt.user_id = u.id
+  WHERE LOWER(TRIM(prt.email)) = LOWER(TRIM(p_email))
+    AND prt.token = TRIM(p_token)
+  ORDER BY prt.created_at DESC
+  LIMIT 1;
+
+  IF v_record IS NULL THEN
+    RETURN 'invalid';
+  END IF;
+
+  IF v_record.is_used THEN
+    RETURN 'used';
+  END IF;
+
+  IF v_record.expires_at < NOW() THEN
+    RETURN 'expired';
+  END IF;
+
+  -- Update password
+  UPDATE users
+  SET password_hash = hash_password(p_new_pass),
+      updated_at    = NOW()
+  WHERE id = v_record.u_id;
+
+  -- Mark token as used
+  UPDATE password_reset_tokens
+  SET is_used = TRUE
+  WHERE id = v_record.id;
+
+  RETURN 'ok';
+END;
+$$;
+
+-- ── Verify ──────────────────────────────────────────────────
+SELECT
+  table_name,
+  'created ✅' AS status
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('location_directory', 'password_reset_tokens')
+ORDER BY table_name;
+
+SELECT routine_name
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+  AND routine_name IN ('generate_reset_token', 'consume_reset_token')
+ORDER BY routine_name;
