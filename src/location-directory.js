@@ -124,10 +124,24 @@ function filterLocationDir() {
     }).join('') + '</div>';
 }
 
-function openAddLocationEntry(existing) {
+async function openAddLocationEntry(existing) {
   var overlay = document.getElementById('locDirEntryOverlay');
   if (!overlay) { overlay = document.createElement('div'); overlay.id='locDirEntryOverlay'; overlay.className='modal-overlay'; document.body.appendChild(overlay); }
   var e = existing || {};
+
+  var staffList = [];
+  try { staffList = (await dbGetClinicStaff(activeClinicId)) || []; } catch(ex) { staffList = []; }
+  window._locDirStaffMap = {};
+  staffList.forEach(function(s) { window._locDirStaffMap[s.user_id] = s; });
+
+  var staffOpts = '<option value="">— Select Staff Member —</option>' +
+    staffList.map(function(s) {
+      var sel = (e.staff_user_id === s.user_id) ? ' selected' : '';
+      return '<option value="'+escAttr(s.user_id)+'"'+sel+'>'+escHtml(s.name)+' ('+escHtml((s.user_id||'').slice(-6))+')</option>';
+    }).join('');
+
+  var isDoctorType = (!e.entity_type || e.entity_type === 'doctor');
+
   overlay.innerHTML =
     '<div class="modal" style="max-width:480px">' +
       '<div class="modal-header"><div>' +
@@ -137,9 +151,14 @@ function openAddLocationEntry(existing) {
       '<div class="modal-body">' +
         '<div class="form-row" style="margin-bottom:12px">' +
           '<div class="field"><label>Name <span style="color:var(--red)">*</span></label><input type="text" id="loc_name" value="'+escAttr(e.name||'')+'" placeholder="e.g. Dr. Priya Mehta / MRI Lab"></div>' +
-          '<div class="field"><label>Type</label><select id="loc_type">' +
+          '<div class="field"><label>Type</label><select id="loc_type" onchange="onLocTypeChange()">' +
             ['doctor','lab','pharmacy','ward','ot','admin','other'].map(function(t){ return '<option value="'+t+'"'+(t===(e.entity_type||'doctor')?' selected':'')+'>'+({'doctor':'🩺 Doctor','lab':'🧪 Lab/Diagnostic','pharmacy':'💊 Pharmacy','ward':'🛏️ Ward','ot':'⚕️ OT/Procedure','admin':'🔐 Admin','other':'📍 Other'}[t])+'</option>'; }).join('') +
           '</select></div>' +
+        '</div>' +
+        '<div id="loc_staff_field" class="field" style="margin-bottom:12px;'+(isDoctorType?'':'display:none')+'">' +
+          '<label>Staff Member <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Registered only)</span></label>' +
+          '<select id="loc_staff_id" onchange="onLocStaffSelect()" style="width:100%">'+staffOpts+'</select>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Select a registered staff member — name &amp; specialization will be auto-filled.</div>' +
         '</div>' +
         '<div class="field" style="margin-bottom:12px"><label>Specialization / Description</label><input type="text" id="loc_spec" value="'+escAttr(e.specialization||'')+'" placeholder="e.g. Cardiologist, Blood Tests, MRI, CT Scan"></div>' +
         '<div class="form-row" style="margin-bottom:12px">' +
@@ -160,18 +179,54 @@ function openAddLocationEntry(existing) {
   overlay.classList.add('open'); document.body.style.overflow = 'hidden';
 }
 
+function onLocTypeChange() {
+  var type = document.getElementById('loc_type')?.value || 'other';
+  var staffField = document.getElementById('loc_staff_field');
+  if (staffField) staffField.style.display = (type === 'doctor') ? '' : 'none';
+  if (type !== 'doctor') {
+    var staffSel = document.getElementById('loc_staff_id');
+    if (staffSel) staffSel.value = '';
+  }
+}
+
+function onLocStaffSelect() {
+  var uid = document.getElementById('loc_staff_id')?.value || '';
+  if (!uid || !window._locDirStaffMap) return;
+  var staff = window._locDirStaffMap[uid];
+  if (!staff) return;
+  var nameEl = document.getElementById('loc_name');
+  var specEl = document.getElementById('loc_spec');
+  if (nameEl) nameEl.value = 'Dr. ' + staff.name;
+  if (specEl) specEl.value = staff.specialization || staff.role || '';
+}
+
 function openEditLocationEntry(id) {
   var entry = _locationEntries.find(function(e){ return e.id === id; });
   if (entry) openAddLocationEntry(entry);
 }
 
 async function saveLocationEntry(existingId) {
-  var name = (document.getElementById('loc_name')?.value || '').trim();
-  if (!name) { showToast('Name is required.', 'error'); return; }
+  var name   = (document.getElementById('loc_name')?.value || '').trim();
+  var type   = document.getElementById('loc_type')?.value || 'other';
+  var errEl  = document.getElementById('loc_error');
+  if (errEl) errEl.textContent = '';
+
+  if (!name) { if(errEl) errEl.textContent='Name is required.'; showToast('Name is required.', 'error'); return; }
+
+  // Doctor entries must be linked to a registered staff member
+  if (type === 'doctor') {
+    var staffId = document.getElementById('loc_staff_id')?.value || '';
+    if (!staffId) {
+      if(errEl) errEl.textContent='Please select a registered staff member for a Doctor location entry.';
+      showToast('Select a registered staff member.', 'error');
+      return;
+    }
+  }
   var entry = {
     id:          existingId || ('loc_'+Date.now()+'_'+Math.random().toString(36).slice(2,5)),
     clinic_id:   activeClinicId,
-    entity_type: document.getElementById('loc_type')?.value     || 'other',
+    staff_user_id: document.getElementById('loc_staff_id')?.value || null,
+    entity_type: type,
     name,
     specialization: document.getElementById('loc_spec')?.value  || '',
     floor:       document.getElementById('loc_floor')?.value    || '',

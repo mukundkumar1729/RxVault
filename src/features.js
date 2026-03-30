@@ -515,6 +515,10 @@ async function saveAppointment() {
     name  = (document.getElementById('bk_patientName')?.value || '').trim();
     phone = (document.getElementById('bk_phone')?.value       || '').trim();
     if (!name) { if (errEl) errEl.textContent = 'Patient name is required.'; return; }
+    if (phone && phone.replace(/[\s\-\+]/g, '').length < 10) { 
+        if (errEl) errEl.textContent = 'Please enter a valid phone number (min 10 digits).'; 
+        return; 
+    }
     isRegistered = false;
   }
 

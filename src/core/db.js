@@ -1,28 +1,22 @@
+import { store } from './store.js';
 // ════════════════════════════════════════════════════════════
 //  SUPABASE.JS — Full database layer for Rx Vault
 //  Includes: core CRUD + AI search + auth functions
 //  Load order: FIRST (before clinic.js, auth.js, script.js)
 // ════════════════════════════════════════════════════════════
 
-var SUPABASE_URL = 'https://wavakcolrtrwmjcjkdfc.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_T0hi4JUMec0BU0si3U8UCQ_gShxYVYm';
+export const SUPABASE_URL = 'https://wavakcolrtrwmjcjkdfc.supabase.co';
+export const SUPABASE_KEY = 'sb_publishable_T0hi4JUMec0BU0si3U8UCQ_gShxYVYm';
 
-var _sc = supabase; var createClient = _sc.createClient;
-var db = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+export const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Attach to window for legacy scripts (non-module scripts)
-if (typeof window !== 'undefined') {
-    window.SUPABASE_URL = SUPABASE_URL;
-    window.SUPABASE_KEY = SUPABASE_KEY;
-    window.db = db;
-}
-
-function dbErr(label, error) {
+export const dbErr = function(label, error) {
   console.error('[DB] ' + label + ':', error?.message || error);
 }
 
 // ─── Loading overlay ──────────────────────────────────────
-function showLoading(msg) {
+export const showLoading = function(msg) {
   msg = msg || 'Loading…';
   var el = document.getElementById('dbLoadingOverlay');
   if (!el) {
@@ -40,7 +34,7 @@ function showLoading(msg) {
     el.style.display = 'flex';
   }
 }
-function hideLoading() {
+export const hideLoading = function() {
   var el = document.getElementById('dbLoadingOverlay');
   if (el) el.style.display = 'none';
 }
@@ -48,29 +42,29 @@ function hideLoading() {
 // ════════════════════════════════════════════════════════════
 //  CLINICS
 // ════════════════════════════════════════════════════════════
-async function dbGetClinics() {
+export const dbGetClinics = async function() {
   const { data, error } = await db.from('clinics').select('*').order('created_at', { ascending: true });
   if (error) { dbErr('getClinics', error); return []; }
   return (data || []).map(dbToClinic);
 }
-async function dbInsertClinic(clinic) {
+export const dbInsertClinic = async function(clinic) {
   const { data, error } = await db.from('clinics').insert(clinicToDb(clinic)).select().single();
   if (error) { dbErr('insertClinic', error); return null; }
   return dbToClinic(data);
 }
-async function dbUpdateClinic(id, fields) {
+export const dbUpdateClinic = async function(id, fields) {
   const row = clinicToDb(fields);
   delete row.id; delete row.created_at;
   const { error } = await db.from('clinics').update(row).eq('id', id);
   if (error) { dbErr('updateClinic', error); return false; }
   return true;
 }
-async function dbDeleteClinic(id) {
+export const dbDeleteClinic = async function(id) {
   const { error } = await db.from('clinics').delete().eq('id', id);
   if (error) { dbErr('deleteClinic', error); return false; }
   return true;
 }
-function clinicToDb(c) {
+export const clinicToDb = function(c) {
   return {
     id: c.id, name: c.name||'', address: c.address||'', phone: c.phone||'',
     email: c.email||'', type: c.type||'multispecialty', logo: c.logo||'🏥',
@@ -78,7 +72,7 @@ function clinicToDb(c) {
     created_at: c.createdAt||new Date().toISOString()
   };
 }
-function dbToClinic(r) {
+export const dbToClinic = function(r) {
   return {
     id: r.id, name: r.name, address: r.address||'', phone: r.phone||'',
     email: r.email||'', type: r.type||'multispecialty', logo: r.logo||'🏥',
@@ -90,23 +84,23 @@ function dbToClinic(r) {
 // ════════════════════════════════════════════════════════════
 //  PRESCRIPTIONS
 // ════════════════════════════════════════════════════════════
-async function dbGetPrescriptions(clinicId) {
+export const dbGetPrescriptions = async function(clinicId) {
   const { data, error } = await db.from('prescriptions').select('*').eq('clinic_id', clinicId).order('date', { ascending: false });
   if (error) { dbErr('getPrescriptions', error); return []; }
   return (data || []).map(dbToRx);
 }
-async function dbUpsertPrescription(rx) {
+export const dbUpsertPrescription = async function(rx) {
   const row = rxToDb(rx);
   const { error } = await db.from('prescriptions').upsert(row, { onConflict: 'id' });
   if (error) { dbErr('upsertPrescription', error); return false; }
   return true;
 }
-async function dbDeletePrescription(id) {
+export const dbDeletePrescription = async function(id) {
   const { error } = await db.from('prescriptions').delete().eq('id', id);
   if (error) { dbErr('deletePrescription', error); return false; }
   return true;
 }
-function rxToDb(p) {
+export const rxToDb = function(p) {
   return {
     id: p.id, clinic_id: p.clinicId, type: p.type||'allopathy',
     patient_name: p.patientName||'', age: p.age||'', gender: p.gender||'',
@@ -119,7 +113,7 @@ function rxToDb(p) {
     created_at: p.createdAt||new Date().toISOString(), updated_at: p.updatedAt||new Date().toISOString()
   };
 }
-function dbToRx(r) {
+export const dbToRx = function(r) {
   return {
     id: r.id, clinicId: r.clinic_id, type: r.type, patientName: r.patient_name,
     age: r.age||'', gender: r.gender||'', bloodGroup: r.blood_group||'',
@@ -136,23 +130,23 @@ function dbToRx(r) {
 // ════════════════════════════════════════════════════════════
 //  DOCTORS
 // ════════════════════════════════════════════════════════════
-async function dbGetDoctors(clinicId) {
+export const dbGetDoctors = async function(clinicId) {
   const { data, error } = await db.from('doctors').select('*').eq('clinic_id', clinicId).order('created_at', { ascending: true });
   if (error) { dbErr('getDoctors', error); return []; }
   return (data || []).map(dbToDoctor);
 }
-async function dbUpsertDoctor(doctor, clinicId) {
+export const dbUpsertDoctor = async function(doctor, clinicId) {
   const row = doctorToDb(doctor, clinicId);
   const { error } = await db.from('doctors').upsert(row, { onConflict: 'id' });
   if (error) { dbErr('upsertDoctor', error); return false; }
   return true;
 }
-async function dbDeleteDoctor(id) {
+export const dbDeleteDoctor = async function(id) {
   const { error } = await db.from('doctors').delete().eq('id', id);
   if (error) { dbErr('deleteDoctor', error); return false; }
   return true;
 }
-function doctorToDb(d, clinicId) {
+export const doctorToDb = function(d, clinicId) {
   return {
     id: d.id||('dr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
     clinic_id: clinicId||d.clinicId, reg_no: d.regNo||'', name: d.name||'',
@@ -162,7 +156,7 @@ function doctorToDb(d, clinicId) {
     availability: d.availability||[], unavailable: d.unavailable||false
   };
 }
-function dbToDoctor(r) {
+export const dbToDoctor = function(r) {
   return {
     id: r.id, clinicId: r.clinic_id, regNo: r.reg_no||'', name: r.name,
     qualification: r.qualification||'', specialization: r.specialization||'',
@@ -175,18 +169,18 @@ function dbToDoctor(r) {
 // ════════════════════════════════════════════════════════════
 //  PATIENTS
 // ════════════════════════════════════════════════════════════
-async function dbGetPatients(clinicId) {
+export const dbGetPatients = async function(clinicId) {
   const { data, error } = await db.from('patients').select('*').eq('clinic_id', clinicId).order('registered_at', { ascending: false });
   if (error) { dbErr('getPatients', error); return []; }
   return (data || []).map(dbToPatient);
 }
-async function dbInsertPatient(patient) {
+export const dbInsertPatient = async function(patient) {
   const row = patientToDb(patient);
   const { error } = await db.from('patients').upsert(row, { onConflict: 'id' });
   if (error) { dbErr('insertPatient', error); return false; }
   return true;
 }
-function patientToDb(p) {
+export const patientToDb = function(p) {
   return {
     id: p.id, clinic_id: p.clinicId, name: p.name||'', age: p.age||'',
     gender: p.gender||'', blood_group: p.bloodGroup||'', phone: p.phone||'',
@@ -196,7 +190,7 @@ function patientToDb(p) {
     last_fee_date: p.lastFeeDate||null
   };
 }
-function dbToPatient(r) {
+export const dbToPatient = function(r) {
   return {
     id: r.id, clinicId: r.clinic_id, name: r.name, age: r.age||'',
     gender: r.gender||'', bloodGroup: r.blood_group||'', phone: r.phone||'',
@@ -210,23 +204,23 @@ function dbToPatient(r) {
 // ════════════════════════════════════════════════════════════
 //  AI SEARCH
 // ════════════════════════════════════════════════════════════
-async function dbSearchFuzzy(query, clinicId, limit) {
+export const dbSearchFuzzy = async function(query, clinicId, limit) {
   limit = limit || 10;
   const { data, error } = await db.rpc('search_similar_fuzzy', { p_query: query, p_clinic_id: clinicId, p_limit: limit });
   if (error) { dbErr('searchFuzzy', error); return []; }
   return data || [];
 }
-async function dbSearchSemantic(embedding, clinicId, limit) {
+export const dbSearchSemantic = async function(embedding, clinicId, limit) {
   limit = limit || 10;
   const { data, error } = await db.rpc('search_similar_semantic', { p_embedding: embedding, p_clinic_id: clinicId, p_limit: limit });
   if (error) { dbErr('searchSemantic', error); return []; }
   return data || [];
 }
-async function dbStoreEmbedding(prescriptionId, embedding) {
+export const dbStoreEmbedding = async function(prescriptionId, embedding) {
   const { error } = await db.from('prescriptions').update({ embedding }).eq('id', prescriptionId);
   if (error) { dbErr('storeEmbedding', error); }
 }
-async function dbUpdateClinicPlan(clinicId, plan, geminiKey) {
+export const dbUpdateClinicPlan = async function(clinicId, plan, geminiKey) {
   const { error } = await db.from('clinics').update({ plan, gemini_key: geminiKey||'' }).eq('id', clinicId);
   if (error) { dbErr('updateClinicPlan', error); return false; }
   return true;
@@ -235,27 +229,27 @@ async function dbUpdateClinicPlan(clinicId, plan, geminiKey) {
 // ════════════════════════════════════════════════════════════
 //  AUTH DB FUNCTIONS
 // ════════════════════════════════════════════════════════════
-async function dbLogin(email, password) {
+export const dbLogin = async function(email, password) {
   const { data, error } = await db.rpc('login_user', { p_email: email.toLowerCase().trim(), p_password: password });
   if (error) { dbErr('login', error); return null; }
   return (data && data.length > 0) ? data[0] : null;
 }
-async function dbGetUserClinics(userId) {
+export const dbGetUserClinics = async function(userId) {
   const { data, error } = await db.rpc('get_user_clinics', { p_user_id: userId });
   if (error) { dbErr('getUserClinics', error); return []; }
   return data || [];
 }
-async function dbGetClinicStaff(clinicId) {
+export const dbGetClinicStaff = async function(clinicId) {
   const { data, error } = await db.rpc('get_clinic_staff', { p_clinic_id: clinicId });
   if (error) { dbErr('getClinicStaff', error); return []; }
   return data || [];
 }
-async function dbGetStaffMember(clinicId, userId) {
+export const dbGetStaffMember = async function(clinicId, userId) {
   const { data, error } = await db.from('clinic_staff').select('*').eq('clinic_id', clinicId).eq('user_id', userId).maybeSingle();
   if (error) { dbErr('getStaffMember', error); return null; }
   return data;
 }
-async function dbCreateStaffUser(name, email, password, role, clinicId, assignedBy, staffType) {
+export const dbCreateStaffUser = async function(name, email, password, role, clinicId, assignedBy, staffType) {
   var existing;
   try {
     const res = await db.from('users').select('id,email').eq('email', email.toLowerCase().trim()).maybeSingle();
@@ -283,11 +277,11 @@ async function dbCreateStaffUser(name, email, password, role, clinicId, assigned
   return { success: true, userId };
 }
 // ─── Clinic Calls (Digital Bell) ──────────────────────────
-async function dbRingBell(clinicId, callerName, message) {
+export const dbRingBell = async function(clinicId, callerName, message) {
   var { data, error } = await db.from('clinic_calls').insert({ clinic_id: clinicId, caller_name: callerName, message: message || 'Staff requested at OPD', status: 'active' });
   return !error;
 }
-async function dbGetActiveCalls(clinicId) {
+export const dbGetActiveCalls = async function(clinicId) {
   var { data, error } = await db.from('clinic_calls').select('*').eq('clinic_id', clinicId).eq('status', 'active').order('created_at', { ascending: false });
   if (error) {
     dbErr('getActiveCalls', error);
@@ -296,11 +290,11 @@ async function dbGetActiveCalls(clinicId) {
   return data || [];
 }
 
-async function dbClearCall(callId) {
+export const dbClearCall = async function(callId) {
   var { data, error } = await db.from('clinic_calls').update({ status: 'cleared' }).eq('id', callId);
   return !error;
 }
-async function dbUpdateStaffStatus(clinicId, userId, status, until) {
+export const dbUpdateStaffStatus = async function(clinicId, userId, status, until) {
   const { error } = await db.from('clinic_staff').update({
     status: status,
     status_until: until,
@@ -313,37 +307,37 @@ async function dbUpdateStaffStatus(clinicId, userId, status, until) {
   }
   return true;
 }
-async function dbUpdateStaffRole(clinicId, userId, newRole) {
+export const dbUpdateStaffRole = async function(clinicId, userId, newRole) {
   const { error } = await db.from('clinic_staff').update({ role: newRole, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);
   if (error) { dbErr('updateStaffRole', error); return false; }
   return true;
 }
-async function dbUpdateStaffType(clinicId, userId, newType) {
+export const dbUpdateStaffType = async function(clinicId, userId, newType) {
   const { error } = await db.from('clinic_staff').update({ staff_type: newType, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);
   if (error) { dbErr('updateStaffType', error); return false; }
   return true;
 }
-async function dbToggleStaffActive(clinicId, userId, isActive) {
+export const dbToggleStaffActive = async function(clinicId, userId, isActive) {
   const { error } = await db.from('clinic_staff').update({ is_active: isActive, updated_at: new Date().toISOString() }).eq('clinic_id', clinicId).eq('user_id', userId);
   if (error) { dbErr('toggleStaffActive', error); return false; }
   return true;
 }
-async function dbAdminResetPassword(userId, newPassword) {
+export const dbAdminResetPassword = async function(userId, newPassword) {
   const { error } = await db.rpc('admin_reset_password', { p_user_id: userId, p_new_pass: newPassword });
   if (error) { dbErr('adminResetPassword', error); return false; }
   return true;
 }
-async function dbChangePassword(userId, oldPassword, newPassword) {
+export const dbChangePassword = async function(userId, oldPassword, newPassword) {
   const { data, error } = await db.rpc('change_password', { p_user_id: userId, p_old_pass: oldPassword, p_new_pass: newPassword });
   if (error) { dbErr('changePassword', error); return false; }
   return data === true;
 }
-async function dbGenerateResetToken(email) {
+export const dbGenerateResetToken = async function(email) {
   const { data, error } = await db.rpc('generate_reset_token', { p_email: email.toLowerCase().trim() });
   if (error) { dbErr('generateResetToken', error); return null; }
   return (data && data.length > 0) ? data[0] : null; // { token, user_name }
 }
-async function dbConsumeResetToken(email, token, newPassword) {
+export const dbConsumeResetToken = async function(email, token, newPassword) {
   const { data, error } = await db.rpc('consume_reset_token', {
     p_email: email.toLowerCase().trim(), p_token: token.trim(), p_new_pass: newPassword
   });
@@ -351,14 +345,14 @@ async function dbConsumeResetToken(email, token, newPassword) {
   return data; // 'ok' | 'invalid' | 'expired' | 'used'
 }
 
-async function dbCreateUserWithPassword(name, email, password, role) {
+export const dbCreateUserWithPassword = async function(name, email, password, role) {
   const { data, error } = await db.rpc('create_staff_user', {
     p_name: name, p_email: email.toLowerCase().trim(), p_password: password, p_role: role||'staff'
   });
   if (error) { dbErr('createUserWithPassword', error); return null; }
   return data;
 }
-async function dbAssignStaff(clinicId, userId, role, assignedBy) {
+export const dbAssignStaff = async function(clinicId, userId, role, assignedBy) {
   const { error } = await db.from('clinic_staff').upsert({
     clinic_id: clinicId, user_id: userId, role: role,
     is_active: true, assigned_by: assignedBy||null, updated_at: new Date().toISOString()
@@ -366,12 +360,12 @@ async function dbAssignStaff(clinicId, userId, role, assignedBy) {
   if (error) { dbErr('assignStaff', error); return false; }
   return true;
 }
-async function dbRemoveStaff(clinicId, userId) {
+export const dbRemoveStaff = async function(clinicId, userId) {
   const { error } = await db.from('clinic_staff').delete().eq('clinic_id', clinicId).eq('user_id', userId);
   if (error) { dbErr('removeStaff', error); return false; }
   return true;
 }
-async function dbAudit(action, tableName, recordId, oldData, newData) {
+export const dbAudit = async function(action, tableName, recordId, oldData, newData) {
   try {
     await db.from('audit_log').insert({
       user_id:    typeof currentUser !== 'undefined' && currentUser ? currentUser.id : null,
@@ -387,7 +381,7 @@ async function dbAudit(action, tableName, recordId, oldData, newData) {
 //  APPOINTMENTS
 // ════════════════════════════════════════════════════════════
 
-async function dbGetAppointments(clinicId, date) {
+export const dbGetAppointments = async function(clinicId, date) {
   var query = db.from('appointments').select('*').eq('clinic_id', clinicId);
   if (date) query = query.eq('appt_date', date);
   var { data, error } = await query.order('appt_date', { ascending: true })
@@ -396,19 +390,19 @@ async function dbGetAppointments(clinicId, date) {
   return data || [];
 }
 
-async function dbUpsertAppointment(appt) {
+export const dbUpsertAppointment = async function(appt) {
   var { error } = await db.from('appointments').upsert(appt, { onConflict: 'id' });
   if (error) { dbErr('upsertAppointment', error); return false; }
   return true;
 }
 
-async function dbDeleteAppointment(id) {
+export const dbDeleteAppointment = async function(id) {
   var { error } = await db.from('appointments').delete().eq('id', id);
   if (error) { dbErr('deleteAppointment', error); return false; }
   return true;
 }
 
-async function dbGetNextToken(clinicId, date) {
+export const dbGetNextToken = async function(clinicId, date) {
   var { data, error } = await db
     .from('appointments')
     .select('token_no')
@@ -424,7 +418,7 @@ async function dbGetNextToken(clinicId, date) {
 //  INVOICES
 // ════════════════════════════════════════════════════════════
 
-async function dbGetInvoices(clinicId) {
+export const dbGetInvoices = async function(clinicId) {
   var { data, error } = await db
     .from('invoices')
     .select('*')
@@ -434,13 +428,13 @@ async function dbGetInvoices(clinicId) {
   return data || [];
 }
 
-async function dbUpsertInvoice(inv) {
+export const dbUpsertInvoice = async function(inv) {
   var { error } = await db.from('invoices').upsert(inv, { onConflict: 'id' });
   if (error) { dbErr('upsertInvoice', error); return false; }
   return true;
 }
 
-async function dbGetNextInvoiceNo(clinicId) {
+export const dbGetNextInvoiceNo = async function(clinicId) {
   var { data, error } = await db
     .from('invoices')
     .select('invoice_no')
@@ -460,7 +454,7 @@ async function dbGetNextInvoiceNo(clinicId) {
 //  VITALS
 // ════════════════════════════════════════════════════════════
 
-async function dbGetVitals(clinicId, patientName) {
+export const dbGetVitals = async function(clinicId, patientName) {
   var query = db.from('vitals').select('*').eq('clinic_id', clinicId);
   if (patientName) query = query.ilike('patient_name', patientName);
   var { data, error } = await query.order('recorded_at', { ascending: false });
@@ -468,10 +462,10 @@ async function dbGetVitals(clinicId, patientName) {
   return data || [];
 }
 
-async function dbInsertVitals(record) {
+export const dbInsertVitals = async function(record) {
   var { error } = await db.from('vitals').insert(record);
   if (error) { dbErr('insertVitals', error); return false; }
   return true;
 }
 
-export { db };
+

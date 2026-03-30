@@ -408,15 +408,8 @@ async function loadStaffList() {
           '</div>' +
           '<div class="admin-dr-sub">' + escHtml(s.email) + ' &nbsp;·&nbsp; Last login: ' + lastLogin + '</div>' +
         '</div>' +
-        '<div class="admin-dr-actions">' +
+        '<div class="admin-dr-actions" data-role="'+escAttr(s.role)+'">' +
           (s.staff_type === 'adhoc' ? '<button class="btn-sm btn-outline-teal" onclick="convertStaffToPermanent(\''+uid+'\', \''+uname+'\')">⭐ Make Permanent</button>' : '') +
-          '<select onchange="changeStaffRole(this.dataset.uid, this.value)" data-uid="' + uid + '"' +
-            (isMe ? ' disabled' : '') +
-            ' style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px">' +
-            ['admin','doctor','receptionist','pharmacist','viewer','medical_assistant','lab_technician','billing_manager','inventory_manager','clinic_supervisor','medical_support_aide'].map(function(r) {
-              return '<option value="'+r+'"'+(r===s.role?' selected':'')+'>'+capitalize(r.replace(/_/g, ' '))+'</option>';
-            }).join('') +
-          '</select>' +
           '<button class="btn-sm '+(s.is_active?'btn-outline-red':'btn-outline-teal')+'"' +
             ' data-uid="'+uid+'" data-active="'+(s.is_active?'false':'true')+'"' +
             ' onclick="toggleStaffActive(this.dataset.uid, this.dataset.active===\'true\')"' +
@@ -543,7 +536,7 @@ async function generateResetTokenForStaff(userId, name, email) {
         'this.textContent=\'✅ Copied!\';setTimeout(function(){this.textContent=\'📋 Copy Token\';}.bind(this),1500)' +
       '" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;width:100%">📋 Copy Token</button>' +
       '<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:18px">User enters this token on the <strong>Forgot Password</strong> screen.</div>' +
-      '<button onclick="this.closest(\'div[style*=position\\:fixed]\').remove()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 22px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;width:100%">Close</button>' +
+      '<button onclick="this.closest(\'div[style*=\\\'position:fixed\\\']\') ? this.closest(\'div[style*=\\\'position:fixed\\\']\').remove() : this.parentElement.parentElement.remove()" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 22px;font-family:\'DM Sans\',sans-serif;font-size:13px;cursor:pointer;width:100%">Close</button>' +
     '</div>';
   document.body.appendChild(overlay);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -903,9 +896,7 @@ if (_origLoadStaffList) {
         var name = row.querySelector('.admin-dr-name')?.textContent?.split('\n')[0]?.trim() || '';
         var emailEl = row.querySelector('.admin-dr-sub');
         var emailText = emailEl ? emailEl.textContent.split('·')[0]?.trim() : '';
-        var role = '';
-        var roleEl = actionsDiv.querySelector('select');
-        if (roleEl) role = roleEl.value;
+        var role = actionsDiv.dataset.role || '';
 
         var editBtn = document.createElement('button');
         editBtn.className = 'btn-sm btn-outline-teal profile-edit-btn';
