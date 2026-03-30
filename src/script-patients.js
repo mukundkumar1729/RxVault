@@ -12,15 +12,32 @@ function openRegisterModal() {
   }
   ['regName','regAge','regPhone','regEmail','regAddress','regFee'].forEach(function(id){ setVal(id,''); });
   setVal('regGender',''); setVal('regBloodGroup','');
-  document.querySelector('input[name="regPayment"][value="Cash"]').checked = true;
-  document.getElementById('regDate').value = todayISO();
-  document.getElementById('regPid').textContent = genPatientId();
+  var payRadio = document.querySelector('input[name="regPayment"][value="Cash"]');
+  if (payRadio) payRadio.checked = true;
+
+  // Set system date and make it read-only
+  var today = typeof todayISO === 'function' ? todayISO() : new Date().toISOString().split('T')[0];
+  var regDateEl = document.getElementById('regDate');
+  if (regDateEl) {
+    regDateEl.value = today;
+    regDateEl.readOnly = true;
+    regDateEl.style.background = 'var(--surface2)';
+    regDateEl.style.color = 'var(--text-muted)';
+    regDateEl.style.cursor = 'not-allowed';
+    regDateEl.title = 'Registration date is automatically set to today';
+  }
+
+  var pidEl = document.getElementById('regPid');
+  if (pidEl) pidEl.textContent = typeof genPatientId === 'function' ? genPatientId() : 'PID-' + Date.now();
+
   var sel = document.getElementById('regDoctor');
-  sel.innerHTML = '<option value="">— Select Doctor —</option>' +
-    doctorRegistry.map(function(d) {
-      return '<option value="' + escAttr(d.name) + '" data-reg="' + escAttr(d.regNo) + '"' + (d.unavailable ? ' disabled' : '') + '>' +
-        'Dr. ' + escHtml(d.name) + (d.unavailable ? ' (Unavailable)' : '') + ' — ' + escHtml(d.specialization||d.type) + '</option>';
-    }).join('');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Select Doctor —</option>' +
+      (doctorRegistry||[]).map(function(d) {
+        return '<option value="'+escAttr(d.name)+'" data-reg="'+escAttr(d.regNo)+'"'+(d.unavailable?' disabled':'')+'>'+
+          'Dr. '+escHtml(d.name)+(d.unavailable?' (Unavailable)':'')+' — '+escHtml(d.specialization||d.type)+'</option>';
+      }).join('');
+  }
   openModal('registerModal');
 }
 

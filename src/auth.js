@@ -590,39 +590,90 @@ async function loadAuditLog() {
 
 // ─── Change own password ──────────────────────────────────
 function openChangePassword() {
-  ['cpOldPass','cpNewPass','cpConfirmPass'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value = '';
-  });
-  var errEl = document.getElementById('changePassError');
-  if (errEl) errEl.textContent = '';
+  ['cpOldPass','cpNewPass','cpConfirmPass'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var errEl = document.getElementById('changePassError'); if (errEl) errEl.textContent = '';
   var sub = document.getElementById('changePassSubtitle');
-  if (sub && currentUser) sub.textContent = 'Signed in as ' + currentUser.name;
+  if (sub && typeof currentUser !== 'undefined' && currentUser) sub.textContent = 'Signed in as ' + currentUser.name;
+
+  // Inject token option into change password modal
+  var changePassModal = document.getElementById('changePassModal');
+  if (changePassModal && !changePassModal.querySelector('#cpTokenSection')) {
+    var body = changePassModal.querySelector('.modal-body');
+    if (body) {
+      var tokenSection = document.createElement('div');
+      tokenSection.id = 'cpTokenSection';
+      tokenSection.style.cssText = 'margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);';
+      tokenSection.innerHTML =
+        '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Authentication Method</div>' +
+        '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
+            '<input type="radio" name="cpAuthMethod" value="password" checked onchange="toggleCpAuthMethod()"> 🔑 Current Password' +
+          '</label>' +
+          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
+            '<input type="radio" name="cpAuthMethod" value="token" onchange="toggleCpAuthMethod()"> 🎫 Admin Reset Token' +
+          '</label>' +
+        '</div>' +
+        '<div id="cpTokenField" style="display:none">' +
+          '<div class="premium-field" style="margin-bottom:0"><label>Admin Token</label>' +
+            '<input type="text" id="cpAdminToken" class="premium-input" placeholder="Enter 6-digit admin token" maxlength="10" style="letter-spacing:0.2em;text-align:center;font-size:16px;font-family:monospace">' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">Ask your admin to generate a reset token for your account via Staff Management → 🔑 Reset.</div>' +
+        '</div>';
+      body.insertBefore(tokenSection, body.firstChild);
+    }
+  }
   openModal('changePassModal');
 }
 
-async function submitChangePassword() {
-  var oldPass = document.getElementById('cpOldPass')?.value    || '';
-  var newPass = document.getElementById('cpNewPass')?.value    || '';
-  var confirm = document.getElementById('cpConfirmPass')?.value|| '';
-  var errEl   = document.getElementById('changePassError');
-  if (errEl) errEl.textContent = '';
+function toggleCpAuthMethod() {
+  var method    = document.querySelector('input[name="cpAuthMethod"]:checked')?.value || 'password';
+  var tokenFld  = document.getElementById('cpTokenField');
+  var oldPassFld = document.getElementById('cpOldPass')?.closest('.premium-field');
+  if (tokenFld)  tokenFld.style.display  = method === 'token'    ? '' : 'none';
+  if (oldPassFld) oldPassFld.style.display = method === 'password' ? '' : 'none';
+}
 
-  if (!oldPass)              { if(errEl) errEl.textContent='Enter current password.';       return; }
-  if (newPass.length < 8)    { if(errEl) errEl.textContent='New password min 8 characters.';return; }
+async function submitChangePassword() {
+  var method  = document.querySelector('input[name="cpAuthMethod"]:checked')?.value || 'password';
+  var oldPass = document.getElementById('cpOldPass')?.value     || '';
+  var newPass = document.getElementById('cpNewPass')?.value     || '';
+  var confirm = document.getElementById('cpConfirmPass')?.value || '';
+  var token   = document.getElementById('cpAdminToken')?.value  || '';
+  var errEl   = document.getElementById('changePassError'); if (errEl) errEl.textContent = '';
+
+  if (newPass.length < 8)      { if(errEl) errEl.textContent='New password min 8 characters.'; return; }
   if (!/[A-Z]/.test(newPass))  { if(errEl) errEl.textContent='Password must contain at least one uppercase letter.'; return; }
   if (!/[0-9]/.test(newPass))  { if(errEl) errEl.textContent='Password must contain at least one number.'; return; }
   if (!/[a-z]/.test(newPass))  { if(errEl) errEl.textContent='Password must contain at least one lowercase letter.'; return; }
-  if (newPass !== confirm)   { if(errEl) errEl.textContent='Passwords do not match.';       return; }
+  if (newPass !== confirm)     { if(errEl) errEl.textContent='Passwords do not match.'; return; }
 
   var btn = document.getElementById('cpSubmitBtn');
   if (btn) { btn.disabled=true; btn.textContent='⏳ Saving…'; }
-  var ok = await dbChangePassword(currentUser.id, oldPass, newPass);
-  if (btn) { btn.disabled=false; btn.textContent='🔒 Change Password'; }
 
-  if (!ok) { if(errEl) errEl.textContent='Current password is incorrect.'; return; }
+  var ok = false;
+
+  if (method === 'token') {
+    if (!token) { if(errEl) errEl.textContent='Please enter the admin token.'; if(btn){btn.disabled=false;btn.textContent='🔑 Update Password';} return; }
+    var email = typeof currentUser !== 'undefined' && currentUser ? currentUser.email : '';
+    var result = await dbConsumeResetToken(email, token, newPass);
+    ok = (result === 'ok');
+    if (!ok) {
+      var msg = result === 'expired' ? 'Token has expired.' : result === 'used' ? 'Token already used.' : 'Invalid token.';
+      if(errEl) errEl.textContent = msg;
+    }
+  } else {
+    if (!oldPass) { if(errEl) errEl.textContent='Enter current password.'; if(btn){btn.disabled=false;btn.textContent='🔑 Update Password';} return; }
+    ok = await dbChangePassword(currentUser.id, oldPass, newPass);
+    if (!ok) { if(errEl) errEl.textContent='Current password is incorrect.'; }
+  }
+
+  if (btn) { btn.disabled=false; btn.textContent='🔑 Update Password'; }
+  if (!ok) return;
   closeModal('changePassModal');
-  showToast('Password changed successfully.', 'success');
+  showToast('✅ Password changed successfully. Please sign in again.', 'success');
+  setTimeout(function(){ if (typeof authLogout === 'function') authLogout(); }, 1500);
 }
+
 
 // ─── Staff Busy Status ────────────────────────────────────
 async function setUserStatus(status, hours) {

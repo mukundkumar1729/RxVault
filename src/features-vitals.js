@@ -71,6 +71,21 @@ async function openServicesPanel(rxId) {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+    // Check patient is registered
+    var patient = (patientRegistry||[]).find(function(p){
+      return (p.name||'').trim().toLowerCase() === (rx.patientName||'').trim().toLowerCase();
+    });
+    if (!patient) {
+      showToast('⚠️ Patient "' + rx.patientName + '" is not registered. Please register the patient before recording vitals.', 'error');
+      return;
+    }
+
+    // Check valid prescription (status must be active and not expired)
+    var today = new Date(); today.setHours(0,0,0,0);
+    var isExpired = rx.validUntil && new Date(rx.validUntil + 'T00:00:00') < today;
+    if (rx.status !== 'active' || isExpired) {
+      if (!confirm('⚠️ This prescription is ' + (isExpired ? 'expired' : rx.status) + '.\n\nDo you still want to record vitals for this patient?')) return;
+    }
   // Load existing vitals for this prescription in background
   var existing = await dbGetVitalsForPrescription(rxId);
   // Re-render with history
