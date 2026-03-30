@@ -5,6 +5,8 @@
  */
 // 1. Configuration: Add all your page mappings here
 const COMPONENT_CONFIG = [
+    { url: 'component/appshell-side-navbar.html', targetId: 'appShellSideNavbar' },
+    { url: 'component/appshell-topbar.html', targetId: 'appshellTopbar' },
     { url: 'component/admin-modal.html', targetId: 'adminModal' },
     { url: 'component/add-doctor.html', targetId: 'doctorFormModal' },
     { url: 'component/patient-reg.html', targetId: 'registerModal' },
