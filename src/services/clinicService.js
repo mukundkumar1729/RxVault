@@ -46,7 +46,8 @@ export const loadAuthorizedClinics = async (user) => {
             name: c.clinic_name,
             logo: c.clinic_logo || '🏥',
             type: c.clinic_type || 'multispecialty',
-            staffRole: c.staff_role
+            staffRole: c.staff_role,
+            pin: c.clinic_pin
         }));
 
         // SuperAdmin fallback mapping

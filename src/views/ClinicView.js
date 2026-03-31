@@ -107,8 +107,8 @@ export const renderClinicSelectionGrid = () => {
             ]),
             ...(canCreate ? [
                 el('div', { className: 'clinic-card-actions' }, [
-                    el('button', { className: 'clinic-edit-btn', attributes: { title: 'Edit' }, textContent: '✏️', onClick: (e) => { e.stopPropagation(); window.openEditClinicModal(c.id); } }),
-                    el('button', { className: 'clinic-del-btn', attributes: { title: 'Delete' }, textContent: '🗑️', onClick: (e) => { e.stopPropagation(); window.triggerDeleteClinicById(c.id); } })
+                    el('button', { className: 'clinic-edit-btn', attributes: { title: 'Edit' }, textContent: '✏️', onClick: (e) => { e.stopPropagation(); openEditClinicModal(c.id); } }),
+                    el('button', { className: 'clinic-del-btn', attributes: { title: 'Delete' }, textContent: '🗑️', onClick: (e) => { e.stopPropagation(); triggerDeleteClinicById(c.id); } })
                 ])
             ] : []),
             el('div', { className: 'clinic-card-arrow', textContent: '→' })
@@ -124,4 +124,122 @@ export const renderClinicSelectionGrid = () => {
     listEl.appendChild(headerRow);
     listEl.appendChild(cardsGrid);
     listEl.appendChild(footerRow);
+};
+
+/**
+ * Prefills the Clinic Form with existing data or generic defaults
+ */
+export const prefillNewClinicForm = (clinic) => {
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    setVal('cgName',    clinic ? clinic.name    : '');
+    setVal('cgAddress', clinic ? clinic.address : '');
+    setVal('cgPhone',   clinic ? clinic.phone   : '');
+    setVal('cgEmail',   clinic ? clinic.email   : '');
+    setVal('cgPin',     clinic ? clinic.pin     : '');
+    setVal('cgLogo',    clinic ? clinic.logo    : '🏥');
+    
+    const typeEl = document.getElementById('cgType');
+    if (typeEl) typeEl.value = clinic ? (clinic.type || 'multispecialty') : 'multispecialty';
+    
+    const titleEl = document.getElementById('clinicFormTitle');
+    if (titleEl) titleEl.textContent = clinic ? 'Edit Clinic Details' : (store.clinics.length ? '＋ New Clinic' : '🏥 Create Your First Clinic');
+    
+    const saveBtn = document.getElementById('cgSaveBtn');
+    if (saveBtn) saveBtn.dataset.editId = clinic ? clinic.id : '';
+};
+
+export const showNewClinicForm = () => {
+    const list = document.getElementById('clinicGateList');
+    const form = document.getElementById('clinicGateForm');
+    if (list) list.style.display = 'none';
+    if (form) form.style.display = '';
+    
+    const closeBtn = document.getElementById('clinicGateCloseBtn');
+    if (closeBtn) closeBtn.style.display = (store.clinics || []).length ? '' : 'none';
+    
+    prefillNewClinicForm(null);
+    setTimeout(() => { const i = document.getElementById('cgName'); if (i) i.focus(); }, 100);
+};
+
+export const cancelClinicForm = () => {
+    if (!(store.clinics || []).length) {
+        if (typeof window.showToast === 'function') window.showToast('Please create your first clinic to continue.', 'info');
+        return;
+    }
+    renderClinicSelectionGrid();
+};
+
+export const openEditClinicModal = (id) => {
+    const clinic = (store.clinics || []).find(c => c.id === id);
+    if (!clinic) return;
+    
+    const list = document.getElementById('clinicGateList');
+    const form = document.getElementById('clinicGateForm');
+    if (list) list.style.display = 'none';
+    if (form) form.style.display = '';
+    
+    prefillNewClinicForm(clinic);
+};
+
+import { saveClinicPayload, deleteClinicEntity } from '../services/clinicService.js';
+
+export const saveClinicFormSecure = async () => {
+    const nameEl = document.getElementById('cgName');
+    const name = (nameEl?.value || '').trim();
+    if (!name) { 
+        if (typeof window.showToast === 'function') window.showToast('Clinic name is required.', 'error'); 
+        nameEl?.focus(); 
+        return; 
+    }
+    
+    const btn = document.getElementById('cgSaveBtn');
+    const editId = btn ? btn.dataset.editId : '';
+    const oldText = btn ? btn.textContent : '';
+    
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving…'; }
+    
+    const data = {
+        name,
+        address: document.getElementById('cgAddress')?.value || '',
+        phone:   document.getElementById('cgPhone')?.value   || '',
+        email:   document.getElementById('cgEmail')?.value   || '',
+        type:    document.getElementById('cgType')?.value    || 'multispecialty',
+        logo:    (document.getElementById('cgLogo')?.value || '').trim() || '🏥',
+        pin:     (document.getElementById('cgPin')?.value  || '').trim() || 'admin1234'
+    };
+    
+    try {
+        const result = await saveClinicPayload(data, editId, store.currentUser);
+        if (btn) { btn.disabled = false; btn.textContent = oldText; }
+        
+        if (result.success) {
+            if (typeof window.showToast === 'function') window.showToast(editId ? 'Clinic updated!' : 'Clinic created!', 'success');
+            // If it was a new clinic, saveClinicPayload already set it active and auto-routed.
+            // If it was an edit, just go back to the list
+            if (editId) renderClinicSelectionGrid();
+            else {
+                // Trigger global orchestrator
+                if (typeof window.selectClinicFinalize === 'function') window.selectClinicFinalize(result.updated);
+            }
+        }
+    } catch (err) {
+        console.error('[ClinicView] Save error:', err);
+        if (btn) { btn.disabled = false; btn.textContent = oldText; }
+        if (typeof window.showToast === 'function') window.showToast(err.message, 'error');
+    }
+};
+
+export const triggerDeleteClinicById = async (id) => {
+    if (!confirm('Delete this clinic and ALL its data?\nThis cannot be undone.')) return;
+    
+    if (typeof window.showLoading === 'function') window.showLoading('Deleting clinic…');
+    try {
+        await deleteClinicEntity(id, store.currentUser);
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+        renderClinicSelectionGrid();
+    } catch (err) {
+        console.error('[ClinicView] Delete error:', err);
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+        if (typeof window.showToast === 'function') window.showToast('Failed to delete clinic.', 'error');
+    }
 };

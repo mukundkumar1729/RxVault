@@ -84,7 +84,8 @@ function genPatientId() { return 'PID-' + Date.now().toString(36).toUpperCase();
 // ─── Main init — called after clinic is selected ─────────
 async function initAppForClinic() {
   isAdminUnlocked = false;
-  showLoading('Loading clinic data…');
+  
+  if (typeof window.showLoading === 'function') window.showLoading('Loading clinic data…');
   renderTopbarClinic();
 
   // Restore current user's status for this clinic
@@ -106,7 +107,9 @@ async function initAppForClinic() {
     (async () => { if (typeof loadAppointmentRegistry === 'function') await loadAppointmentRegistry(); })(),
     (async () => { if (typeof loadBillingRegistry === 'function') await loadBillingRegistry(); })()
   ]);
-  hideLoading();
+
+  if (typeof window.hideLoading === 'function') window.hideLoading();
+  
   render();
   updateStats();
   if (currentView === 'doctors')  renderAdminDoctorList();
@@ -126,6 +129,8 @@ function updateStats() {
   var recent = prescriptions.filter(function(p){ return new Date(p.date) >= thirty; }).length;
   var active = prescriptions.filter(function(p){ return p.status === 'active'; }).length;
 
+  var setEl = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
+
   ['statTotal','statsTotal'].forEach(function(id){ setEl(id, total); });
   ['statAllo','statsAllo'].forEach(function(id){ setEl(id, allo); });
   ['statHomo','statsHomo'].forEach(function(id){ setEl(id, homo); });
@@ -140,8 +145,6 @@ function updateStats() {
   // Appointments
   if (typeof appointmentRegistry !== 'undefined') {
     setEl('badgeAppointments', appointmentRegistry.length);
-  } else if (typeof dbGetAppointments === 'function') {
-    // If registry not yet loaded but function exists, we'll wait for init
   }
 
   // Pharmacy
@@ -157,7 +160,7 @@ function updateStats() {
   var labOrders = prescriptions.reduce(function(acc, p){ return acc + (p.diagnostics ? p.diagnostics.length : 0); }, 0);
   setEl('badgeLabOrders', labOrders);
 
-  // Follow-up & Vaccination (Optional, placeholder for now)
+  // Follow-up & Vaccination
   setEl('badgeFollowup', 0);
   setEl('badgeVaccination', 0);
 }
@@ -192,7 +195,7 @@ async function ringBell() {
   var msg = 'Staff requested at OPD / Consultation Room';
   var ok = await dbRingBell(activeClinicId, currentUser.name, msg);
   if (ok) {
-    showToast('🔔 Bell rung! Staff notified.', 'success');
+    if (typeof showToast === 'function') showToast('🔔 Bell rung! Staff notified.', 'success');
     checkClinicCalls();
   }
 }
@@ -214,6 +217,11 @@ function renderClinicCalls(calls) {
     playBellSound();
   }
   lastActiveCallIds = currentIds;
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   container.innerHTML = calls.map(function(c) {
     return '<div class="call-notif" style="pointer-events:all; background:var(--surface); border:2px solid var(--teal); border-radius:var(--radius); padding:12px 16px; box-shadow:var(--shadow-lg); animation:slideIn 0.3s ease; display:flex; flex-direction:column; gap:4px; min-width:240px;">' +
@@ -258,9 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 2000);
 });
 
-
-// ─── Boot ─────────────────────────────────────────────────
-(async function boot() {
-  var gateShown = await initClinicGate();
-  if (!gateShown) await initAppForClinic();
-})();
+// ─── Phase 5 Modular Transition ──────────────────────────────
+// Redundant legacy boot() removed in favor of ES6 main.js
+// ════════════════════════════════════════════════════════════

@@ -378,25 +378,48 @@ export const clearFilters = () => {
 };
 
 export const updateViewTitle = () => {
-    const viewLabel = {all: 'All Rx', recent: 'Recent (30d)', active: 'Active'}[store.currentView || 'all'] || 'Rx';
-    const typeLabel = {allopathy: '· Allopathy', homeopathy: '· Homeopathy', ayurveda: '· Ayurveda'}[store.currentTypeFilter] || '';
+    const view = store.currentView || 'all';
     
-    const viewSub = {
-        all: 'All prescription records',
+    const viewLabels = {
+        all: 'All Rx Records',
+        recent: 'Recent Prescriptions',
+        active: 'Active Treatments',
+        doctors: '👨‍⚕️ Doctors Directory',
+        patients: '👥 Patients Registry',
+        appointments: '📅 Appointments & Queue',
+        billing: '💰 Billing & Invoices',
+        pharmacy: '💊 Pharmacy Queue',
+        staff: '👥 Staff Directory',
+        analytics: '📊 Clinical Analytics',
+        labOrders: '🔬 Laboratory Orders',
+        roster: '🗓️ Duty Roster',
+        admin: '⚙️ Administration Panel',
+    };
+
+    const viewSubtitles = {
+        all: 'Manage and track all your medical Rx records',
         recent: 'Prescriptions from the last 30 days',
-        active: 'Currently active treatment records'
-    }[store.currentView || 'all'] || '';
-    
-    const typeSub = {
-        allopathy: ' · Allopathy only',
-        homeopathy: ' · Homeopathy only',
-        ayurveda: ' · Ayurveda only'
-    }[store.currentTypeFilter] || '';
+        active: 'Currently active treatment records and medications',
+        doctors: 'List of registered doctors and their specialties',
+        patients: 'Manage patient records and clinical history',
+        appointments: 'Today\'s tokens and patient arrival status',
+        billing: 'Manage patient invoices, payments and dues',
+        pharmacy: 'Dispensing queue for active prescriptions',
+        staff: 'Internal clinic staff and management',
+        analytics: 'Visual insights into clinic performance and patient data',
+        labOrders: 'Manage and track clinical laboratory orders',
+        roster: 'Clinic shift schedule and staff availability',
+        admin: 'System settings, backups and access control',
+    };
+
+    // Only show type label (Allopathy/Homeopathy/Ayurveda) for Rx Grid views
+    const rxContexts = ['all', 'recent', 'active'];
+    const typeLabel = rxContexts.includes(view) && { allopathy: ' · Allopathy', homeopathy: ' · Homeopathy', ayurveda: ' · Ayurveda' }[store.currentTypeFilter] || '';
     
     const tEl = document.getElementById('pageTitle');
     const sEl = document.getElementById('pageSubtitle');
-    if (tEl) tEl.textContent = `${viewLabel} ${typeLabel}`.trim();
-    if (sEl) sEl.textContent = `${viewSub}${typeSub}`.trim();
+    if (tEl) tEl.textContent = (viewLabels[view] || 'Rx Management') + typeLabel;
+    if (sEl) sEl.textContent = viewSubtitles[view] || 'Medical record management system';
 };
 
 export const setView = (view, eventObj = null) => {
@@ -405,6 +428,7 @@ export const setView = (view, eventObj = null) => {
 
     const dashboardViews = ['all', 'recent', 'active', 'allopathy', 'homeopathy', 'ayurveda'];
     const isDashboard = dashboardViews.includes(view);
+    const rxContexts = ['all', 'recent', 'active'];
 
     if (view === 'doctors' || view === 'patients') {
         const id = view === 'doctors' ? 'doctorsView' : 'patientsView';
@@ -417,20 +441,48 @@ export const setView = (view, eventObj = null) => {
             if (node) node.style.display = '';
         });
     } else {
-        // Modular view: show specific container if exists
-        const id = view.endsWith('View') ? view : (view + 'View');
-        const node = document.getElementById(id) || document.getElementById(view + 'DirView') || document.getElementById(view + 'OrdersView');
+        // Modular view mapping — Check common ID patterns
+        let id = view.endsWith('View') ? view : (view + 'View');
+        // Specific pluralization/singular/alias fixes for new modules
+        if (view === 'appointments') id = 'appointmentView';
+        if (view === 'staff') id = 'staffListView'; 
+        if (view === 'lab' || view === 'labOrders') id = 'labOrdersView';
+
+        const node = document.getElementById(id) 
+            || document.getElementById(view + 'DirView') 
+            || document.getElementById(view + 'OrdersView')
+            || document.getElementById(view + 'View')
+            || document.getElementById(view + 'ListView');
         if (node) node.style.display = '';
     }
 
+    // Update New Rx Button Context
+    const addBtn = document.getElementById('btnAddRx');
+    if (addBtn) {
+        if (view === 'appointments') {
+            addBtn.innerHTML = '<span>➕ Book Appointment</span>';
+            addBtn.onclick = () => window.openBookAppointment ? window.openBookAppointment() : null;
+        } else if (view === 'billing') {
+            addBtn.innerHTML = '<span>➕ New Invoice</span>';
+            addBtn.onclick = () => window.openNewInvoice ? window.openNewInvoice() : null;
+        } else {
+            addBtn.innerHTML = '<span>➕ New Rx</span>';
+            addBtn.onclick = () => window.openAddModal ? window.openAddModal() : null;
+        }
+    }
+
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    if (eventObj && eventObj.currentTarget) eventObj.currentTarget.classList.add('active');
-    else if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
+    
+    // Attempt to highlight sidebar item
+    const navItem = eventObj?.currentTarget || document.getElementById('nav' + capitalize(view)) || document.getElementById(view + 'NavBtn');
+    if (navItem) navItem.classList.add('active');
 
     updateViewTitle();
     applyFilters();
     if (typeof window.refreshSidebarDots === 'function') setTimeout(window.refreshSidebarDots, 20);
 };
+
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const filterByType = (type, eventObj = null) => {
     store.currentTypeFilter = type;

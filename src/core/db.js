@@ -39,6 +39,8 @@ export const hideLoading = function() {
   if (el) el.style.display = 'none';
 }
 
+// End of file bridging at line 43 removed to move to the bottom.
+
 // ════════════════════════════════════════════════════════════
 //  CLINICS
 // ════════════════════════════════════════════════════════════
@@ -466,6 +468,52 @@ export const dbInsertVitals = async function(record) {
   var { error } = await db.from('vitals').insert(record);
   if (error) { dbErr('insertVitals', error); return false; }
   return true;
+}
+
+// ── Bridge UI to legacy globals (Moved to bottom to avoid TDZ) ──
+if (typeof window !== 'undefined') {
+  window.showLoading = showLoading;
+  window.hideLoading = hideLoading;
+  window.dbErr = dbErr;
+  
+  // Bridge Database functions for Phase 5 Legacy Interop
+  window.dbGetClinics = dbGetClinics;
+  window.dbInsertClinic = dbInsertClinic;
+  window.dbUpdateClinic = dbUpdateClinic;
+  window.dbDeleteClinic = dbDeleteClinic;
+  window.dbGetPrescriptions = dbGetPrescriptions;
+  window.dbUpsertPrescription = dbUpsertPrescription;
+  window.dbDeletePrescription = dbDeletePrescription;
+  window.dbGetDoctors = dbGetDoctors;
+  window.dbUpsertDoctor = dbUpsertDoctor;
+  window.dbDeleteDoctor = dbDeleteDoctor;
+  window.dbGetPatients = dbGetPatients;
+  window.dbInsertPatient = dbInsertPatient;
+  window.dbGetAppointments = dbGetAppointments;
+  window.dbUpsertAppointment = dbUpsertAppointment;
+  window.dbDeleteAppointment = dbDeleteAppointment;
+  window.dbGetInvoices = dbGetInvoices;
+  window.dbUpsertInvoice = dbUpsertInvoice;
+  window.dbGetVitals = dbGetVitals;
+  window.dbInsertVitals = dbInsertVitals;
+
+  // Auth & Staff Management Bridges
+  window.dbLogin = dbLogin;
+  window.dbGetClinicStaff = dbGetClinicStaff;
+  window.dbGetStaffMember = dbGetStaffMember;
+  window.dbCreateStaffUser = dbCreateStaffUser;
+  window.dbAssignStaff = dbAssignStaff;
+  window.dbRemoveStaff = dbRemoveStaff;
+  window.dbUpdateStaffStatus = dbUpdateStaffStatus;
+  window.dbUpdateStaffRole = dbUpdateStaffRole;
+  window.dbUpdateStaffType = dbUpdateStaffType;
+  window.dbToggleStaffActive = dbToggleStaffActive;
+
+  // Bell & Audit
+  window.dbRingBell = dbRingBell;
+  window.dbGetActiveCalls = dbGetActiveCalls;
+  window.dbClearCall = dbClearCall;
+  window.dbAudit = dbAudit;
 }
 
 

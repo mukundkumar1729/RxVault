@@ -15,8 +15,8 @@ let _staffList = [];
 let _rosterDataCache = {};
 
 export const openRosterViewSecure = async () => {
+    if (typeof window.setView === 'function') window.setView('roster');
     store.currentView = 'roster';
-    hideAllViews();
 
     let rv = document.getElementById('rosterView');
     if (!rv) { 

@@ -7,6 +7,8 @@
 const COMPONENT_CONFIG = [
     { url: 'component/appshell-side-navbar.html', targetId: 'appShellSideNavbar' },
     { url: 'component/appshell-topbar.html', targetId: 'appshellTopbar' },
+    { url: 'component/stats-row.html', targetId: 'statsRow' },
+    { url: 'component/controls-bar.html', targetId: 'controlsBar' },
     { url: 'component/admin-modal.html', targetId: 'adminModal' },
     { url: 'component/add-doctor.html', targetId: 'doctorFormModal' },
     { url: 'component/patient-reg.html', targetId: 'registerModal' },
@@ -15,6 +17,7 @@ const COMPONENT_CONFIG = [
     { url: 'component/rx-modal.html', targetId: 'rxFormModal' },
     { url: 'component/body-map.html', targetId: 'bodyMapContainer', callback: 'initBodyMap' },
     { url: 'component/clinic-gate.html', targetId: 'clinicGate' },
+    { url: 'component/delete-confirmation.html', targetId: 'confirmModal' },
 ];
 
 

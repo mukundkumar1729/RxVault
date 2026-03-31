@@ -23,7 +23,7 @@ export const initPatientsView = () => {
 /**
  * Secures standard HTML `.innerHTML` building with safe `el()` creation
  */
-export const renderPatientsGrid = (list = store.patientRegistry) => {
+export const renderPatientsGrid = (list = store.patients) => {
     const grid = document.getElementById('patientsGrid');
     if (!grid) return;
     

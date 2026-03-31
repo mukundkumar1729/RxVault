@@ -10,8 +10,8 @@ import { store } from '../core/store.js';
  */
 export const computeClinicalDashboard = () => {
     const rx = store.prescriptions || [];
-    const invoices = window.invoices || []; // Optional integration with legacy global till Phase 5
-    const patients = window.patientRegistry || []; // Legacy integration
+    const invoices = store.invoices || window.billingRegistry || [];
+    const patients = store.patients || window.patientRegistry || [];
 
     const total = rx.length;
     const activeRx = rx.filter(p => p.status === 'active').length;

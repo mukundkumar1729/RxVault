@@ -7,6 +7,7 @@ function renderList(items, searchQuery, allTerms) {
   searchQuery = searchQuery || '';
   allTerms    = allTerms    || [];
   var container = document.getElementById('prescriptionsList');
+  if (!container) return; // Guard against null container
   if (!items.length) {
     container.innerHTML =
       '<div class="empty-state">' +

@@ -61,7 +61,7 @@ async function initClinicGate() {
       var userClinics = await dbGetUserClinics(currentUser.id);
       clinics = (userClinics || []).map(function(c) {
         return { id: c.clinic_id, name: c.clinic_name, logo: c.clinic_logo||'🏥',
-                 type: c.clinic_type||'multispecialty', staffRole: c.staff_role };
+                 type: c.clinic_type||'multispecialty', staffRole: c.staff_role, pin: c.clinic_pin };
       });
       // SuperAdmin fallback: if no clinics assigned yet, load ALL clinics
       if (!clinics.length && typeof isSuperAdmin === 'function' && isSuperAdmin()) {

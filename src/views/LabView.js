@@ -11,8 +11,8 @@ import { fetchLabOrdersDatabase, persistLabOrder, deleteLabOrderDatabase, COMMON
 let _activeLabOrders = [];
 
 export const openLabOrdersViewSecure = async () => {
+    if (typeof window.setView === 'function') window.setView('labOrders');
     store.currentView = 'labOrders';
-    hideAllViews();
 
     let lv = document.getElementById('labOrdersView');
     if (!lv) { 

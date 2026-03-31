@@ -19,6 +19,7 @@ export const openAnalyticsDashboardSecure = () => {
         container = el('div', { id: 'analyticsView' });
         document.querySelector('.main').appendChild(container);
     }
+    container.style.display = 'block';
     
     emptyNode(container);
 

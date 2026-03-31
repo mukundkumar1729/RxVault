@@ -328,7 +328,17 @@ function openStaffModal() {
   if (subtitle && clinic) subtitle.textContent = clinic.name + ' — Staff Management';
   openModal('staffModal');
   showStaffTab('list');
-  loadStaffList();
+  
+  // Wait for the async component to be rendered in the DOM before loading data
+  var checkCount = 0;
+  var checker = setInterval(function() {
+      var container = document.getElementById('staffListContent');
+      if (container || checkCount > 30) {
+        clearInterval(checker);
+        if (container) loadStaffList();
+      }
+      checkCount++;
+    }, 150);
 }
 
 function showStaffTab(tab) {
@@ -350,7 +360,19 @@ async function loadStaffList() {
   if (!container) return;
   container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)">Loading staff…</div>';
 
-  var staffData = await dbGetClinicStaff(activeClinicId);
+  var clinicId = typeof window !== 'undefined' ? window.activeClinicId : null;
+  if (!clinicId) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--red)">Error: No active clinic selected.</div>';
+    return;
+  }
+  
+  var staffData = null;
+  try {
+    staffData = await dbGetClinicStaff(clinicId);
+  } catch(e) {
+    console.error('[StaffList] Error fetching staff:', e);
+  }
+  
   window.staffStatusMap = {};
   if (staffData) {
     staffData.forEach(function(s) {
@@ -442,6 +464,27 @@ async function addStaffMember() {
   if (!/[A-Z]/.test(password)) { if(errEl) errEl.textContent='Password must contain at least one uppercase letter.'; return; }
   if (!/[0-9]/.test(password)) { if(errEl) errEl.textContent='Password must contain at least one number.'; return; }
   if (!/[a-z]/.test(password)) { if(errEl) errEl.textContent='Password must contain at least one lowercase letter.'; return; }
+
+  // 🛡️ Plan Tier Enforcement
+  if (typeof getLimitFeedback === 'function') {
+    var staffCheck = getLimitFeedback('staff');
+    if (staffCheck) {
+      var msg = staffCheck.message + ' <a href="#" onclick="openClinicSwitcher();return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
+      showToast(msg, 'error');
+      if (errEl) errEl.textContent = staffCheck.message;
+      return; 
+    }
+    
+    if (window.LAB_TECH_ROLES && window.LAB_TECH_ROLES.indexOf(role) !== -1) {
+      var labCheck = getLimitFeedback('labTech');
+      if (labCheck) {
+        var msg = labCheck.message + ' <a href="#" onclick="openClinicSwitcher();return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
+        showToast(msg, 'error');
+        if (errEl) errEl.textContent = labCheck.message;
+        return;
+      }
+    }
+  }
 
   var btn = document.querySelector('#staffTabAdd .btn-teal');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating…'; }

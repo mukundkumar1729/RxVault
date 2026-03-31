@@ -1,0 +1,72 @@
+  <div class="search-panel-header">
+                    <div class="search-panel-label">
+                        🔍 Advanced Search
+                        <span class="search-active-badge" id="searchActiveBadge">Filters Active</span>
+                    </div>
+                    <div class="search-panel-actions">
+                        <span style="font-size:11px;color:var(--text-muted)">
+                            Showing <strong id="resultsShowing">0</strong> of <strong id="resultsTotal">0</strong> records
+                        </span>
+                    </div>
+                </div>
+                <div class="search-grid">
+                    <div class="search-cell">
+                        <span class="search-cell-icon">👤</span>
+                        <span class="search-cell-label">Patient Name</span>
+                        <input type="text" class="search-input" id="srchPatient" placeholder="e.g. Aarav Sharma" oninput="applyFilters()">
+                    </div>
+                    <div class="search-cell">
+                        <span class="search-cell-icon">🩺</span>
+                        <span class="search-cell-label">Doctor Name</span>
+                        <input type="text" class="search-input" id="srchDoctor" placeholder="e.g. Dr. Priya" oninput="applyFilters()">
+                    </div>
+                    <div class="search-cell" style="border-right:1px solid var(--border)">
+                        <span class="search-cell-icon">🔬</span>
+                        <span class="search-cell-label">Diagnosis</span>
+                        <input type="text" class="search-input" id="srchDiagnosis" placeholder="e.g. Viral Fever" oninput="applyFilters()">
+                    </div>
+                    <div class="search-cell">
+                        <span class="search-cell-icon">📱</span>
+                        <span class="search-cell-label">Mobile No.</span>
+                        <input type="text" class="search-input" id="srchPhone" placeholder="e.g. 98765 43210" oninput="applyFilters()">
+                    </div>
+                    <div class="search-cell">
+                        <span class="search-cell-icon">✉️</span>
+                        <span class="search-cell-label">Email</span>
+                        <input type="text" class="search-input" id="srchEmail" placeholder="e.g. patient@email.com" oninput="applyFilters()">
+                    </div>
+                    <div class="search-cell" style="border-right:none">
+                        <span class="search-cell-icon">🪪</span>
+                        <span class="search-cell-label">Patient / Rx ID</span>
+                        <input type="text" class="search-input" id="srchId" placeholder="e.g. rx_17… or PID" oninput="applyFilters()">
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-chip-group">
+                        <span class="filter-chip-label">Sort:</span>
+                        <select class="filter-select" id="sortSelect" onchange="applyFilters()">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="patient">Patient A–Z</option>
+                            <option value="doctor">Doctor A–Z</option>
+                        </select>
+                        <span class="filter-chip-label" style="margin-left:8px">Status:</span>
+                        <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                        <span class="filter-chip-label" style="margin-left:8px">Date From:</span>
+                        <input type="date" id="srchDateFrom" oninput="applyFilters()"
+                            style="padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-secondary);background:var(--surface2);outline:none;cursor:pointer">
+                        <span class="filter-chip-label">to</span>
+                        <input type="date" id="srchDateTo" oninput="applyFilters()"
+                            style="padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-secondary);background:var(--surface2);outline:none;cursor:pointer">
+                    </div>
+                    <button class="clear-all-btn" onclick="clearFilters()">✕ Clear All</button>
+                </div>
+                <div class="results-strip" id="resultsStrip">
+                    <div>Showing <strong id="resultsShowing2" class="results-count">0</strong> result(s)</div>
+                    <div class="results-filters-active" id="activeFilterTags"></div>
+                </div>

@@ -2,11 +2,6 @@ function showLocationDirectoryView() {
   currentView = 'locationDirectory';
   if (typeof hideAllViews === 'function') hideAllViews();
 
-  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel',
-   'doctorsView','patientsView','pharmacyView','appointmentView','billingView'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-
   var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
 
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
@@ -272,3 +267,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 1600);
 });
+
+// Expose global refresh function for external hooks (e.g. from script-doctors.js)
+window.refreshLocationDirectory = function() {
+  var v = document.getElementById('locationDirView');
+  if (v) renderLocationDirectory(v);
+  else if (typeof filterLocationDir === 'function') filterLocationDir();
+};

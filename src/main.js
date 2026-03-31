@@ -7,7 +7,7 @@ import { store } from './core/store.js';
 import { syncCurrentUserStatus, authLogout } from './services/authService.js';
 import { executeAuthGate } from './views/AuthView.js';
 import { loadAuthorizedClinics, resolveInitialClinicRoute, getActiveClinic, setActiveClinic } from './services/clinicService.js';
-import { openClinicGate, closeClinicGate, renderClinicSelectionGrid } from './views/ClinicView.js';
+import { openClinicGate, closeClinicGate, renderClinicSelectionGrid, showNewClinicForm, cancelClinicForm, saveClinicFormSecure, openEditClinicModal, triggerDeleteClinicById } from './views/ClinicView.js';
 
 // Global Patching for Legacy Interop during transition (Phase 5 bridge)
 import { openLocationDirectory } from './views/LocationView.js';
@@ -25,6 +25,8 @@ import { openOpdBoardViewSecure, openVaccinationViewSecure, openFollowupViewSecu
 import { initPrescriptionView, applyFilters, clearFilters, setView, filterByType } from './views/PrescriptionView.js';
 import { initDoctorsView, renderDoctorsGrid } from './views/DoctorView.js';
 import { initPatientsView, renderPatientsGrid } from './views/PatientView.js';
+import { openLabOrdersViewSecure } from './views/LabView.js';
+import { openRosterViewSecure } from './views/RosterView.js';
 import { hideAllViews } from './utils/dom.js';
 
 /**
@@ -51,12 +53,28 @@ const bootstrapApp = async () => {
 
     // ── Legacy Bridging for Untouched Monolith Components ──
     window.currentUser = store.currentUser;
+    window.activeClinicId = store.activeClinicId || null;
+    window.getActiveClinic = getActiveClinic;
+    
     // Bind legacy permissions object manually
     import('./services/authService.js').then(module => {
         window.getEffectiveRole = module.getEffectiveRole;
         window.isSuperAdmin = module.isSuperAdmin;
         window.hasRole = module.hasRole;
         window.can = module.can;
+    });
+    
+    // Bridge essential View & Data controllers to global scope for Phase 5 legacy compatibility
+    window.initClinicGate = openClinicGate;
+    window.dbGetUserClinics = (id) => import('./core/db.js').then(m => m.dbGetUserClinics(id));
+    
+    // Bridge Plan Limit Service
+    import('./services/limitService.js').then(module => {
+        window.checkPlanLimit = module.checkPlanLimit;
+        window.getLimitFeedback = module.getLimitFeedback;
+    });
+    import('./core/planConfig.js').then(module => {
+        window.LAB_TECH_ROLES = module.LAB_TECH_ROLES;
     });
 
     // Stage 2: Clinic Tenancy Resolution
@@ -129,9 +147,18 @@ const finalizeApplicationMount = async () => {
         if (typeof window.dbGetPatients === 'function') store.patients = await window.dbGetPatients(activeClinic.id);
         if (typeof window.dbGetAppointments === 'function') store.appointments = await window.dbGetAppointments(activeClinic.id);
         if (typeof window.dbGetInvoices === 'function') store.invoices = await window.dbGetInvoices(activeClinic.id);
+        if (typeof window.dbGetClinicStaff === 'function') store.staff = await window.dbGetClinicStaff(activeClinic.id);
         
         refreshGlobalCounts();
         
+        // Sync to Legacy Window Globals (Phase 5 Bridge)
+        window.prescriptions = store.prescriptions;
+        window.doctorRegistry = store.doctors;
+        window.patientRegistry = store.patients;
+        window.appointmentRegistry = store.appointments;
+        window.billingRegistry = store.invoices;
+        window.activeClinicId = activeClinic.id; // Crucial for legacy supabase calls
+
         // Force initial view renders if they are active
         renderDoctorsGrid(store.doctors);
         renderPatientsGrid(store.patients);
@@ -203,13 +230,24 @@ window.showPatientsView = () => {
     renderPatientsGrid(store.patients);
 };
 window.showAppointmentView = openAppointmentViewSecure;
-window.showStaffListView = () => setView('staff');
-window.showLocationDirectoryView = openLocationDirectory;
+window.showStaffListView = () => {
+    if (typeof setView === 'function') setView('staff');
+    // Trigger legacy data-fetch and render
+    const container = document.getElementById('staffListView');
+    if (container && typeof renderStaffListView === 'function') {
+        renderStaffListView(container);
+    }
+};
+window.showLocationDirectoryView = () => {
+    // Modular view takes precedence but we ensure legacy state is synced
+    if (typeof openLocationDirectory === 'function') openLocationDirectory();
+    else if (typeof showLocationDirectoryView === 'function') showLocationDirectoryView();
+};
 window.showPharmacyView = () => setView('pharmacy');
 window.showStockView = () => setView('stock');
 window.showBillingView = openBillingViewSecure;
 
-window.showLabOrdersView = () => setView('labOrders');
+window.showLabOrdersView = openLabOrdersViewSecure;
 window.showFollowupView = openFollowupViewSecure;
 window.showVaccinationView = openVaccinationViewSecure;
 window.showOpdBoardView = openOpdBoardViewSecure;
@@ -217,11 +255,41 @@ window.showOpdBoardView = openOpdBoardViewSecure;
 window.showAnalyticsDashboard = openAnalyticsDashboardSecure;
 window.showAnalyticsView = () => setView('analytics');
 window.showOutbreakView = () => setView('outbreak');
-window.showRosterView = () => setView('roster');
+window.showRosterView = openRosterViewSecure;
 
-window.openAdminPanel = () => setView('admin');
-window.openStaffModal = () => setView('staff');
+window.openAdminPanel = () => {
+    if (typeof window.openModal === 'function') window.openModal('adminModal');
+    else setView('admin');
+};
+window.openStaffModal = () => {
+    if (typeof window.openModal === 'function') {
+        window.openModal('staffModal');
+        if (typeof window.showStaffTab === 'function') window.showStaffTab('list');
+        
+        // Wait for the async component to be rendered in the DOM before loading data
+        let checkCount = 0;
+        const checker = setInterval(() => {
+            const container = document.getElementById('staffListContent');
+            if (container || checkCount > 30) {
+                clearInterval(checker);
+                if (container && typeof window.loadStaffList === 'function') {
+                    window.loadStaffList();
+                }
+            }
+            checkCount++;
+        }, 150);
+    } else {
+        setView('staff');
+    }
+};
 window.openClinicSwitcher = openClinicGate;
+window.hideClinicGate = closeClinicGate; // Bridge for legacy calls
+window.showNewClinicForm = showNewClinicForm;
+window.cancelNewClinic = cancelClinicForm;
+window.saveClinicForm = saveClinicFormSecure;
+window.openEditClinicModal = openEditClinicModal;
+window.triggerDeleteClinicById = triggerDeleteClinicById;
+
 window.toggleUserMenu = () => {
     const dropdown = document.querySelector('.user-menu-dropdown');
     if (dropdown) dropdown.classList.toggle('open');
@@ -248,10 +316,16 @@ window.refreshGlobalCounts = refreshGlobalCounts;
 
 if (typeof window.openAddModal !== 'function') {
     window.openAddModal = () => {
-       // Fallback bridge to legacy form script if already loaded
-       if (typeof window._openAddModalLegacy === 'function') window._openAddModalLegacy();
+        // Fallback bridge to legacy form script if already loaded
+        if (typeof window._openAddModalLegacy === 'function') window._openAddModalLegacy();
+        else if (window.openModal) window.openAddModal(); // Check if legacy script attached it to window
     };
 }
+
+// Legacy Patient/Rx Bridges
+window.openRegisterModal = window.openRegisterModal || (typeof openRegisterModal === 'function' ? openRegisterModal : null);
+window.openPrescriptionForPatient = window.openPrescriptionForPatient || (typeof openPrescriptionForPatient === 'function' ? openPrescriptionForPatient : null);
+window.openAddModalForPatient = window.openAddModalForPatient || (typeof openAddModalForPatient === 'function' ? openAddModalForPatient : null);
 
 window.authLogout = authLogout;
 

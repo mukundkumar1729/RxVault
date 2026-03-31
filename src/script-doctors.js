@@ -81,6 +81,15 @@ function renderAdminDoctorList() {
 
 // ─── Doctor form ──────────────────────────────────────────
 function openAddDoctorForm() {
+  if (typeof getLimitFeedback === 'function') {
+    var feedback = getLimitFeedback('doctor');
+    if (feedback) {
+      var msg = feedback.message + ' <a href="#" onclick="openClinicSwitcher();return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
+      showToast(msg, 'error');
+      return;
+    }
+  }
+  
   editingDoctorIdx = null;
   document.getElementById('doctorFormTitle').textContent = '➕ Add Doctor';
   ['dfRegNo','dfName','dfQualification','dfSpecialization','dfPhone','dfEmail','dfAddress'].forEach(function(id){ setVal(id,''); });
@@ -147,12 +156,17 @@ async function saveDoctor() {
     if (!ok) { showToast('DB save failed', 'error'); return; }
     doctorRegistry[editingDoctorIdx] = d;
     showToast('Updated Dr. ' + name, 'success');
+    if (typeof window.refreshLocationDirectory === 'function') window.refreshLocationDirectory();
+    else if (typeof filterLocationDir === 'function') filterLocationDir();
   } else {
     d.id = 'dr_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
     var ok2 = await dbUpsertDoctor(d, activeClinicId);
     if (!ok2) { showToast('DB save failed', 'error'); return; }
     doctorRegistry.push(d);
     showToast('Added Dr. ' + name, 'success');
+    // Ensure Location Directory stays in sync
+    if (typeof window.refreshLocationDirectory === 'function') window.refreshLocationDirectory();
+    else if (typeof filterLocationDir === 'function') filterLocationDir();
   }
   updateStats(); closeModal('doctorFormModal'); renderAdminDoctorList();
   if (currentView === 'doctors') renderDoctorsPage();
@@ -170,6 +184,9 @@ async function deleteDoctor(idx) {
   doctorRegistry.splice(idx, 1); updateStats(); renderAdminDoctorList();
   if (currentView === 'doctors') renderDoctorsPage();
   showToast('Deleted Dr. ' + d.name, 'info');
+  // Refresh Location Directory
+  if (typeof window.refreshLocationDirectory === 'function') window.refreshLocationDirectory();
+  else if (typeof filterLocationDir === 'function') filterLocationDir();
 }
 
 // ─── Availability rows ────────────────────────────────────
@@ -233,15 +250,15 @@ function getAvailSlots() {
 function showDoctorView() {
   currentView = 'doctors';
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
-  document.getElementById('navDoctors').classList.add('active');
+  var nav = document.getElementById('navDoctors'); if (nav) nav.classList.add('active');
   ['statsRow','controlsBar','prescriptionsList','aiSearchPanel','patientsView','pharmacyView',
    'stockView','analyticsView','outbreakView'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
   var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
-  document.getElementById('doctorsView').style.display = '';
-  document.getElementById('pageTitle').textContent    = '👨‍⚕️ Doctors & Availability';
-  document.getElementById('pageSubtitle').textContent = 'Registered practitioners and their consultation schedules';
+  var dv = document.getElementById('doctorsView'); if (dv) dv.style.display = '';
+  var pt = document.getElementById('pageTitle'); if (pt) pt.textContent = '👨‍⚕️ Doctors & Availability';
+  var ps = document.getElementById('pageSubtitle'); if (ps) ps.textContent = 'Registered practitioners and their consultation schedules';
 
   var avSel = document.getElementById('doctorAvailFilter');
   if (avSel) {
