@@ -9,6 +9,7 @@ import { loadActiveLocations, executeLocationSearch } from '../services/location
 
 export const openLocationDirectory = async () => {
     store.currentView = 'locationDirectory';
+    hideAllViews();
 
     let v = document.getElementById('locationDirView');
     if (!v) {

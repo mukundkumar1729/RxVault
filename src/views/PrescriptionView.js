@@ -4,14 +4,14 @@
 // ════════════════════════════════════════════════════════════
 
 import { store, subscribe } from '../core/store.js';
-import { el, emptyNode, escapeHtml } from '../utils/dom.js';
+import { el, emptyNode, escapeHtml, hideAllViews } from '../utils/dom.js';
 import { formatDate } from '../utils/formatters.js';
 
 export const initPrescriptionView = () => {
     subscribe('prescriptions', (rxList) => {
         // Redraw lists when reactive store pushes updates
-        if (store.currentView === 'all' || store.currentView === 'patients') {
-            window.render(); // Hooks into legacy global `render()` until fully integrated
+        if (!store.currentView || store.currentView === 'all' || [ 'recent', 'active' ].includes(store.currentView)) {
+            applyFilters(); 
         }
     });
 };
@@ -248,4 +248,224 @@ const injectPrescriptionQRSecure = (rxId) => {
     overlay.appendChild(modal);
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+};
+
+// ─── Filtering & View Operations (Modular Refactor) ─────────────────
+
+const getSearchVals = () => {
+    return {
+        patient:   (document.getElementById('srchPatient')?.value   || '').toLowerCase().trim(),
+        doctor:    (document.getElementById('srchDoctor')?.value    || '').toLowerCase().trim(),
+        diagnosis: (document.getElementById('srchDiagnosis')?.value || '').toLowerCase().trim(),
+        phone:     (document.getElementById('srchPhone')?.value     || '').toLowerCase().trim(),
+        email:     (document.getElementById('srchEmail')?.value     || '').toLowerCase().trim(),
+        id:        (document.getElementById('srchId')?.value        || '').toLowerCase().trim(),
+        dateFrom:  (document.getElementById('srchDateFrom')?.value  || ''),
+        dateTo:    (document.getElementById('srchDateTo')?.value    || ''),
+        status:    (document.getElementById('statusFilter')?.value  || 'all'),
+        sort:      (document.getElementById('sortSelect')?.value    || 'newest'),
+    };
+};
+
+export const applyFilters = () => {
+    const prescriptions = store.prescriptions || [];
+    let filtered = [...prescriptions];
+    const s = getSearchVals();
+    
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Global filter constraints
+    if (store.currentView === 'recent') filtered = filtered.filter(p => new Date(p.date) >= thirtyDaysAgo);
+    if (store.currentView === 'active') filtered = filtered.filter(p => p.status === 'active');
+    if (store.currentTypeFilter && store.currentTypeFilter !== 'all') filtered = filtered.filter(p => p.type === store.currentTypeFilter);
+
+    // Apply specific search matches
+    if (s.patient)   filtered = filtered.filter(p => (p.patientName||'').toLowerCase().includes(s.patient));
+    if (s.doctor)    filtered = filtered.filter(p => (p.doctorName||'').toLowerCase().includes(s.doctor));
+    if (s.diagnosis) filtered = filtered.filter(p => (p.diagnosis||'').toLowerCase().includes(s.diagnosis) || (p.hospital||'').toLowerCase().includes(s.diagnosis));
+    if (s.phone)     filtered = filtered.filter(p => (p.phone||'').replace(/\s/g,'').includes(s.phone.replace(/\s/g,'')) || (p.doctorPhone||'').replace(/\s/g,'').includes(s.phone.replace(/\s/g,'')));
+    if (s.email)     filtered = filtered.filter(p => (p.email||'').toLowerCase().includes(s.email));
+    if (s.id)        filtered = filtered.filter(p => (p.id||'').toLowerCase().includes(s.id) || (p.patientId||'').toLowerCase().includes(s.id));
+    if (s.dateFrom)  filtered = filtered.filter(p => p.date && p.date >= s.dateFrom);
+    if (s.dateTo)    filtered = filtered.filter(p => p.date && p.date <= s.dateTo);
+    if (s.status !== 'all') filtered = filtered.filter(p => p.status === s.status);
+
+    // Sorting
+    if (s.sort === 'newest')  filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+    if (s.sort === 'oldest')  filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+    if (s.sort === 'patient') filtered.sort((a,b) => (a.patientName||'').localeCompare(b.patientName||''));
+    if (s.sort === 'doctor')  filtered.sort((a,b) => (a.doctorName||'').localeCompare(b.doctorName||''));
+
+    // Update DOM counts natively (ES6 safe)
+    const showing1 = document.getElementById('resultsShowing');
+    const showing2 = document.getElementById('resultsShowing2');
+    const total = document.getElementById('resultsTotal');
+    if (showing1) showing1.textContent = filtered.length;
+    if (showing2) showing2.textContent = filtered.length;
+    if (total) total.textContent = prescriptions.length;
+
+    updateActiveFilterTags(s);
+
+    const allTerms = [s.patient, s.doctor, s.diagnosis, s.phone, s.email, s.id].filter(Boolean);
+    renderList(filtered, allTerms.join(' '), allTerms);
+};
+
+export const updateActiveFilterTags = (s) => {
+    const tags = [];
+    if (s.patient)   tags.push({label:`Patient: "${s.patient}"`, clear: () => { document.getElementById('srchPatient').value=''; applyFilters(); }});
+    if (s.doctor)    tags.push({label:`Doctor: "${s.doctor}"`, clear: () => { document.getElementById('srchDoctor').value=''; applyFilters(); }});
+    if (s.diagnosis) tags.push({label:`Diagnosis: "${s.diagnosis}"`, clear: () => { document.getElementById('srchDiagnosis').value=''; applyFilters(); }});
+    if (s.phone)     tags.push({label:`Phone: "${s.phone}"`, clear: () => { document.getElementById('srchPhone').value=''; applyFilters(); }});
+    if (s.email)     tags.push({label:`Email: "${s.email}"`, clear: () => { document.getElementById('srchEmail').value=''; applyFilters(); }});
+    if (s.id)        tags.push({label:`ID: "${s.id}"`, clear: () => { document.getElementById('srchId').value=''; applyFilters(); }});
+    if (s.dateFrom)  tags.push({label:`From: ${formatDate(s.dateFrom)}`, clear: () => { document.getElementById('srchDateFrom').value=''; applyFilters(); }});
+    if (s.dateTo)    tags.push({label:`To: ${formatDate(s.dateTo)}`, clear: () => { document.getElementById('srchDateTo').value=''; applyFilters(); }});
+    if (s.status !== 'all') tags.push({label:`Status: ${s.status.charAt(0).toUpperCase() + s.status.slice(1)}`, clear: () => { document.getElementById('statusFilter').value='all'; applyFilters(); }});
+    
+    if (store.currentTypeFilter && store.currentTypeFilter !== 'all') {
+        const t = store.currentTypeFilter;
+        tags.push({
+            label:`Type: ${t.charAt(0).toUpperCase() + t.slice(1)}`, 
+            clear:() => {
+                store.currentTypeFilter = 'all';
+                document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active-filter'));
+                const first = document.querySelector('.type-filter-btn');
+                if (first) first.classList.add('active-filter');
+                applyFilters();
+            }
+        });
+    }
+
+    const badge = document.getElementById('searchActiveBadge');
+    if (badge) badge.classList.toggle('show', tags.length > 0);
+    
+    const container = document.getElementById('activeFilterTags');
+    if (!container) return;
+    
+    emptyNode(container);
+    if (!tags.length) {
+        container.appendChild(el('span', { style: { color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }, textContent: 'No filters active' }));
+        return;
+    }
+    
+    tags.forEach(t => {
+        const tagEl = el('span', { className: 'active-filter-tag', onClick: t.clear }, [
+            document.createTextNode(`${t.label} `),
+            el('span', { style: { fontSize: '12px' }, textContent: '×' })
+        ]);
+        container.appendChild(tagEl);
+    });
+};
+
+export const clearFilters = () => {
+    ['srchPatient','srchDoctor','srchDiagnosis','srchPhone','srchEmail','srchId','srchDateFrom','srchDateTo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    
+    const sortSel = document.getElementById('sortSelect');
+    if (sortSel) sortSel.value = 'newest';
+    
+    const statusSel = document.getElementById('statusFilter');
+    if (statusSel) statusSel.value = 'all';
+    
+    store.currentTypeFilter = 'all';
+    document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active-filter'));
+    const first = document.querySelector('.type-filter-btn'); 
+    if (first) first.classList.add('active-filter');
+    
+    applyFilters();
+};
+
+export const updateViewTitle = () => {
+    const viewLabel = {all: 'All Rx', recent: 'Recent (30d)', active: 'Active'}[store.currentView || 'all'] || 'Rx';
+    const typeLabel = {allopathy: '· Allopathy', homeopathy: '· Homeopathy', ayurveda: '· Ayurveda'}[store.currentTypeFilter] || '';
+    
+    const viewSub = {
+        all: 'All prescription records',
+        recent: 'Prescriptions from the last 30 days',
+        active: 'Currently active treatment records'
+    }[store.currentView || 'all'] || '';
+    
+    const typeSub = {
+        allopathy: ' · Allopathy only',
+        homeopathy: ' · Homeopathy only',
+        ayurveda: ' · Ayurveda only'
+    }[store.currentTypeFilter] || '';
+    
+    const tEl = document.getElementById('pageTitle');
+    const sEl = document.getElementById('pageSubtitle');
+    if (tEl) tEl.textContent = `${viewLabel} ${typeLabel}`.trim();
+    if (sEl) sEl.textContent = `${viewSub}${typeSub}`.trim();
+};
+
+export const setView = (view, eventObj = null) => {
+    hideAllViews();
+    store.currentView = view;
+
+    const dashboardViews = ['all', 'recent', 'active', 'allopathy', 'homeopathy', 'ayurveda'];
+    const isDashboard = dashboardViews.includes(view);
+
+    if (view === 'doctors' || view === 'patients') {
+        const id = view === 'doctors' ? 'doctorsView' : 'patientsView';
+        const node = document.getElementById(id);
+        if (node) node.style.display = '';
+    } else if (isDashboard) {
+        // Show main Rx context for Dashboard views
+        ['statsRow', 'controlsBar', 'prescriptionsList', 'aiSearchPanel'].forEach(id => {
+            const node = document.getElementById(id);
+            if (node) node.style.display = '';
+        });
+    } else {
+        // Modular view: show specific container if exists
+        const id = view.endsWith('View') ? view : (view + 'View');
+        const node = document.getElementById(id) || document.getElementById(view + 'DirView') || document.getElementById(view + 'OrdersView');
+        if (node) node.style.display = '';
+    }
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (eventObj && eventObj.currentTarget) eventObj.currentTarget.classList.add('active');
+    else if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
+
+    updateViewTitle();
+    applyFilters();
+    if (typeof window.refreshSidebarDots === 'function') setTimeout(window.refreshSidebarDots, 20);
+};
+
+export const filterByType = (type, eventObj = null) => {
+    store.currentTypeFilter = type;
+
+    document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active-filter'));
+    const evtTarget = eventObj ? eventObj.currentTarget : (window.event ? window.event.currentTarget : null);
+    
+    if (evtTarget && evtTarget.classList.contains('type-filter-btn')) {
+        evtTarget.classList.add('active-filter');
+    } else if (type === 'all') {
+        const first = document.querySelector('.type-filter-btn');
+        if (first) first.classList.add('active-filter');
+    }
+
+    updateViewTitle();
+    applyFilters();
+};
+
+export const renderList = (items, searchQuery = '', allTerms = []) => {
+    const container = document.getElementById('prescriptionsList');
+    if (!container) return;
+    
+    emptyNode(container);
+
+    if (!items.length) {
+        container.appendChild(el('div', { className: 'empty-state' }, [
+            el('div', { className: 'empty-icon', textContent: '📭' }),
+            el('div', { className: 'empty-title', textContent: 'No prescriptions found' }),
+            el('div', { className: 'empty-sub', textContent: searchQuery ? 'No records match your search criteria.' : 'Start by adding your first prescription.' }),
+            ...(!searchQuery ? [el('button', { className: 'btn-add', textContent: '＋ Add First Prescription', onClick: () => window.openAddModal && window.openAddModal() })] : [])
+        ]));
+        return;
+    }
+
+    items.forEach(p => {
+        container.appendChild(buildPrescriptionCard(p, searchQuery, allTerms));
+    });
 };

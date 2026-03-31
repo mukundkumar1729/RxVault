@@ -15,6 +15,26 @@ if (typeof window !== 'undefined') {
     window.SUPABASE_URL = SUPABASE_URL;
     window.SUPABASE_KEY = SUPABASE_KEY;
     window.db = db;
+    
+    // Auto-bridge all db functions to global window for legacy service compatibility
+    [
+        'dbGetClinics', 'dbInsertClinic', 'dbUpdateClinic', 'dbDeleteClinic',
+        'dbGetPrescriptions', 'dbUpsertPrescription', 'dbDeletePrescription',
+        'dbGetDoctors', 'dbUpsertDoctor', 'dbDeleteDoctor',
+        'dbGetPatients', 'dbInsertPatient',
+        'dbSearchFuzzy', 'dbSearchSemantic', 'dbStoreEmbedding', 'dbUpdateClinicPlan',
+        'dbLogin', 'dbGetUserClinics', 'dbGetClinicStaff', 'dbGetStaffMember',
+        'dbCreateStaffUser', 'dbRingBell', 'dbGetActiveCalls', 'dbClearCall',
+        'dbUpdateStaffStatus', 'dbUpdateStaffRole', 'dbUpdateStaffType',
+        'dbToggleStaffActive', 'dbAdminResetPassword', 'dbChangePassword',
+        'dbGenerateResetToken', 'dbConsumeResetToken', 'dbCreateUserWithPassword',
+        'dbAssignStaff', 'dbRemoveStaff', 'dbAudit',
+        'dbGetAppointments', 'dbUpsertAppointment', 'dbDeleteAppointment', 'dbGetNextToken',
+        'dbGetInvoices', 'dbUpsertInvoice', 'dbGetNextInvoiceNo',
+        'dbGetVitals', 'dbInsertVitals'
+    ].forEach(fnName => {
+        if (typeof eval(fnName) === 'function') window[fnName] = eval(fnName);
+    });
 }
 
 function dbErr(label, error) {

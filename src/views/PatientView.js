@@ -13,7 +13,7 @@ import { getPatientFeeStatus, getDaysRemaining } from '../services/patientServic
  */
 export const initPatientsView = () => {
     // When the patient registry updates, re-render the active view automatically
-    subscribe('patientRegistry', (newList) => {
+    subscribe('patients', (newList) => {
         if (store.currentView === 'patients') {
             renderPatientsGrid(newList);
         }

@@ -1,4 +1,5 @@
 import { db } from '../supabase.js';
+import { store } from '../core/store.js';
 
 /**
  * Unified AI call — routes through the Supabase Edge Function claude-proxy
@@ -140,4 +141,52 @@ export const markdownToHtml = (text) => {
         .replace(/🚨/g, '<span style="color:var(--red);font-weight:700">🚨</span>')
         .replace(/\n\n/g, '</p><p style="margin:6px 0">')
         .replace(/\n/g, '<br>');
+};
+
+/**
+ * Fuzzy search across all prescriptions for AI Case matching
+ */
+export const searchMedicalRecordsFuzzy = (query) => {
+    const qLow = query.toLowerCase();
+    const terms = qLow.split(/\s+/).filter(t => t.length > 2);
+    const prescriptions = store.prescriptions || [];
+    
+    const matched = prescriptions.filter(rx => {
+        const haystack = [rx.patientName, rx.diagnosis, rx.notes, rx.doctorName,
+            (rx.medicines || []).map(m => m.name).join(' ')].join(' ').toLowerCase();
+        return terms.some(t => haystack.includes(t)) || haystack.includes(qLow);
+    });
+
+    // Sort by match score
+    matched.sort((a, b) => {
+        const getHaystack = (rx) => [rx.patientName, rx.diagnosis, rx.notes].join(' ').toLowerCase();
+        const scoreA = terms.filter(t => getHaystack(a).includes(t)).length;
+        const scoreB = terms.filter(t => getHaystack(b).includes(t)).length;
+        return scoreB - scoreA;
+    });
+
+    return matched;
+};
+
+/**
+ * Summarizes the common clinical pattern among top matched cases
+ */
+export const requestClinicalInsight = async (query, matched) => {
+    try {
+        const topCases = matched.slice(0, 5).map(rx => {
+            const meds = (rx.medicines || []).map(m => m.name).slice(0, 3).join(', ');
+            return `• ${rx.patientName || '?'}, ${rx.date || ''}: ${rx.diagnosis || 'No diagnosis'}. Medicines: ${meds}`;
+        }).join('\n');
+
+        const prompt = `You are a clinical assistant. The doctor searched for "${query}" and found these cases:\n\n${topCases}\n\nIn 2-3 sentences: what is the common clinical pattern? Any notable differences? Keep it concise and clinically relevant. No disclaimers.`;
+
+        const data = await callClaude({
+            max_tokens: 250,
+            messages: [{ role: 'user', content: prompt }]
+        });
+        return (data.content || []).map(b => b.text || '').join('').trim();
+    } catch (e) {
+        console.error('Insight API Error:', e);
+        return null;
+    }
 };

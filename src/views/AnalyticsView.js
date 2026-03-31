@@ -12,6 +12,7 @@ import { computeClinicalDashboard, generateReportCSV } from '../services/analyti
  */
 export const openAnalyticsDashboardSecure = () => {
     store.currentView = 'analytics';
+    hideAllViews();
     
     let container = document.getElementById('analyticsView');
     if (!container) {

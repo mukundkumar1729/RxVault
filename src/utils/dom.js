@@ -88,3 +88,22 @@ export const el = (tag, props = {}, children = []) => {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   };
+
+/**
+ * Hides all view containers to allow a clean state before mounting a new view.
+ */
+export const hideAllViews = () => {
+    const ids = [
+        'statsRow', 'controlsBar', 'prescriptionsList', 'aiSearchPanel',
+        'doctorsView', 'patientsView', 'pharmacyView',
+        'appointmentView', 'billingView', 'vitalsView',
+        'labView', 'dietView', 'portalView', 'medImageView',
+        'analyticsView', 'rosterView', 'stockView',
+        'opdBoardView', 'vaccinationView', 'followupView',
+        'locationDirView', 'labOrdersView'
+    ];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+};
