@@ -100,18 +100,32 @@ export const renderClinicSelectionGrid = () => {
                     el('span', { textContent: c.name }),
                     ...(isActive ? [el('span', { style: { fontSize: '10px', color: 'var(--teal)' }, textContent: ' ✓ Active' })] : [])
                 ]),
-                el('div', { className: 'clinic-card-meta' }, [
-                    el('span', { className: 'clinic-type-tag', textContent: `${icon} ${tname}` }),
-                    ...(c.staffRole ? [el('span', { className: 'clinic-type-tag', style: { background: 'rgba(10,124,110,0.15)', color: 'var(--teal)', marginLeft: '4px' }, textContent: window.formatRole ? window.formatRole(c.staffRole) : c.staffRole })] : [])
-                ])
-            ]),
-            ...(canCreate ? [
-                el('div', { className: 'clinic-card-actions' }, [
-                    el('button', { className: 'clinic-edit-btn', attributes: { title: 'Edit' }, textContent: '✏️', onClick: (e) => { e.stopPropagation(); openEditClinicModal(c.id); } }),
-                    el('button', { className: 'clinic-del-btn', attributes: { title: 'Delete' }, textContent: '🗑️', onClick: (e) => { e.stopPropagation(); triggerDeleteClinicById(c.id); } })
-                ])
+            el('div', { className: 'clinic-card-meta' }, [
+                el('span', { className: 'clinic-type-tag', textContent: `${icon} ${tname}` }),
+                el('span', { 
+                    className: 'clinic-type-tag', 
+                    style: { background: 'rgba(15,30,48,0.05)', color: 'var(--text-muted)', marginLeft: '4px', border: '1px solid var(--border)' }, 
+                    textContent: (c.plan || 'free').charAt(0).toUpperCase() + (c.plan || 'free').slice(1)
+                }),
+                ...(c.staffRole ? [el('span', { className: 'clinic-type-tag', style: { background: 'rgba(10,124,110,0.15)', color: 'var(--teal)', marginLeft: '4px' }, textContent: window.formatRole ? window.formatRole(c.staffRole) : c.staffRole })] : [])
+            ])
+        ]),
+        el('div', { className: 'clinic-card-actions' }, [
+            ...((isSuperAdmin || c.staffRole === 'admin') && (c.plan === 'free' || c.plan === 'silver') ? [
+                el('button', { 
+                    className: 'clinic-edit-btn', 
+                    style: { color: 'var(--teal)', borderColor: 'rgba(10,124,110,0.2)', marginRight: '6px' },
+                    attributes: { title: 'Upgrade Plan' }, 
+                    textContent: '💎', 
+                    onClick: (e) => { e.stopPropagation(); if (typeof window.openUpgradeModal === 'function') window.openUpgradeModal(c.id); } 
+                })
             ] : []),
-            el('div', { className: 'clinic-card-arrow', textContent: '→' })
+            ...(canCreate || c.staffRole === 'admin' ? [
+                el('button', { className: 'clinic-edit-btn', attributes: { title: 'Edit' }, textContent: '✏️', onClick: (e) => { e.stopPropagation(); openEditClinicModal(c.id); } }),
+                el('button', { className: 'clinic-del-btn', attributes: { title: 'Delete' }, textContent: '🗑️', onClick: (e) => { e.stopPropagation(); triggerDeleteClinicById(c.id); } })
+            ] : [])
+        ]),
+        el('div', { className: 'clinic-card-arrow', textContent: '→' })
         ]);
         
         cardsGrid.appendChild(card);

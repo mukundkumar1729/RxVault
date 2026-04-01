@@ -47,13 +47,23 @@ export const loadAuthorizedClinics = async (user) => {
             logo: c.clinic_logo || '🏥',
             type: c.clinic_type || 'multispecialty',
             staffRole: c.staff_role,
-            pin: c.clinic_pin
+            pin: c.clinic_pin,
+            plan: c.plan || 'free' // Map plan if provided by RPC, else default
         }));
 
-        // SuperAdmin fallback mapping
-        if (!loadedClinics.length && typeof window.isSuperAdmin === 'function' && window.isSuperAdmin()) {
+        // SuperAdmin / Global Fetching Path
+        // If SuperAdmin, we ALWAYS fetch from dbGetClinics to get complete 'plan' data
+        if (typeof window.isSuperAdmin === 'function' && window.isSuperAdmin()) {
             const allClinics = await dbGetClinics();
-            loadedClinics = allClinics.map(c => ({ ...c, staffRole: 'superadmin' }));
+            const baseMap = new Map((userClinics || []).map(c => [c.clinic_id, c]));
+            
+            loadedClinics = allClinics.map(ac => {
+                const assigned = baseMap.get(ac.id);
+                return {
+                    ...ac,
+                    staffRole: assigned ? assigned.staff_role : 'superadmin'
+                };
+            });
         }
     } else {
         // Unauthenticated fetching path

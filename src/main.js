@@ -51,6 +51,12 @@ const bootstrapApp = async () => {
     const sidebar = document.getElementById('appShellSideNavbar');
     if (sidebar) sidebar.style.display = 'block';
 
+    // Restore Sidebar Collapsed State
+    const isCollapsed = localStorage.getItem('rx_sidebar_collapsed') === 'true';
+    if (isCollapsed) {
+        document.querySelector('.app-shell')?.classList.add('sidebar-collapsed');
+    }
+
     // ── Legacy Bridging for Untouched Monolith Components ──
     window.currentUser = store.currentUser;
     window.activeClinicId = store.activeClinicId || null;
@@ -63,6 +69,8 @@ const bootstrapApp = async () => {
         window.hasRole = module.hasRole;
         window.can = module.can;
     });
+    // Immediate global exposure for boot sequence
+    window.isSuperAdmin = () => store.currentUser?.role === 'superadmin';
     
     // Bridge essential View & Data controllers to global scope for Phase 5 legacy compatibility
     window.initClinicGate = openClinicGate;
@@ -89,6 +97,7 @@ const initializeTenancyGate = async (user) => {
     if (typeof window.showLoading === 'function') window.showLoading('Loading clinics…');
 
     const clinics = await loadAuthorizedClinics(user);
+    window.clinics = clinics; // Sync for legacy clinic.js interop
     const route = resolveInitialClinicRoute(clinics);
     
     if (typeof window.hideLoading === 'function') window.hideLoading();
@@ -290,10 +299,22 @@ window.saveClinicForm = saveClinicFormSecure;
 window.openEditClinicModal = openEditClinicModal;
 window.triggerDeleteClinicById = triggerDeleteClinicById;
 
-window.toggleUserMenu = () => {
-    const dropdown = document.querySelector('.user-menu-dropdown');
+window.toggleUserMenu = (e) => {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('userDropdown');
     if (dropdown) dropdown.classList.toggle('open');
 };
+
+// Global click-outside closer for dropdowns
+document.addEventListener('click', (e) => {
+    const userBtn = document.getElementById('topbarUserBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    if (userDropdown && userDropdown.classList.contains('open')) {
+        if (userBtn && !userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('open');
+        }
+    }
+});
 
 // Phase 6 Final Routing Bindings
 window.showAppointments = openAppointmentViewSecure;

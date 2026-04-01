@@ -61,12 +61,21 @@ async function initClinicGate() {
       var userClinics = await dbGetUserClinics(currentUser.id);
       clinics = (userClinics || []).map(function(c) {
         return { id: c.clinic_id, name: c.clinic_name, logo: c.clinic_logo||'🏥',
-                 type: c.clinic_type||'multispecialty', staffRole: c.staff_role, pin: c.clinic_pin };
+                 type: c.clinic_type||'multispecialty', staffRole: c.staff_role, pin: c.clinic_pin,
+                 plan: c.plan || 'free' };
       });
-      // SuperAdmin fallback: if no clinics assigned yet, load ALL clinics
-      if (!clinics.length && typeof isSuperAdmin === 'function' && isSuperAdmin()) {
-        clinics = await dbGetClinics();
-        clinics.forEach(function(c) { c.staffRole = 'superadmin'; });
+
+      // Improvement: SuperAdmins should always see full clinic data (including plan)
+      if (typeof isSuperAdmin === 'function' && isSuperAdmin()) {
+        const allClinics = await dbGetClinics();
+        const baseClinics = clinics;
+        clinics = allClinics.map(function(ac) {
+          const assigned = baseClinics.find(c => c.id === ac.id);
+          return {
+            ...ac,
+            staffRole: assigned ? assigned.staffRole : 'superadmin'
+          };
+        });
       }
     } else {
       clinics = await dbGetClinics();
@@ -169,18 +178,25 @@ function renderClinicGate() {
     var roleLabel = c.staffRole
       ? '<span class="clinic-type-tag" style="background:rgba(10,124,110,0.15);color:var(--teal);margin-left:4px">'+formatRole(c.staffRole)+'</span>'
       : '';
-    var adminBtns = canCreate
+    var canEdit = canCreate || (c.staffRole === 'admin');
+    var adminBtns = canEdit
       ? '<button class="clinic-edit-btn" onclick="event.stopPropagation();openEditClinicModal(\''+c.id+'\')" title="Edit">✏️</button>' +
         '<button class="clinic-del-btn"  onclick="event.stopPropagation();deleteClinicById(\''+c.id+'\')" title="Delete">🗑️</button>'
       : '';
+    var planLabel = '<span class="clinic-type-tag" style="background:rgba(15,30,48,0.05);color:var(--text-muted);margin-left:4px;border:1px solid var(--border)">'+capitalize(c.plan||'free')+'</span>';
+    var canUpgrade = (c.staffRole === 'admin' || c.staffRole === 'superadmin' || canCreate);
+    var upgradeBtn = canUpgrade && (c.plan === 'free' || c.plan === 'silver')
+      ? '<button class="clinic-edit-btn" style="color:var(--teal);border-color:rgba(10,124,110,0.2)" onclick="event.stopPropagation();openUpgradeModal(\''+c.id+'\')" title="Upgrade Plan">💎</button>'
+      : '';
+
     return (
       '<div class="clinic-card'+(isActive?' clinic-card-active':'')+'" onclick="selectClinic(\''+c.id+'\')">' +
         '<div class="clinic-card-icon">'+escHtml(c.logo||icon)+'</div>' +
         '<div class="clinic-card-info">' +
           '<div class="clinic-card-name">'+escHtml(c.name)+(isActive?' <span style="font-size:10px;color:var(--teal)">✓ Active</span>':'')+'</div>' +
-          '<div class="clinic-card-meta"><span class="clinic-type-tag">'+icon+' '+tname+'</span>'+roleLabel+'</div>' +
+          '<div class="clinic-card-meta"><span class="clinic-type-tag">'+icon+' '+tname+'</span>'+planLabel+roleLabel+'</div>' +
         '</div>' +
-        (adminBtns ? '<div class="clinic-card-actions">'+adminBtns+'</div>' : '') +
+        '<div class="clinic-card-actions">'+upgradeBtn+adminBtns+'</div>' +
         '<div class="clinic-card-arrow">→</div>' +
       '</div>'
     );
@@ -341,3 +357,36 @@ function renderTopbarUser() {
   if (ddName)  ddName.textContent  = user.name;
   if (ddEmail) ddEmail.textContent = user.email;
 }
+
+// ─── Upgrade flow ─────────────────────────────────────────
+var currentUpgradeClinicId = null;
+
+async function openUpgradeModal(clinicId) {
+    currentUpgradeClinicId = clinicId;
+    var overlay = document.getElementById('upgradeModal');
+    if (!overlay) return;
+    
+    // Load content if empty
+    if (!overlay.innerHTML) {
+        const resp = await fetch('component/upgrade-plan.html');
+        overlay.innerHTML = await resp.text();
+    }
+    
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+async function selectUpgradePlan(plan) {
+    if (!currentUpgradeClinicId) return;
+    if (!confirm('Confirm upgrade to ' + plan.toUpperCase() + '?')) return;
+
+    closeModal('upgradeModal');
+    
+    // Dynamically import the Razorpay service
+    const { startUpgradeFlow } = await import('./services/razorpayService.js');
+    await startUpgradeFlow(currentUpgradeClinicId, plan, typeof currentUser !== 'undefined' ? currentUser : null);
+}
+
+// Bridge to window
+window.openUpgradeModal = openUpgradeModal;
+window.selectUpgradePlan = selectUpgradePlan;

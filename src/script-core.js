@@ -131,7 +131,7 @@ function updateStats() {
 
   var setEl = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
 
-  ['statTotal','statsTotal'].forEach(function(id){ setEl(id, total); });
+  ['statTotal','statsTotal','statTotalMobile'].forEach(function(id){ setEl(id, total); });
   ['statAllo','statsAllo'].forEach(function(id){ setEl(id, allo); });
   ['statHomo','statsHomo'].forEach(function(id){ setEl(id, homo); });
   ['statAyur','statsAyur'].forEach(function(id){ setEl(id, ayur); });
@@ -142,9 +142,12 @@ function updateStats() {
   setEl('badgeDoctors', doctorRegistry.length);
   setEl('badgePatients', patientRegistry.length);
   
-  // Appointments
+  // Appointments — Default badge shows today's "pending" queue or total for today
   if (typeof appointmentRegistry !== 'undefined') {
-    setEl('badgeAppointments', appointmentRegistry.length);
+    var today = new Date().toISOString().split('T')[0];
+    var todayAppts = appointmentRegistry.filter(function(a) { return (a.appt_date || '').slice(0, 10) === today; });
+    var pending = todayAppts.filter(function(a) { return a.status === 'waiting' || a.status === 'in-room'; }).length;
+    setEl('badgeAppointments', pending || todayAppts.length);
   }
 
   // Pharmacy
@@ -160,10 +163,10 @@ function updateStats() {
   var labOrders = prescriptions.reduce(function(acc, p){ return acc + (p.diagnostics ? p.diagnostics.length : 0); }, 0);
   setEl('badgeLabOrders', labOrders);
 
-  // Follow-up & Vaccination
   setEl('badgeFollowup', 0);
   setEl('badgeVaccination', 0);
 }
+window.updateStats = updateStats;
 
 // ─── Render entry point ───────────────────────────────────
 function render() { updateStats(); if (typeof applyFilters === 'function') applyFilters(); applyPermissionUI(); }
@@ -261,10 +264,48 @@ setInterval(function() {
   if (typeof activeClinicId !== 'undefined' && activeClinicId) checkClinicCalls();
 }, 10000);
 document.addEventListener('DOMContentLoaded', function() {
+  loadTheme();
   setTimeout(function() {
     if (typeof activeClinicId !== 'undefined' && activeClinicId) checkClinicCalls();
   }, 2000);
 });
+
+// ─── Stats Dropdown ───────────────────────────────────────
+function toggleStatsDropdown(e) {
+  if (e) e.stopPropagation();
+  var dd = document.getElementById('statsDropdown');
+  if (!dd) return;
+  var isOpen = dd.classList.toggle('open');
+  if (isOpen) {
+    // Close on next outside click
+    setTimeout(function() {
+      document.addEventListener('click', function closeStats(ev) {
+        var trigger = document.querySelector('.topbar-stats-trigger');
+        if (trigger && trigger.contains(ev.target)) return;
+        if (dd && dd.contains(ev.target)) return;
+        dd.classList.remove('open');
+        document.removeEventListener('click', closeStats);
+      });
+    }, 0);
+  }
+}
+
+// ─── Theme System ─────────────────────────────────────────
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('rxvault_theme', theme);
+  // Mark active button
+  document.querySelectorAll('.theme-btn').forEach(function(btn) {
+    var isMatch = btn.getAttribute('onclick').includes("'" + theme + "'");
+    btn.style.borderColor = isMatch ? 'var(--teal)' : 'var(--border)';
+    btn.style.boxShadow = isMatch ? '0 0 0 2px rgba(10,124,110,0.2)' : 'none';
+  });
+}
+
+function loadTheme() {
+  var saved = localStorage.getItem('rxvault_theme') || 'light';
+  setTheme(saved);
+}
 
 // ─── Phase 5 Modular Transition ──────────────────────────────
 // Redundant legacy boot() removed in favor of ES6 main.js

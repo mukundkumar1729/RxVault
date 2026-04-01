@@ -254,6 +254,19 @@ function clearDoctorAvailPanel() {
   if (panel) panel.classList.add('hidden');
 }
 
+// ─── Sidebar toggle ───────────────────────────────────────
+function toggleSidebar() {
+  var shell = document.querySelector('.app-shell');
+  if (!shell) return;
+  
+  if (window.innerWidth <= 900) {
+    document.body.classList.toggle('sidebar-mobile-open');
+  } else {
+    var isCollapsed = shell.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('rx_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+  }
+}
+
 // ─── Keyboard shortcuts ───────────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') { closeModal('rxFormModal'); closeModal('confirmModal'); }

@@ -50,12 +50,35 @@ const refreshAppointmentView = async () => {
     // Load data
     await fetchAppointments(store.activeClinicId, apptFilterState.date);
     
+    // Sync sidebar badge (legacy)
+    if (typeof window.updateStats === 'function') {
+        // We need to update the appointmentRegistry in script-core too
+        if (typeof window.appointmentRegistry !== 'undefined') {
+            // This is a bit hacky but necessary for legacy bridge
+            // Ideally script-core should use store.appointments
+            window.appointmentRegistry = await window.dbGetAppointments(store.activeClinicId);
+        }
+        window.updateStats();
+    }
+    
     // Render Layout
-    const statsRow = el('div', { id: 'apptStats', className: 'stats-grid', style: { display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' } });
-    const filterBar = el('div', { id: 'apptFilterBar', style: { marginBottom: '16px' } });
+    const statsRow = el('div', { id: 'apptStats', className: 'stats-grid', style: { display: 'flex', gap: '15px', marginBottom: '24px', flexWrap: 'wrap' } });
+    const filterContainer = el('div', { 
+        style: { 
+            background: 'var(--surface)', 
+            border: '1px solid var(--border)', 
+            borderRadius: 'var(--radius-lg)', 
+            padding: '16px', 
+            marginBottom: '20px',
+            boxShadow: 'var(--shadow-sm)'
+        }
+    });
+    const filterBar = el('div', { id: 'apptFilterBar' });
+    filterContainer.appendChild(filterBar);
+
     const listWrap = el('div', { id: 'apptList' });
     
-    container.append(statsRow, filterBar, listWrap);
+    container.append(statsRow, filterContainer, listWrap);
     
     renderStats(statsRow);
     renderFilters(filterBar);
@@ -67,20 +90,53 @@ const renderStats = (container) => {
     const stats = computeQueueStats(apptFilterState.date);
     
     const cards = [
-        { label: 'Total', val: stats.total, icon: '📋', bg: 'var(--surface2)', clr: 'var(--text-primary)' },
-        { label: 'Arrived', val: stats.arrived, icon: '🟢', bg: '#e8f5e9', clr: 'var(--green)' },
-        { label: 'In Room', val: stats.inRoom, icon: '🔵', bg: 'var(--teal-pale)', clr: 'var(--teal)' },
-        { label: 'Done', val: stats.done, icon: '✅', bg: 'var(--green-bg, #e8f5e9)', clr: 'var(--green)' },
+        { label: 'Total', val: stats.total, icon: '📋', bg: 'rgba(79, 70, 229, 0.08)', clr: '#4f46e5' },
+        { label: 'Arrived', val: stats.arrived, icon: '🟢', bg: 'rgba(22, 163, 74, 0.08)', clr: '#16a34a' },
+        { label: 'In Room', val: stats.inRoom, icon: '🔵', bg: 'rgba(13, 148, 136, 0.08)', clr: '#0d9488' },
+        { label: 'Done', val: stats.done, icon: '✅', bg: 'rgba(5, 150, 105, 0.08)', clr: '#059669' },
     ];
     
     cards.forEach(s => {
         container.appendChild(el('div', { 
-            style: { background: s.bg, border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1', minWidth: '100px' } 
+            style: { 
+                background: s.bg, 
+                border: `1px solid ${s.clr}20`, 
+                borderRadius: '16px', 
+                padding: '16px 20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '14px', 
+                flex: '1', 
+                minWidth: '140px',
+                transition: 'transform 0.2s ease',
+                cursor: 'default'
+            },
+            onmouseenter: (e) => e.currentTarget.style.transform = 'translateY(-2px)',
+            onmouseleave: (e) => e.currentTarget.style.transform = 'translateY(0)'
         }, [
-            el('div', { style: { fontSize: '22px' }, textContent: s.icon }),
+            el('div', { 
+                style: { 
+                    fontSize: '26px', 
+                    background: '#fff', 
+                    width: '48px', 
+                    height: '48px', 
+                    borderRadius: '12px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                }, 
+                textContent: s.icon 
+            }),
             el('div', {}, [
-                el('div', { style: { fontSize: '24px', fontWeight: '700', color: s.clr, fontFamily: '"DM Serif Display", serif' }, textContent: s.val }),
-                el('div', { style: { fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.08em' }, textContent: s.label })
+                el('div', { 
+                    style: { fontSize: '26px', fontWeight: '800', color: s.clr, fontFamily: '"DM Serif Display", serif', lineHeight: '1.1' }, 
+                    textContent: s.val 
+                }),
+                el('div', { 
+                    style: { fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: '2px' }, 
+                    textContent: s.label 
+                })
             ])
         ]));
     });
@@ -89,46 +145,74 @@ const renderStats = (container) => {
 const renderFilters = (container) => {
     emptyNode(container);
     
-    const inputStyle = { width: '100%', padding: '7px 10px 7px 30px', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '12.5px', fontFamily: 'DM Sans, sans-serif', background: 'var(--surface)', boxSizing: 'border-box' };
-    const iconStyle = { position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', pointerEvents: 'none' };
+    const inputStyle = { 
+        width: '100%', 
+        padding: '10px 12px 10px 42px', 
+        border: '1px solid var(--border)', 
+        borderRadius: '10px', 
+        fontSize: '13px', 
+        fontFamily: 'DM Sans, sans-serif', 
+        background: '#f9fafb', 
+        boxSizing: 'border-box',
+        transition: 'all 0.2s ease',
+        outline: 'none'
+    };
     
-    const searchGroup = (icon, id, placeholder, val) => el('div', { style: { position: 'relative', flex: '1', minWidth: '140px' } }, [
+    const iconStyle = { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', pointerEvents: 'none', opacity: '0.6' };
+    
+    const searchGroup = (icon, id, placeholder, val, type = 'text') => el('div', { style: { position: 'relative', flex: '1', minWidth: '160px' } }, [
         el('span', { style: iconStyle, textContent: icon }),
         el('input', { 
-            id, type: 'text', placeholder, 
+            id, type, placeholder, 
+            style: inputStyle,
             attributes: { value: val },
+            onfocus: (e) => { e.target.style.borderColor = 'var(--teal)'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)'; },
+            onblur: (e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = '#f9fafb'; e.target.style.boxShadow = 'none'; },
             oninput: (e) => { 
-                const field = id.replace('apptF', '').toLowerCase();
-                apptFilterState[field] = e.target.value.toLowerCase().trim();
-                renderList(document.getElementById('apptList'));
-            } 
-        }, [], { style: inputStyle })
-    ]);
-
-    container.appendChild(el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', padding: '12px 0 8px' } }, [
-        // Date selector
-        el('div', { style: { position: 'relative', minWidth: '140px' } }, [
-            el('span', { style: iconStyle, textContent: '📅' }),
-            el('input', { 
-                type: 'date', 
-                style: { ...inputStyle, paddingLeft: '32px' },
-                attributes: { value: apptFilterState.date },
-                onchange: (e) => { 
+                if (type === 'date') {
                     apptFilterState.date = e.target.value;
                     refreshAppointmentView();
+                } else {
+                    const field = id.replace('apptF', '').toLowerCase();
+                    apptFilterState[field] = e.target.value.toLowerCase().trim();
+                    renderList(document.getElementById('apptList'));
                 }
-            })
-        ]),
-        searchGroup('👤', 'apptFPatient', 'Patient name', apptFilterState.patient),
-        searchGroup('🩺', 'apptFDoctor', 'Doctor name', apptFilterState.doctor),
+            } 
+        })
+    ]);
+
+    container.appendChild(el('div', { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' } }, [
+        // Date selector
+        searchGroup('📅', 'apptFDate', '', apptFilterState.date, 'date'),
+        searchGroup('👤', 'apptFPatient', 'Search Patient...', apptFilterState.patient),
+        searchGroup('🩺', 'apptFDoctor', 'Search Doctor...', apptFilterState.doctor),
         el('button', { 
-            style: { padding: '7px 14px', border: '1px solid var(--border)', borderRadius: '20px', background: 'var(--surface)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-muted)', fontFamily: 'DM Sans, sans-serif', whiteSpace: 'nowrap' },
-            textContent: '✕ Clear',
+            style: { 
+                padding: '10px 18px', 
+                border: '1px solid var(--border)', 
+                borderRadius: '10px', 
+                background: '#fff', 
+                fontSize: '13px', 
+                fontWeight: '600',
+                cursor: 'pointer', 
+                color: 'var(--text-muted)', 
+                fontFamily: 'DM Sans, sans-serif', 
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+            },
+            onmouseenter: (e) => { e.target.style.background = '#fef2f2'; e.target.style.color = 'var(--red)'; e.target.style.borderColor = '#fca5a5'; },
+            onmouseleave: (e) => { e.target.style.background = '#fff'; e.target.style.color = 'var(--text-muted)'; e.target.style.borderColor = 'var(--border)'; },
             onclick: () => {
                 apptFilterState = { patient: '', doctor: '', phone: '', time: '', date: new Date().toISOString().split('T')[0] };
                 refreshAppointmentView();
             }
-        })
+        }, [
+            el('span', { textContent: '✕' }),
+            ' Clear Filters'
+        ])
     ]));
 };
 

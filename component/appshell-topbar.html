@@ -1,78 +1,100 @@
- <div class="topbar-brand">
-                <div class="brand-icon">💊</div>
-                <div>
-                    <div class="brand-name">Rx Vault</div>
-                    <div class="brand-tag">Medical Record Manager</div>
+<div class="topbar-brand">
+    <button class="sidebar-toggle-btn no-print" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </button>
+    <div class="brand-icon">💊</div>
+    <div>
+        <div class="brand-name">Rx Vault</div>
+        <div class="brand-tag">Medical Record Manager</div>
+    </div>
+</div>
+<div class="topbar-right">
+    <button class="topbar-clinic-btn" data-perm="switch_clinic" onclick="openClinicSwitcher()" title="Switch clinic">
+        <span class="topbar-clinic-icon" id="topbarClinicIcon">🏥</span>
+        <span class="topbar-clinic-name" id="topbarClinicName">Loading…</span>
+        <span class="topbar-clinic-caret">▾</span>
+    </button>
+    
+    <div class="topbar-stats-group">
+        <button class="topbar-stats-trigger no-print" onclick="toggleStatsDropdown(event)" title="Show statistics">
+            📊 <span class="stats-trigger-text">Stats</span> <span class="stats-caret">▾</span>
+        </button>
+        <div class="topbar-stats-dropdown" id="statsDropdown">
+            <div class="stats-dropdown-header">Live Statistics</div>
+            <div class="topbar-stat">Total: <strong id="statTotalMobile">0</strong></div>
+            <div class="topbar-stat" style="background:rgba(26,111,219,0.15);border-color:rgba(26,111,219,0.25)">
+                <span style="color:#7eb8f7">Allo:</span> <strong id="statAllo">0</strong>
+            </div>
+            <div class="topbar-stat" style="background:rgba(107,63,160,0.15);border-color:rgba(107,63,160,0.25)">
+                <span style="color:#c792ea">Homo:</span> <strong id="statHomo">0</strong>
+            </div>
+            <div class="topbar-stat" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.25)">
+                <span style="color:#f78c6c">Ayur:</span> <strong id="statAyur">0</strong>
+            </div>
+        </div>
+    </div>
+
+    <button id="btnRingBell" onclick="ringBell()" class="no-print" style="position:relative;background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.3); border-radius:50%; width:36px; height:36px; color:#ef4444; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; transition:all 0.15s;" title="🆘 Call Medical Staff (Digital Bell)">
+        🔔
+    </button>
+
+    <div style="position:relative">
+        <div class="topbar-user-menu" onclick="toggleUserMenu(event)" id="topbarUserBtn">
+            <span class="topbar-user-avatar" id="topbarUserAvatar">👤</span>
+            <div class="topbar-user-info">
+                <div class="topbar-user-name" id="topbarUserName">Loading…</div>
+                <div class="topbar-user-role" id="topbarUserRole"></div>
+            </div>
+            <span id="topbarUserStatus" class="status-badge status-available no-print" style="margin-right:8px; display:none;">Available</span>
+            <span style="font-size:10px;opacity:0.7">▾</span>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+            <button onclick="openChangePassword()" style="margin-top: 4px;">🔑 Change Password</button>
+            <div class="user-dropdown-divider"></div>
+            <div style="padding:10px 14px">
+                <div style="font-size:10.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.04em">Display Theme</div>
+                <div style="display:flex; gap:6px;">
+                    <button onclick="setTheme('light')" class="theme-btn" style="flex:1; padding:6px; font-size:11px; font-weight:600; border:1px solid var(--border); border-radius:6px; background:#fff; color:#333; cursor:pointer;">☀️ Light</button>
+                    <button onclick="setTheme('dark')" class="theme-btn" style="flex:1; padding:6px; font-size:11px; font-weight:600; border:1px solid var(--border); border-radius:6px; background:#1e293b; color:#fff; cursor:pointer;">🌙 Dark</button>
+                    <button onclick="setTheme('solarized')" class="theme-btn" style="flex:1; padding:6px; font-size:11px; font-weight:600; border:1px solid var(--border); border-radius:6px; background:#fdf6e3; color:#073642; cursor:pointer;">🌿 Solar</button>
                 </div>
             </div>
-            <div class="topbar-right">
-                <button class="topbar-clinic-btn" data-perm="switch_clinic" onclick="openClinicSwitcher()" title="Switch clinic">
-                    <span class="topbar-clinic-icon" id="topbarClinicIcon">🏥</span>
-                    <span class="topbar-clinic-name" id="topbarClinicName">Loading…</span>
-                    <span class="topbar-clinic-caret">▾</span>
-                </button>
-                <div class="topbar-stat">Total: <strong id="statTotal">0</strong></div>
-                <div class="topbar-stat" style="background:rgba(26,111,219,0.15);border-color:rgba(26,111,219,0.25)">
-                    <span style="color:#7eb8f7">Allo:</span> <strong id="statAllo">0</strong>
+
+            <div class="user-dropdown-divider"></div>
+            <div class="user-status-widget">
+                <div class="status-widget-label">Set My Status</div>
+                <div style="margin-bottom:10px;">
+                    <select id="statusPresetSelect" onchange="document.getElementById('customStatusWrapper').style.display=this.value==='custom'?'block':'none'" style="width:100%; padding:8px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text-primary);">
+                        <option value="available">✅ Available</option>
+                        <option value="on_round">🩺 On Round</option>
+                        <option value="on_lunch">🥣 On Lunch</option>
+                        <option value="busy_ot">🚑 In OT</option>
+                        <option value="busy_opd">🏨 In OPD</option>
+                        <option value="outside">🚶 Outside</option>
+                        <option value="not_in">🏠 Off-Duty</option>
+                        <option value="custom">✏️ Custom Status...</option>
+                    </select>
                 </div>
-                <div class="topbar-stat" style="background:rgba(107,63,160,0.15);border-color:rgba(107,63,160,0.25)">
-                    <span style="color:#c792ea">Homo:</span> <strong id="statHomo">0</strong>
+                <div id="customStatusWrapper" style="margin-bottom:10px; display:none;">
+                    <input type="text" id="customStatusInput" placeholder="e.g. In Meeting" style="width:100%; padding:8px 12px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
                 </div>
-                <div class="topbar-stat" style="background:rgba(180,83,9,0.15);border-color:rgba(180,83,9,0.25)">
-                    <span style="color:#f78c6c">Ayur:</span> <strong id="statAyur">0</strong>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                    <label style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Duration:</label>
+                    <select id="statusDurationSelect" style="flex:1; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+                        <option value="0">No Limit</option>
+                        <option value="1">1 Hour</option>
+                        <option value="2" selected>2 Hours</option>
+                        <option value="4">4 Hours</option>
+                        <option value="8">8 Hours</option>
+                        <option value="24">24 Hours</option>
+                    </select>
                 </div>
-                <button id="btnRingBell" onclick="ringBell()" class="no-print" style="position:relative;background:rgba(220,38,38,0.15); border:1px solid rgba(220,38,38,0.3); border-radius:50%; width:36px; height:36px; color:#ef4444; cursor:pointer; display:none; align-items:center; justify-content:center; font-size:16px; transition:all 0.15s;" title="🆘 Call Medical Staff (Digital Bell)">
-                    🔔
-                </button>
-                <div style="position:relative">
-                    <div class="topbar-user-menu" onclick="toggleUserMenu(event)" id="topbarUserBtn">
-                        <span class="topbar-user-avatar" id="topbarUserAvatar">👤</span>
-                        <div class="topbar-user-info">
-                            <div class="topbar-user-name" id="topbarUserName">Loading…</div>
-                            <div class="topbar-user-role" id="topbarUserRole"></div>
-                        </div>
-                        <span id="topbarUserStatus" class="status-badge status-available no-print" style="margin-right:8px; display:none;">Available</span>
-                        <span style="font-size:10px;opacity:0.7">▾</span>
-                    </div>
-                    <div class="user-dropdown" id="userDropdown">
-                        <div class="user-dropdown-header">
-                            <div class="user-dropdown-name" id="ddUserName">—</div>
-                            <div class="user-dropdown-email" id="ddUserEmail">—</div>
-                        </div>
-                        <button onclick="openChangePassword()">🔑 Change Password</button>
-                        <div class="user-dropdown-divider"></div>
-                        <div class="user-status-widget">
-                            <div class="status-widget-label">Set My Status</div>
-                            <div style="margin-bottom:10px;">
-                                <select id="statusPresetSelect" onchange="document.getElementById('customStatusWrapper').style.display=this.value==='custom'?'block':'none'" style="width:100%; padding:8px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text-primary);">
-                                    <option value="available">✅ Available</option>
-                                    <option value="on_round">🩺 On Round</option>
-                                    <option value="on_lunch">🥣 On Lunch</option>
-                                    <option value="busy_ot">🚑 In OT</option>
-                                    <option value="busy_opd">🏨 In OPD</option>
-                                    <option value="outside">🚶 Outside</option>
-                                    <option value="not_in">🏠 Off-Duty</option>
-                                    <option value="custom">✏️ Custom Status...</option>
-                                </select>
-                            </div>
-                            <div id="customStatusWrapper" style="margin-bottom:10px; display:none;">
-                                <input type="text" id="customStatusInput" placeholder="e.g. In Meeting" style="width:100%; padding:8px 12px; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-                                <label style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Duration:</label>
-                                <select id="statusDurationSelect" style="flex:1; padding:6px 8px; font-size:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
-                                    <option value="0">No Limit</option>
-                                    <option value="1">1 Hour</option>
-                                    <option value="2" selected>2 Hours</option>
-                                    <option value="4">4 Hours</option>
-                                    <option value="8">8 Hours</option>
-                                    <option value="24">24 Hours</option>
-                                </select>
-                            </div>
-                            <button onclick="updateUserStatusFromUI()" class="btn-sm btn-teal" style="width:100%; justify-content:center; padding:10px; font-weight:700;">Update Status</button>
-                        </div>
-                        <div class="user-dropdown-divider"></div>
-                        <button class="logout-btn" onclick="authLogout()">🚪 Sign Out</button>
-                    </div>
-                </div>
+                <button onclick="updateUserStatusFromUI()" class="btn-sm btn-teal" style="width:100%; justify-content:center; padding:10px; font-weight:700;">Update Status</button>
             </div>
+            <div class="user-dropdown-divider"></div>
+            <button class="logout-btn" onclick="authLogout()">🚪 Sign Out</button>
+        </div>
+    </div>
+</div>

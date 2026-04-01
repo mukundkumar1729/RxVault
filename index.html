@@ -29,6 +29,13 @@
     <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
 
+    <!-- ─── UPGRADE MODAL OVERLAY ─── -->
+    <div class="modal-overlay no-print" id="upgradeModal"></div>
+    
+    <!-- ─── RAZORPAY SDK ─── -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+
         <!-- ─── TOP BAR ─── -->
         <header class="topbar no-print" id="appshellTopbar"> </header>
 
@@ -219,6 +226,9 @@
 
     <!-- Toast container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Sidebar Backdrop for mobile -->
+    <div class="sidebar-backdrop no-print" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
     <div class="scripts">
         <!-- Core Infrastructure -->
