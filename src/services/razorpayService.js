@@ -40,8 +40,8 @@ export const startUpgradeFlow = async (clinicId, plan, user, promoCode = null, c
         if (error) throw error;
         if (data.error) throw new Error(data.error);
 
-        console.log('[Razorpay] Order created on server:', data);
-        console.log(`[Razorpay] Target Amount: ₹${(data.amount / 100).toFixed(2)} (${data.amount} paise)`);
+
+
         
         if (typeof window.hideLoading === 'function') window.hideLoading();
 

@@ -70,7 +70,7 @@ export const getPlanStatus = (clinic) => {
  */
 export const autoEnforceClinicLimits = async (clinicId) => {
     if (!clinicId) return;
-    console.log('[LimitService] Enforcing limits for clinic:', clinicId);
+
     
     // 1. Get latest clinic data
     const clinics = await db.from('clinics').select('*').eq('id', clinicId);
@@ -81,7 +81,7 @@ export const autoEnforceClinicLimits = async (clinicId) => {
         planExpiresAt: clinic.plan_expires_at 
     });
 
-    console.log('[LimitService] Current status:', statusInfo.status);
+
 
     // 2. Fetch all staff & doctors
     const { data: doctors } = await db.from('doctors').select('*').eq('clinic_id', clinicId).order('created_at', { ascending: true });
@@ -144,7 +144,7 @@ export const autoEnforceClinicLimits = async (clinicId) => {
         }
     }
     
-    console.log('[LimitService] Enforcement complete.');
+
 };
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);

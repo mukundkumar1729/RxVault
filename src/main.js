@@ -34,19 +34,19 @@ import { autoEnforceClinicLimits } from './services/limitService.js';
  * Stage 1: Authentication Initialization
  */
 const bootstrapApp = async () => {
-    console.log('[RxVault] Application Bootstrap Initialized');
+
     
     // Validate session token with server
     const user = await syncCurrentUserStatus();
     
     if (!user) {
-        console.log('[RxVault] No active session. Halting boot sequence for Auth Gate.');
+
         // If not authenticated, open login/register gate
         executeAuthGate();
         return;
     }
 
-    console.log(`[RxVault] Session Valid: ${user.name}`);
+
     
     // UI Setup: Ensure sidebars are visible for authenticated users
     const sidebar = document.getElementById('appShellSideNavbar');
@@ -161,7 +161,7 @@ const finalizeApplicationMount = async () => {
         
         // ── ENFORCEMENT ──
         // Check for expiry/grace and deactivate/reactivate staff as needed
-        console.log('[RxVault] Running subscription enforcement…');
+
         await autoEnforceClinicLimits(activeClinic.id);
         
         // If enforcement might have changed staff/doctor status, re-hydrate those specific collections

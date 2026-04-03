@@ -379,7 +379,7 @@ window.updateBreakdownUI = async function(promoCode = null) {
     
     // 1. Calculate locally first (ensures immediate UI update and works without Edge Function update)
     const breakdown = await calculateBreakdownLocally(selectedUpgradePlanId, promoCode);
-    console.log('[Upgrade] Calculated local breakdown:', breakdown);
+
 
     // 2. Fallback to server if needed (optional, keeping it for parity)
     /*
@@ -391,7 +391,7 @@ window.updateBreakdownUI = async function(promoCode = null) {
     */
 
     // 3. Update UI
-    console.log('[Upgrade] Updating UI with breakdown:', breakdown);
+
     const basePrice = breakdown.basePrice || 0;
     document.getElementById('bdBasePrice').innerText = '₹' + basePrice.toLocaleString();
     
@@ -503,7 +503,7 @@ window.proceedToPayment = async function() {
     const localTotal = breakdown.total;
     const serverTotal = serverBreakdown.total;
 
-    console.log('[PriceVerify]', { local: localTotal, server: serverTotal, serverBreakdown });
+
 
     // Allow 0.05 difference for rounding, but block major discrepancies (like missing discounts)
     if (Math.abs(localTotal - serverTotal) > 0.05) {

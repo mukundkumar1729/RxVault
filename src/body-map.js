@@ -4,7 +4,7 @@
 
 function initBodyMap() {
     const container = document.getElementById('bodyMapContainer');
-    console.log('[BodyMap] Initializing...', container ? 'found' : 'not found');
+
     if (!container) return;
 
     // Add Clear Button if not exists

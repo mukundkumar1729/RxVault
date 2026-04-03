@@ -45,11 +45,11 @@ async function loadComponent({ url, targetId, callback }) {
 }
 
 async function initializeDashboard() {
-    console.log('[Loader] Initializing dashboard components...');
+
     for (const config of COMPONENT_CONFIG) {
         await loadComponent(config);
     }
-    console.log('[Loader] All components loaded.');
+
 }
 
 
