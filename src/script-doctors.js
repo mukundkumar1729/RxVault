@@ -84,7 +84,7 @@ function openAddDoctorForm() {
   if (typeof getLimitFeedback === 'function') {
     var feedback = getLimitFeedback('doctor');
     if (feedback) {
-      var msg = feedback.message + ' <a href="#" onclick="openClinicSwitcher();return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
+      var msg = feedback.message + ' <a href="#" onclick="openUpgradeModal(activeClinicId);return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
       showToast(msg, 'error');
       return;
     }

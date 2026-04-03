@@ -1,90 +1,143 @@
 <div class="modal upgrade-modal" id="upgradeModalContent">
     <div class="modal-header">
         <div>
-            <div class="modal-title">💎 Choose Your Plan</div>
-            <div class="modal-subtitle">Unlock advanced features and higher resource limits.</div>
+            <div class="modal-title">💎 Choose Your Yearly Plan</div>
+            <div class="modal-subtitle">Best value for your clinic. Select a plan to see the tax breakdown.</div>
         </div>
         <button class="modal-close" onclick="closeModal('upgradeModal')">✕</button>
     </div>
     <div class="modal-body">
-        <div class="upgrade-grid">
-            <!-- Silver Plan -->
-            <div class="upgrade-card silver" onclick="selectUpgradePlan('silver')">
-                <div class="upgrade-card-recommended">Recommended</div>
-                <div class="upgrade-card-header">
-                    <div class="upgrade-plan-icon">🥈</div>
-                    <div class="upgrade-plan-name">Silver Plan</div>
-                    <div class="upgrade-plan-price">₹1,729 <span>/mo</span></div>
+        <div id="planSelectionView">
+            <div class="upgrade-grid">
+                <!-- Silver Plan -->
+                <div class="upgrade-card silver" onclick="showPlanBreakdown('silver')">
+                    <div class="upgrade-card-recommended">Recommended</div>
+                    <div class="upgrade-card-header">
+                        <div class="upgrade-plan-icon">🥈</div>
+                        <div class="upgrade-plan-name">Silver Plan</div>
+                        <div class="upgrade-plan-price">₹1,729 <span>/yr</span></div>
+                    </div>
+                    <ul class="upgrade-features">
+                        <li>👨‍⚕️ Up to <strong>7 Doctors</strong></li>
+                        <li>🧪 Up to <strong>7 Lab Techs</strong></li>
+                        <li>👥 Up to <strong>29 Total Staff</strong></li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <button class="btn-upgrade-select">Select Silver</button>
                 </div>
-                <ul class="upgrade-features">
-                    <li>👨‍⚕️ Up to <strong>7 Doctors</strong></li>
-                    <li>🧪 Up to <strong>7 Lab Techs</strong></li>
-                    <li>👥 Up to <strong>29 Total Staff</strong></li>
-                    <li>✅ Clinical Decision Support</li>
-                    <li>✅ Priority Support</li>
-                </ul>
-                <button class="btn-upgrade-select">Upgrade to Silver</button>
-            </div>
 
-            <!-- Gold Plan -->
-            <div class="upgrade-card gold" onclick="selectUpgradePlan('gold')">
-                <div class="upgrade-card-header">
-                    <div class="upgrade-plan-icon">🥇</div>
-                    <div class="upgrade-plan-name">Gold Plan</div>
-                    <div class="upgrade-plan-price">₹4,479 <span>/mo</span></div>
+                <!-- Gold Plan -->
+                <div class="upgrade-card gold" onclick="showPlanBreakdown('gold')">
+                    <div class="upgrade-card-header">
+                        <div class="upgrade-plan-icon">🥇</div>
+                        <div class="upgrade-plan-name">Gold Plan</div>
+                        <div class="upgrade-plan-price">₹4,479 <span>/yr</span></div>
+                    </div>
+                    <ul class="upgrade-features">
+                        <li>👨‍⚕️ Up to <strong>100 Doctors</strong></li>
+                        <li>🧪 Up to <strong>100 Lab Techs</strong></li>
+                        <li>👥 <strong>Unlimited Staff</strong></li>
+                        <li>✅ AI Medical Insights</li>
+                    </ul>
+                    <button class="btn-upgrade-select">Select Gold</button>
                 </div>
-                <ul class="upgrade-features">
-                    <li>👨‍⚕️ Up to <strong>100 Doctors</strong></li>
-                    <li>🧪 Up to <strong>100 Lab Techs</strong></li>
-                    <li>👥 <strong>Unlimited Staff</strong></li>
-                    <li>✅ AI Medical Insights</li>
-                    <li>✅ Multi-clinic Management</li>
-                </ul>
-                <button class="btn-upgrade-select">Upgrade to Gold</button>
-            </div>
 
-            <!-- Platinum Plan -->
-            <div class="upgrade-card platinum" onclick="selectUpgradePlan('platinum')">
-                <div class="upgrade-card-header">
-                    <div class="upgrade-plan-icon">💎</div>
-                    <div class="upgrade-plan-name">Platinum Plan</div>
-                    <div class="upgrade-plan-price">₹8,879 <span>/mo</span></div>
+                <!-- Platinum Plan -->
+                <div class="upgrade-card platinum" onclick="showPlanBreakdown('platinum')">
+                    <div class="upgrade-card-header">
+                        <div class="upgrade-plan-icon">💎</div>
+                        <div class="upgrade-plan-name">Platinum Plan</div>
+                        <div class="upgrade-plan-price">₹8,879 <span>/yr</span></div>
+                    </div>
+                    <ul class="upgrade-features">
+                        <li>👨‍⚕️ <strong>Unlimited Doctors</strong></li>
+                        <li>🧪 <strong>Unlimited Lab Techs</strong></li>
+                        <li>👥 <strong>Unlimited Staff</strong></li>
+                        <li>✅ Enterprise AI Suite</li>
+                    </ul>
+                    <button class="btn-upgrade-select">Select Platinum</button>
                 </div>
-                <ul class="upgrade-features">
-                    <li>👨‍⚕️ <strong>Unlimited Doctors</strong></li>
-                    <li>🧪 <strong>Unlimited Lab Techs</strong></li>
-                    <li>👥 <strong>Unlimited Staff</strong></li>
-                    <li>✅ Full Enterprise AI Suite</li>
-                    <li>✅ Dedicated Success Manager</li>
-                </ul>
-                <button class="btn-upgrade-select">Upgrade to Platinum</button>
+            </div>
+        </div>
+
+        <!-- Breakdown & Checkout View (Initially Hidden) -->
+        <div id="checkoutBreakdownView" style="display:none; max-width:400px; margin:0 auto; animation: slideIn 0.3s ease;">
+            <button class="btn-back" onclick="showPlanSelection()">← Back to Plans</button>
+            <div class="checkout-summary-card">
+                <div class="summary-plan-info">
+                    <span id="summaryPlanName" style="font-weight:700; font-size:18px;">Plan</span>
+                    <span class="badge-yearly">Yearly Billing</span>
+                </div>
+                
+                <div class="promo-box">
+                    <input type="text" id="promoCodeInput" placeholder="Promo Code (e.g. RX2026)">
+                    <button onclick="applyPromoCode()">Apply</button>
+                </div>
+
+                <div class="price-breakdown">
+                    <div class="breakdown-row">
+                        <span>Base Price</span>
+                        <span id="bdBasePrice">₹0</span>
+                    </div>
+                    <div class="breakdown-row discount" id="bdDiscountRow" style="display:none;">
+                        <span>Discount</span>
+                        <span id="bdDiscountValue">-₹0</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span id="bdTax1Name">Tax 1</span>
+                        <span id="bdTax1Value">₹0</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span id="bdTax2Name">Tax 2</span>
+                        <span id="bdTax2Value">₹0</span>
+                    </div>
+                    <div class="breakdown-divider"></div>
+                    <div class="breakdown-row total">
+                        <span>Total Payable</span>
+                        <span id="bdTotalAmount">₹0</span>
+                    </div>
+                </div>
+
+                <button class="btn-pay-now" id="btnFinalPay" onclick="proceedToPayment()">
+                    Secure Checkout with Razorpay
+                </button>
+                <div style="text-align:center; font-size:10px; color:var(--text-muted); margin-top:12px;">
+                    🔒 PCI-DSS Compliant • Secure 256-bit Encryption
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.upgrade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 10px 0; }
-.upgrade-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 24px; display: flex; flex-direction: column; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+.upgrade-modal { max-width: 900px; }
+.upgrade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 10px 0; }
+.upgrade-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
 .upgrade-card:hover { border-color: var(--teal); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 .upgrade-card-recommended { position: absolute; top: 12px; right: -32px; background: var(--teal); color: #fff; padding: 4px 40px; font-size: 10px; font-weight: 800; text-transform: uppercase; transform: rotate(45deg); }
-.upgrade-card-header { text-align: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-.upgrade-plan-icon { font-size: 40px; margin-bottom: 12px; }
-.upgrade-plan-name { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text-primary); }
-.upgrade-plan-price { font-size: 28px; font-weight: 800; color: var(--teal); margin-top: 8px; }
-.upgrade-plan-price span { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-.upgrade-features { list-style: none; padding: 0; margin: 0 0 24px 0; flex: 1; }
-.upgrade-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
-.upgrade-features strong { color: var(--text-primary); }
-.btn-upgrade-select { width: 100%; padding: 12px; border: 1px solid var(--teal); border-radius: 8px; background: transparent; color: var(--teal); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-.upgrade-card:hover .btn-upgrade-select { background: var(--teal); color: #fff; }
+.upgrade-card-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+.upgrade-plan-icon { font-size: 32px; margin-bottom: 8px; }
+.upgrade-plan-name { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--text-primary); }
+.upgrade-plan-price { font-size: 24px; font-weight: 800; color: var(--teal); margin-top: 4px; }
+.upgrade-plan-price span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.upgrade-features { list-style: none; padding: 0; margin: 0 0 20px 0; flex: 1; }
+.upgrade-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+.btn-upgrade-select { width: 100%; padding: 10px; border: 1px solid var(--teal); border-radius: 8px; background: transparent; color: var(--teal); font-weight: 700; font-size: 12px; cursor: pointer; }
 
-.upgrade-card.gold { border-color: rgba(212, 175, 55, 0.2); }
-.upgrade-card.gold:hover { border-color: #d4af37; }
-.upgrade-card.gold .upgrade-plan-price { color: #b8860b; }
-.upgrade-card.platinum { border-color: rgba(10, 124, 110, 0.1); }
-.upgrade-card.platinum:hover { border-color: #5d5dff; }
-.upgrade-card.platinum .upgrade-plan-price { color: #5d5dff; }
+/* Checkout Styles */
+.btn-back { background:none; border:none; color:var(--teal); font-weight:600; cursor:pointer; margin-bottom:12px; font-size:13px; padding:0; }
+.checkout-summary-card { background:var(--surface2); border:1px solid var(--border); border-radius:16px; padding:24px; box-shadow:var(--shadow); }
+.badge-yearly { font-size:10px; background:rgba(10,124,110,0.1); color:var(--teal); padding:2px 8px; border-radius:12px; margin-left:8px; font-weight:700; text-transform:uppercase; }
+.promo-box { display:flex; gap:8px; margin:20px 0; }
+.promo-box input { flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface); font-size:13px; }
+.promo-box button { padding:0 16px; background:var(--text-primary); color:var(--surface); border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; }
+.price-breakdown { display:flex; flex-direction:column; gap:10px; }
+.breakdown-row { display:flex; justify-content:space-between; font-size:14px; color:var(--text-secondary); }
+.breakdown-row.discount { color:var(--red); font-weight:600; }
+.breakdown-divider { height:1px; background:var(--border); margin:8px 0; }
+.breakdown-row.total { font-size:18px; font-weight:800; color:var(--text-primary); }
+.btn-pay-now { width:100%; margin-top:24px; padding:14px; background:var(--teal); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 15px rgba(10,124,110,0.3); }
+.btn-pay-now:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(10,124,110,0.4); }
 
 @media (max-width: 800px) {
     .upgrade-grid { grid-template-columns: 1fr; }

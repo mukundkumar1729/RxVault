@@ -71,6 +71,7 @@ export const clinicToDb = function(c) {
     id: c.id, name: c.name||'', address: c.address||'', phone: c.phone||'',
     email: c.email||'', type: c.type||'multispecialty', logo: c.logo||'🏥',
     pin: c.pin||'admin1234', plan: c.plan||'free', gemini_key: c.geminiKey||'',
+    plan_expires_at: c.planExpiresAt||null,
     created_at: c.createdAt||new Date().toISOString()
   };
 }
@@ -79,6 +80,7 @@ export const dbToClinic = function(r) {
     id: r.id, name: r.name, address: r.address||'', phone: r.phone||'',
     email: r.email||'', type: r.type||'multispecialty', logo: r.logo||'🏥',
     pin: r.pin||'admin1234', plan: r.plan||'free', geminiKey: r.gemini_key||'',
+    planExpiresAt: r.plan_expires_at,
     createdAt: r.created_at
   };
 }

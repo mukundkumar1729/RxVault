@@ -47,6 +47,15 @@ const loadAndRenderRosterGrid = async (container) => {
     renderRosterGridSecure(container);
 };
 
+const getInitials = (name) => {
+    return (name || 'S').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+};
+
+const getRoleColor = (role) => {
+    const map = { doctor: '#0ea5e9', nurse: '#10b981', pharmacist: '#8b5cf6', receptionist: '#f59e0b', admin: '#ef4444' };
+    return map[role] || '#64748b';
+};
+
 const renderRosterGridSecure = (container) => {
     emptyNode(container);
 
@@ -60,126 +69,123 @@ const renderRosterGridSecure = (container) => {
         onCallToday[di] = count;
     });
 
-    // 1. Shift Legend
-    const legendRow = el('div', { style: { display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' } });
+    // 1. Sleek Toolbar
+    const toolbar = el('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', background: 'var(--surface)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' } }, [
+        el('div', { style: { display: 'flex', gap: '8px' } }, [
+            el('button', { className: 'btn-sm btn-outline-teal', style: { padding: '6px 12px', borderRadius: '8px' }, textContent: '←', title: 'Previous Week', onClick: () => { _rosterWeekOffset--; renderRosterGridSecure(container); } }),
+            el('button', { className: 'btn-sm btn-outline-teal', style: { padding: '6px 12px', borderRadius: '8px' }, textContent: 'Today', onClick: () => { _rosterWeekOffset = 0; renderRosterGridSecure(container); } }),
+            el('button', { className: 'btn-sm btn-outline-teal', style: { padding: '6px 12px', borderRadius: '8px' }, textContent: '→', title: 'Next Week', onClick: () => { _rosterWeekOffset++; renderRosterGridSecure(container); } }),
+        ]),
+        el('div', { style: { fontSize: '15px', fontWeight: '700', color: 'var(--color-secondary)' }, textContent: weekLabel }),
+        el('div', { style: { display: 'flex', gap: '8px' } }, [
+            el('button', { className: 'btn-sm btn-outline-teal', style: { padding: '6px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }, onClick: renderPrintableRosterExport }, [
+                el('span', { textContent: '📤' }), el('span', { textContent: 'Export PDF' })
+            ])
+        ])
+    ]);
+
+    // 2. Legend Row (Subtle)
+    const legendRow = el('div', { style: { display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', padding: '0 4px' } });
     Object.entries(SHIFTS).forEach(([key, s]) => {
-        legendRow.appendChild(el('div', { style: { display: 'flex', alignItems: 'center', gap: '5px', background: s.bg, padding: '4px 12px', borderRadius: '20px' } }, [
-            el('span', { style: { fontSize: '11px', fontWeight: '700', color: s.clr }, textContent: s.short }),
-            el('span', { style: { fontSize: '11px', color: 'var(--text-muted)' }, textContent: `${s.label} · ${s.time}` })
+        legendRow.appendChild(el('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
+            el('div', { style: { width: '10px', height: '10px', borderRadius: '3px', background: s.bg, border: `1.5px solid ${s.clr}` } }),
+            el('span', { style: { fontSize: '11px', fontWeight: '600', color: 'var(--text-main)' }, textContent: s.label }),
+            el('span', { style: { fontSize: '10px', color: 'var(--text-muted)' }, textContent: s.time })
         ]));
     });
 
-    // 2. Week Navigation
-    const navRow = el('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' } }, [
-        el('button', { className: 'btn-sm btn-outline-teal', textContent: '← Prev', onClick: () => { _rosterWeekOffset--; renderRosterGridSecure(container); } }),
-        el('div', { style: { fontSize: '14px', fontWeight: '700', flex: '1', textAlign: 'center' }, textContent: weekLabel }),
-        el('button', { className: 'btn-sm btn-outline-teal', textContent: 'Next →', onClick: () => { _rosterWeekOffset++; renderRosterGridSecure(container); } }),
-        el('button', { className: 'btn-sm btn-outline-teal', textContent: '📤 Export', onClick: renderPrintableRosterExport })
-    ]);
-
-    // 3. Grid Table
-    const tableWrap = el('div', { style: { overflowX: 'auto' } });
-    const table = el('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', minWidth: '700px' } });
+    // 3. Main Grid Table
+    const tableWrap = el('div', { style: { background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' } });
+    const table = el('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', minWidth: '800px' } });
 
     // Thead
-    const thead = el('thead');
-    const headerTr = el('tr', { style: { background: 'var(--surface2)' } });
-    headerTr.appendChild(el('th', { style: { padding: '10px 14px', textAlign: 'left', fontWeight: '700', minWidth: '140px', borderBottom: '1px solid var(--border)' }, textContent: 'Staff' }));
+    const thead = el('thead', { style: { background: 'var(--bg)', borderBottom: '2px solid var(--border)' } });
+    const headerTr = el('tr');
+    headerTr.appendChild(el('th', { style: { padding: '14px 16px', textAlign: 'left', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '11px' }, textContent: 'Staff Member' }));
     
     weekDates.forEach((d, i) => {
         const isToday = d.toDateString() === new Date().toDateString();
-        const th = el('th', { style: { padding: '10px 8px', textAlign: 'center', fontWeight: '700', borderBottom: '1px solid var(--border)', background: isToday ? 'var(--teal-pale)' : '', color: isToday ? 'var(--teal)' : '' } }, [
-            document.createTextNode(DAYS[i].substring(0, 3)),
-            el('br'),
-            el('span', { style: { fontSize: '10px', fontWeight: '400', color: 'var(--text-muted)' }, textContent: `${d.getDate()}/${d.getMonth()+1}` })
+        const th = el('th', { style: { padding: '12px 8px', textAlign: 'center', fontWeight: '700', minWidth: '80px', background: isToday ? 'rgba(10, 124, 110, 0.05)' : '', position: 'relative' } }, [
+            el('div', { style: { fontSize: '11px', color: isToday ? 'var(--color-primary)' : 'var(--text-muted)', textTransform: 'uppercase' }, textContent: DAYS[i].substring(0, 3) }),
+            el('div', { style: { fontSize: '14px', marginTop: '2px', color: isToday ? 'var(--color-primary)' : 'var(--text-main)' }, textContent: d.getDate() }),
+            (onCallToday[i] === 0 ? el('div', { style: { position: 'absolute', top: '6px', right: '6px', width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }, title: 'No on-call staff assigned!' }) : null)
         ]);
-
-        if (onCallToday[i] === 0) {
-            th.appendChild(el('br'));
-            th.appendChild(el('span', { style: { fontSize: '9px', color: 'var(--red)', fontWeight: '700' }, textContent: 'No on-call!' }));
-        }
         headerTr.appendChild(th);
     });
-    headerTr.appendChild(el('th', { style: { padding: '10px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)', minWidth: '70px' }, textContent: 'Status' }));
-    headerTr.appendChild(el('th', { style: { padding: '10px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)' }, textContent: 'Total' }));
+    headerTr.appendChild(el('th', { style: { padding: '12px 8px', textAlign: 'center', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '11px' }, textContent: 'Status' }));
+    headerTr.appendChild(el('th', { style: { padding: '12px 8px', textAlign: 'center', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '11px' }, textContent: 'Weekly' }));
     thead.appendChild(headerTr);
     table.appendChild(thead);
 
     // Tbody
     const tbody = el('tbody');
     if (_staffList.length === 0) {
-        tbody.appendChild(el('tr', {}, [el('td', { attributes: { colspan: '10' }, style: { padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }, textContent: 'No staff registered. Add staff via Administration → Staff Management.' })]));
+        tbody.appendChild(el('tr', {}, [el('td', { attributes: { colspan: '10' }, style: { padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }, textContent: 'No staff members found.' })]));
     } else {
         _staffList.forEach(staff => {
             const shifts = _rosterDataCache[staff.id] || {};
             let nightCount = 0, onCallCount = 0, workDays = 0;
             
             const tr = el('tr', { 
-                onmouseenter: function() { this.style.background = 'var(--surface2)'; },
+                style: { transition: 'background 0.2s ease', borderBottom: '1px solid var(--border)' },
+                onmouseenter: function() { this.style.background = 'rgba(10, 124, 110, 0.02)'; },
                 onmouseleave: function() { this.style.background = ''; }
             });
 
-            const roleIcon = { doctor: '🩺', receptionist: '🧑‍💼', pharmacist: '💊', admin: '🔐', nurse: '💉', viewer: '👁️' }[staff.role] || '👤';
+            // Staff Profile Cell
+            const initials = getInitials(staff.name || staff.email);
+            const roleColor = getRoleColor(staff.role);
             
-            // Staff Bio Cell
-            const bioCell = el('td', { style: { padding: '10px 14px', borderBottom: '1px solid var(--border)' } }, [
-                el('div', { style: { fontWeight: '600' }, textContent: `${roleIcon} ${staff.name || staff.email || 'Staff'}` }),
-                el('div', { style: { fontSize: '10.5px', color: 'var(--text-muted)' }, textContent: (staff.role || '').charAt(0).toUpperCase() + (staff.role || '').slice(1) })
+            const bioCell = el('td', { style: { padding: '12px 16px' } }, [
+                el('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } }, [
+                    el('div', { style: { width: '32px', height: '32px', borderRadius: '10px', background: `${roleColor}20`, color: roleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '11px' }, textContent: initials }),
+                    el('div', {}, [
+                        el('div', { style: { fontWeight: '600', color: 'var(--text-main)', fontSize: '13px' }, textContent: staff.name || staff.email || 'Staff' }),
+                        el('div', { style: { fontSize: '10.5px', color: 'var(--text-muted)', textTransform: 'capitalize' }, textContent: staff.role || 'Staff' })
+                    ])
+                ])
             ]);
             tr.appendChild(bioCell);
 
-            // 7 Days Iteration Check
-            const cellCollector = [];
+            // Shift Cells
             weekDates.forEach((d, di) => {
                 const key = `${DAYS[di]}_${d.toISOString().split('T')[0]}`;
                 const code = shifts[key] || 'OFF';
                 const shift = SHIFTS[code] || SHIFTS.OFF;
-                
+                const isToday = d.toDateString() === new Date().toDateString();
+
                 if (code === 'N') nightCount++;
                 if (code === 'OC') onCallCount++;
                 if (code !== 'OFF') workDays++;
 
-                const selectNode = el('select', { 
-                    style: { fontSize: '11px', padding: '4px 2px', border: '1px solid var(--border)', borderRadius: '6px', background: shift.bg, color: shift.clr, fontWeight: '700', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', width: '58px' },
+                const select = el('select', { 
+                    style: { appearance: 'none', border: 'none', borderRadius: '8px', background: shift.bg, color: shift.clr, padding: '6px 8px', fontSize: '11px', fontWeight: '800', width: '56px', textAlign: 'center', cursor: 'pointer', outline: 'none' },
                     onchange: async (e) => {
-                        const newCode = e.target.value;
-                        const newShiftObj = SHIFTS[newCode] || SHIFTS.OFF;
-                        e.target.style.background = newShiftObj.bg;
-                        e.target.style.color = newShiftObj.clr;
-                        
-                        _rosterDataCache[staff.id] = { ...(_rosterDataCache[staff.id] || {}), [key]: newCode };
-                        await updateStaffShiftDatabase(staff.id, key, newCode);
-                        
-                        // We do not force total refresh to prevent heavy DOM thrashing, soft mutation mapped logic instead
-                        openRosterViewSecure(); 
+                        const val = e.target.value;
+                        const sObj = SHIFTS[val] || SHIFTS.OFF;
+                        e.target.style.background = sObj.bg;
+                        e.target.style.color = sObj.clr;
+                        _rosterDataCache[staff.id] = { ...(_rosterDataCache[staff.id] || {}), [key]: val };
+                        await updateStaffShiftDatabase(staff.id, key, val);
+                        setTimeout(() => renderRosterGridSecure(container), 200); // Soft refresh for totals
                     }
                 }, Object.entries(SHIFTS).map(([k, meta]) => el('option', { value: k, textContent: meta.short, selected: code === k })));
                 
-                cellCollector.push(el('td', { style: { padding: '6px 4px', textAlign: 'center', borderBottom: '1px solid var(--border)' } }, [selectNode]));
+                tr.appendChild(el('td', { style: { padding: '8px 4px', textAlign: 'center', background: isToday ? 'rgba(10, 124, 110, 0.02)' : '' } }, [select]));
             });
-
-            // Append Badges conditionally into Bio
-            const badgeWrap = el('div', { style: { fontSize: '10px', marginTop: '2px', display: 'flex', gap: '4px' } });
-            if (nightCount > 1) badgeWrap.appendChild(el('span', { style: { background: 'var(--homeopathy-bg)', color: 'var(--homeopathy)', padding: '1px 5px', borderRadius: '6px' }, textContent: `🌙 ${nightCount}N` }));
-            if (onCallCount > 0) badgeWrap.appendChild(el('span', { style: { background: 'var(--ayurveda-bg)', color: 'var(--ayurveda)', padding: '1px 5px', borderRadius: '6px' }, textContent: `📞 ${onCallCount}OC` }));
-            if (badgeWrap.childNodes.length > 0) bioCell.appendChild(badgeWrap);
-            
-            // Apply iteration outputs
-            cellCollector.forEach(c => tr.appendChild(c));
 
             // Status Badge
             const sts = staff.status || 'available';
-            const cls = sts.includes('_') ? sts.split('_')[0] : 'custom';
-            const fCls = sts.startsWith('on_') ? sts.split('_')[1] : cls;
+            const fCls = sts.includes('_') ? sts.split('_')[1] : (sts === 'on_duty' ? 'success' : 'muted');
             
-            const formatStrLabel = (str) => (str || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            
-            tr.appendChild(el('td', { style: { padding: '6px 4px', textAlign: 'center', borderBottom: '1px solid var(--border)' } }, [
-                el('small', { className: `status-badge status-${fCls}`, style: { fontSize: '8.5px' }, textContent: formatStrLabel(sts) })
+            tr.appendChild(el('td', { style: { padding: '8px 4px', textAlign: 'center' } }, [
+                el('span', { className: `status-badge status-${fCls}`, style: { fontSize: '9px', padding: '2px 8px' }, textContent: sts.replace(/_/g, ' ') })
             ]));
 
-            // Total Days
-            tr.appendChild(el('td', { style: { padding: '6px 10px', textAlign: 'center', fontWeight: '700', borderBottom: '1px solid var(--border)', color: 'var(--teal)' }, textContent: `${workDays}/7` }));
+            // Weekly Total
+            tr.appendChild(el('td', { style: { padding: '8px 12px', textAlign: 'center' } }, [
+                el('div', { style: { fontWeight: '700', color: workDays >= 5 ? 'var(--color-primary)' : 'var(--text-muted)' }, textContent: `${workDays}/7` })
+            ]));
             
             tbody.appendChild(tr);
         });
@@ -188,12 +194,10 @@ const renderRosterGridSecure = (container) => {
     table.appendChild(tbody);
     tableWrap.appendChild(table);
 
-    // 4. Swap Box Area
-    const swapHost = el('div', { id: 'swapRequests', style: { marginTop: '20px' } });
+    // 4. Pending Swaps Section
+    const swapHost = el('div', { id: 'swapRequests', style: { marginTop: '24px' } });
 
-    container.append(legendRow, navRow, tableWrap, swapHost);
-    
-    // Mount Async Swap Render
+    container.append(toolbar, legendRow, tableWrap, swapHost);
     injectPendingSwapsDOM(swapHost);
 };
 
@@ -204,20 +208,29 @@ const injectPendingSwapsDOM = async (container) => {
     const data = await fetchPendingSwapRequests();
     if (!data.length) return;
 
-    container.appendChild(el('div', { style: { fontSize: '13px', fontWeight: '700', marginBottom: '10px' }, textContent: `🔄 Pending Shift Swap Requests (${data.length})` }));
+    container.appendChild(el('div', { style: { fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: 'var(--color-secondary)', display: 'flex', alignItems: 'center', gap: '8px' } }, [
+        el('span', { textContent: '🔄' }),
+        el('span', { textContent: `Pending Shift Swap Requests (${data.length})` })
+    ]));
 
     data.forEach(req => {
         const requester = _staffList.find(s => s.id === req.requester_id);
         const target = _staffList.find(s => s.id === req.target_id);
 
-        const card = el('div', { style: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' } }, [
+        const card = el('div', { style: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: 'var(--shadow-sm)' } }, [
             el('div', { style: { flex: '1' } }, [
-                el('div', { style: { fontSize: '13px', fontWeight: '600' }, textContent: `${requester?.name || req.requester_id} ↔ ${target?.name || req.target_id}` }),
-                el('div', { style: { fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }, textContent: `${req.slot_key_a} ↔ ${req.slot_key_b}` }),
-                ...(req.message ? [el('div', { style: { fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }, textContent: `"${req.message}"` })] : [])
+                el('div', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }, textContent: `${requester?.name || 'Staff'} ↔ ${target?.name || 'Staff'}` }),
+                el('div', { style: { fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' } }, [
+                    el('span', { style: { background: 'var(--bg)', padding: '2px 6px', borderRadius: '4px' }, textContent: req.slot_key_a.replace(/_/g, ' ') }),
+                    el('span', { textContent: '⇄' }),
+                    el('span', { style: { background: 'var(--bg)', padding: '2px 6px', borderRadius: '4px' }, textContent: req.slot_key_b.replace(/_/g, ' ') })
+                ]),
+                ...(req.message ? [el('div', { style: { fontSize: '12px', color: 'var(--color-primary)', marginTop: '6px', fontStyle: 'italic' }, textContent: `"${req.message}"` })] : [])
             ]),
-            el('button', { className: 'btn-sm btn-teal', style: { fontSize: '12px' }, textContent: '✅ Approve', onClick: () => executeSwapActionSecure(req.id, true) }),
-            el('button', { className: 'btn-sm btn-outline-red', style: { fontSize: '12px' }, textContent: '✕ Reject', onClick: () => executeSwapActionSecure(req.id, false) })
+            el('div', { style: { display: 'flex', gap: '8px' } }, [
+                el('button', { className: 'btn-sm btn-teal', style: { borderRadius: '8px' }, textContent: 'Approve', onClick: () => executeSwapActionSecure(req.id, true) }),
+                el('button', { className: 'btn-sm btn-outline-red', style: { borderRadius: '8px' }, textContent: 'Reject', onClick: () => executeSwapActionSecure(req.id, false) })
+            ])
         ]);
         container.appendChild(card);
     });

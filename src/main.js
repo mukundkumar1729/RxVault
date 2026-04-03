@@ -28,6 +28,7 @@ import { initPatientsView, renderPatientsGrid } from './views/PatientView.js';
 import { openLabOrdersViewSecure } from './views/LabView.js';
 import { openRosterViewSecure } from './views/RosterView.js';
 import { hideAllViews } from './utils/dom.js';
+import { autoEnforceClinicLimits } from './services/limitService.js';
 
 /**
  * Stage 1: Authentication Initialization
@@ -158,6 +159,15 @@ const finalizeApplicationMount = async () => {
         if (typeof window.dbGetInvoices === 'function') store.invoices = await window.dbGetInvoices(activeClinic.id);
         if (typeof window.dbGetClinicStaff === 'function') store.staff = await window.dbGetClinicStaff(activeClinic.id);
         
+        // ── ENFORCEMENT ──
+        // Check for expiry/grace and deactivate/reactivate staff as needed
+        console.log('[RxVault] Running subscription enforcement…');
+        await autoEnforceClinicLimits(activeClinic.id);
+        
+        // If enforcement might have changed staff/doctor status, re-hydrate those specific collections
+        if (typeof window.dbGetDoctors === 'function') store.doctors = await window.dbGetDoctors(activeClinic.id);
+        if (typeof window.dbGetClinicStaff === 'function') store.staff = await window.dbGetClinicStaff(activeClinic.id);
+
         refreshGlobalCounts();
         
         // Sync to Legacy Window Globals (Phase 5 Bridge)

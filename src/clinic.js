@@ -363,6 +363,13 @@ var currentUpgradeClinicId = null;
 
 async function openUpgradeModal(clinicId) {
     currentUpgradeClinicId = clinicId;
+    
+    // Close other modals and overlays first to prevent background layering
+    // This includes standard modals (.modal-overlay) and the clinic selection gate (.clinic-gate-overlay)
+    document.querySelectorAll('.modal-overlay.open, .clinic-gate-overlay.open').forEach(function(m){ 
+        m.classList.remove('open'); 
+    });
+    
     var overlay = document.getElementById('upgradeModal');
     if (!overlay) return;
     

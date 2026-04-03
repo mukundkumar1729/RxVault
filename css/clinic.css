@@ -7,7 +7,7 @@
   position: fixed;
   inset: 0;
   background: linear-gradient(135deg, #0f1e30 0%, #1a3248 50%, #0a7c6e18 100%);
-  z-index: 9999;
+  z-index: 15000;
   display: flex;
   align-items: center;
   justify-content: center;

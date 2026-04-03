@@ -24,7 +24,7 @@ export const loadRazorpay = () => {
 /**
  * Starts the upgrade flow.
  */
-export const startUpgradeFlow = async (clinicId, plan, user) => {
+export const startUpgradeFlow = async (clinicId, plan, user, promoCode = null, country = 'india') => {
     try {
         if (typeof window.showLoading === 'function') window.showLoading('Preparing secure payment…');
 
@@ -32,14 +32,17 @@ export const startUpgradeFlow = async (clinicId, plan, user) => {
         const sdkLoaded = await loadRazorpay();
         if (!sdkLoaded) throw new Error("Could not load Razorpay SDK. Check your internet connection.");
 
-        // 1. Create order via Edge Function (Using SDK to handle Publishable Key headers)
+        // 1. Create order via Edge Function
         const { data, error } = await db.functions.invoke('razorpay', {
-            body: { action: 'create-order', clinicId, plan }
+            body: { action: 'create-order', clinicId, plan, promoCode, country }
         });
 
         if (error) throw error;
         if (data.error) throw new Error(data.error);
 
+        console.log('[Razorpay] Order created on server:', data);
+        console.log(`[Razorpay] Target Amount: ₹${(data.amount / 100).toFixed(2)} (${data.amount} paise)`);
+        
         if (typeof window.hideLoading === 'function') window.hideLoading();
 
         // 2. Open Razorpay Checkout
@@ -48,11 +51,15 @@ export const startUpgradeFlow = async (clinicId, plan, user) => {
             amount: data.amount,
             currency: 'INR',
             name: 'RxVault Pro',
-            description: `Upgrade to ${plan.toUpperCase()} Plan`,
+            description: `Upgrade to ${plan.toUpperCase()} Plan (Yearly)`,
             order_id: data.id,
             prefill: {
                 name: user?.name,
                 email: user?.email
+            },
+            notes: {
+                promoCode: promoCode || 'none',
+                country: country
             },
             theme: { color: '#0a7c6e' },
             handler: async (response) => {
@@ -75,18 +82,31 @@ export const startUpgradeFlow = async (clinicId, plan, user) => {
 
     } catch (error) {
         if (typeof window.hideLoading === 'function') window.hideLoading();
-        console.error('[Razorpay] flow error detailed:', error);
-        
-        let msg = error.message;
-        
-        // If it's a Supabase Function error, sometimes the body is not in .message
-        // but the SDK handles the status. We want to show the status or context.
-        if (error.context && error.context.statusText) {
-            msg = `${error.context.status} ${error.context.statusText}`;
-        }
-
-        if (typeof window.showToast === 'function') window.showToast('Payment initialization failed: ' + msg, 'error');
+        console.error('[Razorpay] flow error:', error);
+        if (typeof window.showToast === 'function') window.showToast('Payment failed: ' + error.message, 'error');
     }
+};
+
+/**
+ * Helper to get only the price breakdown without creating a full order
+ */
+export const getOrderBreakdown = async (plan, promoCode = null, country = 'india') => {
+    // In our simplified edge function, 'create-order' also returns the breakdown.
+    // For a real production app, you might have a dedicated 'preview' action.
+    const { data, error } = await db.functions.invoke('razorpay', {
+        body: { action: 'create-order', plan, promoCode, country, previewOnly: true }
+    });
+    
+    if (error) {
+        console.error('[Razorpay] Server error:', error);
+        throw new Error(error.message || 'Server-side calculation failed.');
+    }
+    
+    if (!data || data.error) {
+        throw new Error((data && data.error) || 'Failed to calculate price breakdown.');
+    }
+    
+    return data.breakdown;
 };
 
 /**
@@ -112,6 +132,8 @@ const verifyPayment = async (clinicId, plan, details) => {
             if (typeof window.showToast === 'function') window.showToast(`Plan successfully upgraded to ${plan.toUpperCase()}!`, 'success');
             // Refresh clinic data/UI
             if (typeof window.initClinicGate === 'function') window.initClinicGate();
+            // Close modal
+            if (typeof window.closeModal === 'function') window.closeModal('upgradeModal');
         } else {
             throw new Error((data && data.error) || 'Verification failed');
         }

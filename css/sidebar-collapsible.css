@@ -83,11 +83,6 @@
   margin-bottom: 0;
 }
 
-/* Dividers are thinner and closer */
-.sidebar .sidebar-divider {
-  margin: 3px 16px;
-}
-
 /* No leftover bottom space when a section is collapsed */
 .sidebar-collapsible.collapsed .sidebar-nav-items {
   margin-bottom: 0;

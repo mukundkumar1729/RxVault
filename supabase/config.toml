@@ -1,0 +1,11 @@
+# Supabase configuration
+[db]
+port = 54322
+
+[api]
+port = 54321
+# external_url = "http://localhost:54321"
+
+[studio]
+port = 54323
+# auth_confirm = false

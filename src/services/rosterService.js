@@ -7,11 +7,11 @@ import { db } from '../core/db.js';
 import { store } from '../core/store.js';
 
 export const SHIFTS = {
-    M:   { label: 'Morning',   time: '7am–2pm',  bg: '#e8f5e9',             clr: 'var(--green)',     short: 'MOR' },
-    A:   { label: 'Afternoon', time: '2pm–9pm',  bg: 'var(--allopathy-bg)', clr: 'var(--allopathy)', short: 'AFT' },
-    N:   { label: 'Night',     time: '9pm–7am',  bg: 'var(--homeopathy-bg)',clr: 'var(--homeopathy)', short: 'NGT' },
-    OC:  { label: 'On-Call',   time: 'standby',  bg: 'var(--ayurveda-bg)',  clr: 'var(--ayurveda)',  short: 'ONC' },
-    OFF: { label: 'Off',       time: 'rest day', bg: 'var(--surface2)',     clr: 'var(--text-muted)', short: 'OFF' },
+    M:   { label: 'Morning',   time: '7am–2pm',  bg: 'hsl(150, 80%, 96%)',  clr: 'hsl(150, 80%, 25%)',  short: 'MOR' },
+    A:   { label: 'Afternoon', time: '2pm–9pm',  bg: 'hsl(210, 80%, 96%)',  clr: 'hsl(210, 80%, 30%)',  short: 'AFT' },
+    N:   { label: 'Night',     time: '9pm–7am',  bg: 'hsl(270, 70%, 96%)',  clr: 'hsl(270, 70%, 35%)',  short: 'NGT' },
+    OC:  { label: 'On-Call',   time: 'standby',  bg: 'hsl(30, 90%, 95%)',   clr: 'hsl(30, 90%, 30%)',   short: 'ONC' },
+    OFF: { label: 'Off',       time: 'rest day', bg: 'hsl(210, 10%, 94%)',  clr: 'hsl(210, 10%, 45%)',  short: 'OFF' },
 };
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
