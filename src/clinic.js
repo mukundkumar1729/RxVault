@@ -127,15 +127,34 @@ async function initClinicGate() {
 // ════════════════════════════════════════════════════════════
 //  CLINIC GATE
 // ════════════════════════════════════════════════════════════
+var _clinicGateRetryCount = 0;
+var _clinicGateRetryMax = 15;
+
 function showClinicGate() {
+  _clinicGateRetryCount = 0;
   var gate = document.getElementById('clinicGate');
   if (gate) { gate.classList.add('open'); document.body.style.overflow = 'hidden'; }
   var listEl = document.getElementById('clinicGateList');
   var formEl = document.getElementById('clinicGateForm');
   if (!listEl || !formEl) {
-    setTimeout(function() { renderClinicGate(); }, 100);
+    _retryRenderClinicGate();
   } else {
     renderClinicGate();
+  }
+}
+
+function _retryRenderClinicGate() {
+  _clinicGateRetryCount++;
+  var listEl = document.getElementById('clinicGateList');
+  var formEl = document.getElementById('clinicGateForm');
+  if (listEl && formEl) {
+    _clinicGateRetryCount = 0;
+    renderClinicGate();
+  } else if (_clinicGateRetryCount < _clinicGateRetryMax) {
+    setTimeout(_retryRenderClinicGate, 200);
+  } else {
+    _clinicGateRetryCount = 0;
+    console.warn('[Clinic] clinic-gate.html may not have loaded. Check network.');
   }
 }
 
@@ -160,8 +179,7 @@ function renderClinicGate() {
   var formEl   = document.getElementById('clinicGateForm');
   var closeBtn = document.getElementById('clinicGateCloseBtn');
   if (!listEl || !formEl) {
-    // DOM not ready — retry shortly
-    setTimeout(renderClinicGate, 150);
+    _retryRenderClinicGate();
     return;
   }
 
