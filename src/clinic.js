@@ -130,7 +130,13 @@ async function initClinicGate() {
 function showClinicGate() {
   var gate = document.getElementById('clinicGate');
   if (gate) { gate.classList.add('open'); document.body.style.overflow = 'hidden'; }
-  renderClinicGate();
+  var listEl = document.getElementById('clinicGateList');
+  var formEl = document.getElementById('clinicGateForm');
+  if (!listEl || !formEl) {
+    setTimeout(function() { renderClinicGate(); }, 100);
+  } else {
+    renderClinicGate();
+  }
 }
 
 function hideClinicGate() {
@@ -153,7 +159,11 @@ function renderClinicGate() {
   var listEl   = document.getElementById('clinicGateList');
   var formEl   = document.getElementById('clinicGateForm');
   var closeBtn = document.getElementById('clinicGateCloseBtn');
-  if (!listEl || !formEl) return;
+  if (!listEl || !formEl) {
+    // DOM not ready — retry shortly
+    setTimeout(renderClinicGate, 150);
+    return;
+  }
 
   if (closeBtn) closeBtn.style.display = clinics.length ? '' : 'none';
 
