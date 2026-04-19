@@ -39,6 +39,19 @@ if (typeof window !== 'undefined') {
 
 function dbErr(label, error) {
   console.error('[DB] ' + label + ':', error?.message || error);
+  if (typeof window.showErrorToast === 'function') {
+    window.showErrorToast(error);
+  }
+}
+
+function dbErrRetry(label, error, retryFn) {
+  const errorStr = String(error.message || error).toLowerCase();
+  const isRetryable = errorStr.includes('network') || errorStr.includes('timeout') || errorStr.includes('fetch');
+  if (typeof window.showErrorToast === 'function' && isRetryable && retryFn) {
+    window.showErrorToast(error, retryFn);
+  } else {
+    dbErr(label, error);
+  }
 }
 
 // ─── Loading overlay ──────────────────────────────────────
