@@ -15,7 +15,21 @@ export const openClinicGate = () => {
         gate.classList.add('open'); 
         document.body.style.overflow = 'hidden'; 
     }
-    renderClinicSelectionGrid();
+    
+    // Implement retry logic to handle async HTML injection from render-html.js
+    let retryCount = 0;
+    const maxRetries = 20;
+    const attemptRender = () => {
+        if (document.getElementById('clinicGateList') && document.getElementById('clinicGateForm')) {
+            renderClinicSelectionGrid();
+        } else if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(attemptRender, 100);
+        } else {
+            console.warn('[ClinicView] Clinic gate components failed to load in time.');
+        }
+    };
+    attemptRender();
 };
 
 export const closeClinicGate = () => {

@@ -35,7 +35,9 @@ import { autoEnforceClinicLimits } from './services/limitService.js';
  */
 const bootstrapApp = async () => {
 
-    
+    // Wait for ALL components to fully load before auth (fixes race condition)
+    if (window.componentsReady) await window.componentsReady;
+
     // Validate session token with server
     const user = await syncCurrentUserStatus();
     

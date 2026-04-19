@@ -45,13 +45,11 @@ async function loadComponent({ url, targetId, callback }) {
 }
 
 async function initializeDashboard() {
-
     for (const config of COMPONENT_CONFIG) {
         await loadComponent(config);
     }
-
 }
 
 
-// Fire it off!
-initializeDashboard();
+// Expose promise for main.js to await
+window.componentsReady = initializeDashboard();
