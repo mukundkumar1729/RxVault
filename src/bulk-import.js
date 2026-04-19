@@ -691,3 +691,302 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 });
+
+// ════════════════════════════════════════════════════════════
+//  STAFF BULK IMPORT
+// ════════════════════════════════════════════════════════════
+
+var _staffImportRows = [];
+
+function openStaffImportModal() {
+  var existing = document.getElementById('staffImportOverlay');
+  if (existing) { existing.remove(); }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'staffImportOverlay';
+  overlay.className = 'modal-overlay open';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,34,64,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  overlay.innerHTML =
+    '<div class="modal" style="max-width:640px">' +
+      '<div class="modal-header">' +
+        '<div><div class="modal-title">📥 Import Staff</div>' +
+          '<div class="modal-subtitle">Bulk-add or update staff via Excel, CSV, JSON or TSV</div></div>' +
+        '<button class="modal-close" onclick="closeOverlay(\'staffImportOverlay\')">✕</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+
+        '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px">📋 Supported Formats</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' +
+            bulkFormatBadge('📊', '.xlsx / .xls', 'Excel', 'var(--teal)') +
+            bulkFormatBadge('📄', '.csv', 'CSV', 'var(--allopathy)') +
+            bulkFormatBadge('🔧', '.json', 'JSON', 'var(--homeopathy)') +
+            bulkFormatBadge('📑', '.tsv', 'TSV', 'var(--ayurveda)') +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">' +
+            '<strong>Required:</strong> <code>name</code>, <code>email</code><br>' +
+            '<strong>Optional:</strong> <code>role</code>, <code>staff_type</code>, <code>phone</code><br>' +
+            '<strong>Password:</strong> Generated automatically if not provided (min 8 chars with uppercase + number)' +
+          '</div>' +
+        '</div>' +
+
+        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">' +
+          '<span style="font-size:12px;color:var(--text-muted);align-self:center">Download template:</span>' +
+          '<button onclick="downloadStaffTemplate(\'csv\')"  class="btn-sm btn-outline-teal" style="font-size:12px">⬇️ CSV</button>' +
+          '<button onclick="downloadStaffTemplate(\'json\')" class="btn-sm btn-outline-teal" style="font-size:12px">⬇️ JSON</button>' +
+          '<button onclick="downloadStaffTemplate(\'xlsx\')" class="btn-sm btn-outline-teal" style="font-size:12px">⬇️ Excel</button>' +
+        '</div>' +
+
+        '<div class="field" style="margin-bottom:14px">' +
+          '<label>When staff (email) already exists:</label>' +
+          '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius)">' +
+              '<input type="radio" name="staffConflict" value="update" checked> ✏️ Update details</label>' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius)">' +
+              '<input type="radio" name="staffConflict" value="skip"> ⏭️ Skip duplicates</label>' +
+          '</div>' +
+        '</div>' +
+
+        '<div id="staffDropZone" ' +
+          'style="border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px"' +
+          ' onclick="document.getElementById(\'staffFileInput\').click()"' +
+          ' ondragover="event.preventDefault();this.style.borderColor=\'var(--teal)\';this.style.background=\'var(--teal-pale)\'"' +
+          ' ondragleave="this.style.borderColor=\'\';this.style.background=\'\'"' +
+          ' ondrop="staffHandleDrop(event)">' +
+          '<div style="font-size:32px;margin-bottom:6px">📂</div>' +
+          '<div style="font-weight:600;color:var(--text-secondary)">Click to browse or drag & drop</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-top:3px">.xlsx · .xls · .csv · .tsv · .json</div>' +
+        '</div>' +
+        '<input type="file" id="staffFileInput" accept=".xlsx,.xls,.csv,.tsv,.json" style="display:none" onchange="staffHandleSelect(event)">' +
+
+        '<div id="staffImportPreview"></div>' +
+        '<div id="staffImportError" style="color:var(--red);font-size:12.5px;min-height:18px"></div>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn-sm btn-outline-teal" onclick="closeOverlay(\'staffImportOverlay\')">Cancel</button>' +
+        '<button class="btn-sm btn-teal" id="staffImportBtn" onclick="executeStaffImport()" disabled style="opacity:0.5">📥 Import Staff</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+}
+
+function staffHandleDrop(event) {
+  event.preventDefault();
+  document.getElementById('staffDropZone').style.borderColor = '';
+  document.getElementById('staffDropZone').style.background  = '';
+  var file = event.dataTransfer.files[0];
+  if (file) staffProcessFile(file);
+}
+
+function staffHandleSelect(event) {
+  var file = event.target.files[0];
+  if (file) staffProcessFile(file);
+}
+
+async function staffProcessFile(file) {
+  var errEl   = document.getElementById('staffImportError');
+  var preview = document.getElementById('staffImportPreview');
+  var btn     = document.getElementById('staffImportBtn');
+  _staffImportRows = [];
+  if (errEl)   errEl.textContent = '';
+  if (preview) preview.innerHTML = '<div style="padding:14px;text-align:center;color:var(--text-muted)">⏳ Parsing file…</div>';
+  if (btn)     { btn.disabled = true; btn.style.opacity = '0.5'; }
+
+  try {
+    var raw  = await bulkParseFile(file);
+    var rows = staffNormalizeRows(raw);
+    _staffImportRows = rows;
+
+    var valid   = rows.filter(function(r){ return !r._error; });
+    var invalid = rows.filter(function(r){ return  r._error; });
+
+    if (preview) {
+      preview.innerHTML =
+
+        '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px">' +
+          '<div style="display:flex;gap:16px;font-size:13px;margin-bottom:10px">' +
+            '<span>📄 <strong>' + rows.length + '</strong> rows</span>' +
+            '<span style="color:var(--green)">✅ <strong>' + valid.length + '</strong> valid</span>' +
+            (invalid.length ? '<span style="color:var(--red)">⚠️ <strong>' + invalid.length + '</strong> with issues</span>' : '') +
+          '</div>' +
+          '<div style="overflow-x:auto;max-height:200px;overflow-y:auto">' +
+          '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+          '<thead><tr style="background:var(--bg)">' +
+            '<th style="padding:6px 10px;text-align:left">Name</th>' +
+            '<th style="padding:6px 10px;text-align:left">Email</th>' +
+            '<th style="padding:6px 10px;text-align:left">Role</th>' +
+            '<th style="padding:6px 10px;text-align:left">Phone</th>' +
+            '<th style="padding:6px 10px;text-align:center">Status</th>' +
+          '</tr></thead><tbody>' +
+          rows.slice(0, 100).map(function(r) {
+            return '<tr style="border-bottom:1px solid var(--border);background:' + (r._error ? 'var(--red-bg)' : '') + '">' +
+              '<td style="padding:5px 10px;font-weight:600">' + escHtml(r.name || '—') + '</td>' +
+              '<td style="padding:5px 10px;font-family:monospace;font-size:11px">' + escHtml(r.email || '—') + '</td>' +
+              '<td style="padding:5px 10px">' + escHtml(r.role || '—') + '</td>' +
+              '<td style="padding:5px 10px">' + escHtml(r.phone || '—') + '</td>' +
+              '<td style="padding:5px 10px;text-align:center">' + (r._error
+                ? '<span style="color:var(--red);font-size:11px">⚠️ ' + escHtml(r._error) + '</span>'
+                : '<span style="color:var(--green)">✅</span>') + '</td>' +
+            '</tr>';
+          }).join('') +
+          (rows.length > 100 ? '<tr><td colspan="5" style="padding:8px;text-align:center;color:var(--text-muted)">…and ' + (rows.length - 100) + ' more</td></tr>' : '') +
+          '</tbody></table></div></div>';
+    }
+
+    if (btn) { btn.disabled = valid.length === 0; btn.style.opacity = valid.length > 0 ? '1' : '0.5'; }
+    if (valid.length === 0 && errEl) errEl.textContent = 'No valid rows found. Check required columns: name, email';
+
+  } catch(e) {
+    if (errEl)   errEl.textContent = '❌ ' + e.message;
+    if (preview) preview.innerHTML = '';
+    if (btn)     { btn.disabled = true; btn.style.opacity = '0.5'; }
+  }
+}
+
+function staffNormalizeRows(raw) {
+  return raw.map(function(row) {
+    var name  = String(row.name || row.full_name || row.fullname || row.staff_name || '').trim();
+    var email = String(row.email || row.email_id || row.email_address || '').trim().toLowerCase();
+
+    if (!name)  return Object.assign({}, row, { _error: 'Missing name' });
+    if (!email) return Object.assign({}, row, { _error: 'Missing email' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Object.assign({}, row, { _error: 'Invalid email format' });
+
+    var rawRole = String(row.role || row.staff_role || row.position || 'doctor').toLowerCase().trim();
+    var role = normalizeStaffRole(rawRole);
+
+    var rawType = String(row.staff_type || row.type || row.employment_type || 'permanent').toLowerCase().trim();
+    var staffType = rawType.includes('adhoc') || rawType.includes('temporary') || rawType.includes('temp') ? 'adhoc' : 'permanent';
+
+    return {
+      name: name,
+      email: email,
+      role: role,
+      staffType: staffType,
+      phone: String(row.phone || row.mobile || row.contact || row.phone_no || '').trim(),
+      password: String(row.password || '').trim() || null,
+      clinicId: activeClinicId,
+    };
+  });
+}
+
+function normalizeStaffRole(raw) {
+  var roleMap = {
+    'doctor': 'doctor', 'dr': 'doctor', '🩺': 'doctor',
+    'receptionist': 'receptionist', 'reception': 'receptionist', 'front desk': 'receptionist', '🧑‍💼': 'receptionist',
+    'pharmacist': 'pharmacist', 'pharmacy': 'pharmacist', '💊': 'pharmacist',
+    'medical assistant': 'medical_assistant', 'ma': 'medical_assistant', 'medical_assistant': 'medical_assistant',
+    'lab technician': 'lab_technician', 'lab_technician': 'lab_technician', 'lab tech': 'lab_technician', '🧪': 'lab_technician',
+    'billing manager': 'billing_manager', 'billing': 'billing_manager', 'finance': 'billing_manager', '💰': 'billing_manager',
+    'inventory manager': 'inventory_manager', 'inventory': 'inventory_manager', '📦': 'inventory_manager',
+    'clinic supervisor': 'clinic_supervisor', 'supervisor': 'clinic_supervisor', '⭐': 'clinic_supervisor',
+    'medical support aide': 'medical_support_aide', 'support aide': 'medical_support_aide', '🛏️': 'medical_support_aide',
+    'admin': 'admin', 'administrator': 'admin', '🔐': 'admin',
+    'viewer': 'viewer', 'view only': 'viewer', '👁': 'viewer',
+  };
+  return roleMap[raw] || 'viewer';
+}
+
+function generateStaffPassword() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var password = '';
+  var hasUpper = false, hasLower = false, hasNum = false;
+  while (!hasUpper || !hasLower || !hasNum || password.length < 8) {
+    password = '';
+    for (var i = 0; i < 10; i++) {
+      var idx = Math.floor(Math.random() * chars.length);
+      password += chars[idx];
+    }
+    hasUpper = /[A-Z]/.test(password);
+    hasLower = /[a-z]/.test(password);
+    hasNum = /[0-9]/.test(password);
+  }
+  return password;
+}
+
+async function executeStaffImport() {
+  var valid      = _staffImportRows.filter(function(r){ return !r._error; });
+  var conflict   = document.querySelector('input[name="staffConflict"]:checked')?.value || 'update';
+  var btn        = document.getElementById('staffImportBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Importing…'; }
+
+  var inserted = 0, updated = 0, skipped = 0, errors = 0;
+  var errorLog = [];
+
+  for (var i = 0; i < valid.length; i++) {
+    var row = valid[i];
+    try {
+      var password = row.password || generateStaffPassword();
+
+      var existing = await dbFindStaffMemberByEmail(activeClinicId, row.email);
+
+      if (existing && existing.user_id) {
+        if (conflict === 'skip') {
+          skipped++;
+          continue;
+        }
+        var roleOk = await dbUpdateStaffRole(activeClinicId, existing.user_id, row.role);
+        var typeOk = await dbUpdateStaffType(activeClinicId, existing.user_id, row.staffType);
+        if (roleOk || typeOk) {
+          updated++;
+          if (typeof dbAudit === 'function') dbAudit('update', 'clinic_staff', existing.user_id, null, { name: row.name, role: row.role });
+        } else {
+          errors++;
+          errorLog.push({ row: i + 1, error: 'Failed to update staff', name: row.name, email: row.email });
+        }
+        continue;
+      }
+
+      var result = await dbCreateStaffUser(row.name, row.email, password, row.role, activeClinicId, currentUser.id, row.staffType);
+
+      if (result.success) {
+        inserted++;
+        if (typeof dbAudit === 'function') dbAudit('create', 'clinic_staff', result.userId, null, { name: row.name, email: row.email, role: row.role });
+      } else {
+        errors++;
+        errorLog.push({ row: i + 1, error: result.error || 'Failed to create', name: row.name, email: row.email });
+      }
+    } catch (err) {
+      errors++;
+      errorLog.push({ row: i + 1, error: err.message, name: row.name, email: row.email });
+    }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '📥 Import Staff'; }
+
+  var summary = '✅ Imported: ' + inserted + ' | 🔄 Updated: ' + updated + ' | ⏭️ Skipped: ' + skipped;
+  if (errors > 0) {
+    summary += ' | ⚠️ Errors: ' + errors;
+  }
+
+  showToast(summary, errors > 0 ? 'info' : 'success');
+
+  if (errorLog.length > 0) {
+    console.error('[StaffImport] Error log:', errorLog);
+    var errEl = document.getElementById('staffImportError');
+    if (errEl) errEl.innerHTML = '⚠️ ' + errors + ' row(s) failed. Check console for details.';
+  }
+
+  closeOverlay('staffImportOverlay');
+  if (typeof loadStaffList === 'function') loadStaffList();
+}
+
+function downloadStaffTemplate(format) {
+  var template = [
+    { name: 'Dr. John Doe', email: 'john@clinic.com', role: 'doctor', staff_type: 'permanent', phone: '+91 98765 43210' },
+    { name: 'Jane Smith', email: 'jane@clinic.com', role: 'receptionist', staff_type: 'permanent', phone: '+91 98765 43211' },
+    { name: 'Mike Johnson', email: 'mike@clinic.com', role: 'pharmacist', staff_type: 'adhoc', phone: '+91 98765 43212' },
+  ];
+
+  if (format === 'json') {
+    downloadBlob(JSON.stringify(template, null, 2), 'staff_import_template.json', 'application/json');
+  } else if (format === 'csv') {
+    var csv = 'name,email,role,staff_type,phone\n' + template.map(function(r){ return '"' + r.name + '","' + r.email + '","' + r.role + '","' + r.staff_type + '","' + r.phone + '"'; }).join('\n');
+    downloadBlob(csv, 'staff_import_template.csv', 'text/csv');
+  } else {
+    downloadExcel(template, 'staff_import_template');
+  }
+}

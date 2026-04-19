@@ -102,6 +102,31 @@ async function savePrescription() {
 
   var ok = await dbUpsertPrescription(rx);
   if (!ok) { showToast('DB save failed — check console', 'error'); return; }
+
+  var interactionWarning = '';
+  if (typeof window.fullInteractionCheck === 'function' && rx.medicines && rx.medicines.length > 0) {
+      var meds = rx.medicines.map(function(m){ return m.name || m; });
+      var check = window.fullInteractionCheck(meds, rx.allergies, null);
+      if (check.hasHighSeverity || check.hasModerateSeverity) {
+          interactionWarning = window.formatInteractionAlert(check);
+          if (interactionWarning) {
+              var overlay = document.createElement('div');
+              overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,34,64,0.6);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+              overlay.innerHTML = '<div style="background:var(--surface);border-radius:16px;max-width:480px;width:100%;box-shadow:0 12px 48px rgba(0,0,0,0.25);padding:24px;text-align:center;animation:slideIn 0.2s ease">' +
+                  '<div style="font-size:40px;margin-bottom:12px">💊</div>' +
+                  '<div style="font-size:20px;font-weight:600;margin-bottom:6px">Drug Interaction Alert</div>' +
+                  '<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Review before prescribing:</div>' +
+                  '<div style="text-align:left;max-height:300px;overflow-y:auto;margin-bottom:16px">' + interactionWarning + '</div>' +
+                  '<button class="btn-sm btn-teal" onclick="this.closest(\'.modal-overlay\').close();">I Understand, Proceed</button>' +
+                  '</div>';
+              document.body.appendChild(overlay);
+              document.body.style.overflow = 'hidden';
+              overlay.onclick = function(e) { if (e.target === overlay) { overlay.remove(); document.body.style.overflow = ''; } };
+              return;
+          }
+      }
+  }
+
   if (typeof storeEmbeddingForRx === 'function') storeEmbeddingForRx(rx).catch(function(){});
   closeModal('rxFormModal'); render();
 }

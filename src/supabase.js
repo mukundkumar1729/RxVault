@@ -288,6 +288,12 @@ async function dbGetStaffMember(clinicId, userId) {
   if (error) { dbErr('getStaffMember', error); return null; }
   return data;
 }
+
+async function dbFindStaffMemberByEmail(clinicId, email) {
+  const { data, error } = await db.from('clinic_staff').select('user_id, staff_type, role, is_active, created_at').eq('clinic_id', clinicId).eq('email', email.toLowerCase().trim()).maybeSingle();
+  if (error) { dbErr('findStaffMemberByEmail', error); return null; }
+  return data;
+}
 async function dbCreateStaffUser(name, email, password, role, clinicId, assignedBy, staffType) {
   var existing;
   try {
