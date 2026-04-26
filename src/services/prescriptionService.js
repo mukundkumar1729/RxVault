@@ -37,6 +37,10 @@ export const savePrescriptionRecord = async (rxData, isEdit = false) => {
     const success = await dbUpsertPrescription(rx);
     if (!success) throw new Error("Database failed to process prescription sync.");
 
+    if (typeof window.addActivityLog === 'function') {
+        window.addActivityLog(isEdit ? 'updated' : 'created', 'prescription', rx.id, rx.patientName);
+    }
+
     // Broadcast reactivity
     store.prescriptions = [...registry];
     return rx;

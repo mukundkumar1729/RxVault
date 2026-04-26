@@ -362,5 +362,26 @@ window.openAddModalForPatient = window.openAddModalForPatient || (typeof openAdd
 
 window.authLogout = authLogout;
 
+// Initialize features after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize real-time notifications
+    if (typeof window.initRealTimeNotifications === 'function') {
+        window.initRealTimeNotifications();
+    }
+    if (typeof window.renderActivityFeed === 'function') {
+        window.renderActivityFeed();
+    }
+
+    // Initialize quick action floating button
+    if (typeof window.initQuickActionButton === 'function') {
+        window.initQuickActionButton();
+    }
+
+    // Initialize chat service
+    if (typeof window.initChatService === 'function') {
+        window.initChatService();
+    }
+});
+
 // Begin Bootstrap on load
 document.addEventListener('DOMContentLoaded', bootstrapApp);
