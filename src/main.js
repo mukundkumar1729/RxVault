@@ -372,14 +372,18 @@ document.addEventListener('DOMContentLoaded', function() {
         window.renderActivityFeed();
     }
 
-    // Initialize quick action floating button
+    // Initialize quick action floating button (with delay to ensure DOM ready)
     if (typeof window.initQuickActionButton === 'function') {
-        window.initQuickActionButton();
+        setTimeout(function() {
+            window.initQuickActionButton();
+        }, 100);
     }
 
     // Initialize chat service
     if (typeof window.initChatService === 'function') {
-        window.initChatService();
+        setTimeout(function() {
+            window.initChatService();
+        }, 100);
     }
 });
 

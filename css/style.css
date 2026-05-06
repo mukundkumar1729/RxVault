@@ -195,6 +195,7 @@ body {
 }
 
 .topbar-user-menu {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 4px 8px;
@@ -323,7 +324,13 @@ body {
 .topbar-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
+  flex-shrink: 0;
+}
+
+.topbar-user-menu {
+  flex-shrink: 0;
 }
 
 .topbar-stat {
@@ -489,16 +496,46 @@ body {
 .user-dropdown {
   position: absolute;
   top: 100%;
-  right: 0;
+  right: 0 !important;
+  left: auto !important;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   z-index: 1000;
-  min-width: 220px;
+  width: 220px;
   display: none;
   margin-top: 8px;
   animation: slideIn 0.2s ease;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+  box-sizing: border-box;
+  transform: none !important;
+}
+
+@media (max-width: 480px) {
+  .user-dropdown {
+    right: 0 !important;
+    left: auto !important;
+    width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-dropdown {
+    right: 0 !important;
+    left: auto !important;
+    width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-dropdown {
+    right: 0 !important;
+    left: auto !important;
+    width: auto;
+    min-width: 200px;
+  }
 }
 
 /* Status Widget */

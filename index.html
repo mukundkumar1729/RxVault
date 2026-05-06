@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rx Vault — Medical Records</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/clinic.css">
     <link rel="stylesheet" href="css/auth.css">
@@ -29,21 +31,17 @@
     <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
 
-    <!-- ─── UPGRADE MODAL OVERLAY ─── -->
-    <div class="modal-overlay no-print" id="upgradeModal"></div>
-    
-    
-    
-
-    
-
+        <!-- ─── UPGRADE MODAL OVERLAY ─── -->
+        <div class="modal-overlay no-print" id="upgradeModal"></div>
         <!-- ─── TOP BAR ─── -->
         <header class="topbar no-print" id="appshellTopbar"> </header>
 
         <!-- ─── Clinic Notifications ─── -->
-    <div id="clinicCallNotifications" style="position:fixed; bottom:24px; right:24px; z-index:10000; pointer-events:none; display:flex; flex-direction:column; gap:12px; align-items:flex-end; max-width:320px;"></div>
-    
-    <!-- ─── SCRIPTS ─── -->
+        <div id="clinicCallNotifications"
+            style="position:fixed; bottom:24px; right:24px; z-index:10000; pointer-events:none; display:flex; flex-direction:column; gap:12px; align-items:flex-end; max-width:320px;">
+        </div>
+
+        <!-- ─── SCRIPTS ─── -->
         <aside class="sidebar no-print" id="appShellSideNavbar"> </aside>
 
         <!-- ─── MAIN CONTENT ─── -->
@@ -136,7 +134,8 @@
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
                     <input type="date" id="apptDateFilter" onchange="loadAppointmentView()"
                         style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;background:var(--surface)">
-                    <button class="btn-add" onclick="openBookAppointment()" style="padding:8px 16px;font-size:13px;white-space:nowrap">
+                    <button class="btn-add" onclick="openBookAppointment()"
+                        style="padding:8px 16px;font-size:13px;white-space:nowrap">
                         ＋ Book Appointment
                     </button>
                 </div>
@@ -157,7 +156,8 @@
                         <option value="paid">✅ Paid</option>
                         <option value="unpaid">⏳ Unpaid</option>
                     </select>
-                    <button class="btn-add" onclick="openNewInvoice()" style="padding:9px 18px;font-size:13px;white-space:nowrap">
+                    <button class="btn-add" onclick="openNewInvoice()"
+                        style="padding:9px 18px;font-size:13px;white-space:nowrap">
                         ＋ New Invoice
                     </button>
                 </div>
@@ -241,10 +241,12 @@
         <script src="src/services/quickActionService.js"></script>
         <script src="src/services/feedbackService.js"></script>
         <script src="src/services/chatService.js"></script>
+        <script src="src/services/hrmsService.js"></script>
+        <script src="src/hrms-ui.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-        
+
         <!-- Database Layer (Module for ES6 context + Global Bridge) -->
         <script type="module" src="src/supabase.js"></script>
 
@@ -270,4 +272,5 @@
         <script type="module" src="src/main.js"></script>
     </div>
 </body>
+
 </html>

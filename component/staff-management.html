@@ -10,8 +10,13 @@
                 <div class="staff-tabs">
                     <button class="staff-tab active" id="tabStaffList" onclick="showStaffTab('list')">👥 Staff List</button>
                     <button class="staff-tab" id="tabStaffAdd" onclick="showStaffTab('add')">➕ Add Staff</button>
-                    <button class="staff-tab" id="tabStaffImport" onclick="openStaffImportModal()">📥 Import Staff</button>
-                    <button class="staff-tab" id="tabStaffAudit" onclick="showStaffTab('audit')">📋 Audit Log</button>
+                    <button class="staff-tab" id="tabStaffLeave" onclick="showStaffTab('leave')">🏖️ Leave</button>
+                    <button class="staff-tab" id="tabStaffSalary" onclick="showStaffTab('salary')">💰 Salary</button>
+                    <button class="staff-tab" id="tabStaffSeparation" onclick="showStaffTab('separation')">🚪 Separation</button>
+                    <button class="staff-tab" id="tabStaffSettlement" onclick="showStaffTab('settlement')">📝 Settlement</button>
+                    <button class="staff-tab" id="tabStaffAppraisal" onclick="showStaffTab('appraisal')">⭐ Appraisal</button>
+                    <button class="staff-tab" id="tabStaffImport" onclick="openStaffImportModal()">📥 Import</button>
+                    <button class="staff-tab" id="tabStaffAudit" onclick="showStaffTab('audit')">📋 Audit</button>
                 </div>
                 <div id="staffTabList" style="max-height:55vh;overflow-y:auto">
                     <div id="staffListContent" style="padding:0"></div>
@@ -62,6 +67,94 @@
                         ✅ Create Account &amp; Add to Clinic
                     </button>
                 </div>
+
+                <!-- Leave Management Tab -->
+                <div id="staffTabLeave" style="display:none;padding:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div class="form-section-title">🏖️ Leave Management</div>
+                        <button class="btn-sm btn-outline-teal" onclick="window.openMyLeaveModal ? window.openMyLeaveModal() : openApplyLeaveModal()" style="font-size:11px">🔄 Refresh</button>
+                    </div>
+                    <div id="leaveBalanceDisplay" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+                        <div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center">
+                            <div style="font-size:20px;font-weight:700;color:var(--teal)">12</div>
+                            <div style="font-size:11px;color:var(--text-muted)">Casual</div>
+                        </div>
+                        <div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center">
+                            <div style="font-size:20px;font-weight:700;color:var(--allopathy)">10</div>
+                            <div style="font-size:11px;color:var(--text-muted)">Sick</div>
+                        </div>
+                        <div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center">
+                            <div style="font-size:20px;font-weight:700;color:var(--homeopathy)">15</div>
+                            <div style="font-size:11px;color:var(--text-muted)">Paid Leave</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">My Leave History</div>
+                    <div id="leaveHistoryList" style="max-height:250px;overflow-y:auto"></div>
+                    <div id="pendingLeavesSection" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                        <div style="font-weight:600;font-size:13px;margin-bottom:8px">Pending Approvals (Manager View)</div>
+                        <div id="pendingLeavesList"></div>
+                    </div>
+                </div>
+
+                <!-- Salary Tab -->
+                <div id="staffTabSalary" style="display:none;padding:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div class="form-section-title">💰 Salary & Payroll</div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn-sm btn-outline-teal" onclick="openProcessSalaryModal()">⚙️ Process Salary</button>
+                            <button class="btn-sm btn-teal" onclick="loadSalaryHistory()">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">My Salary History</div>
+                    <div id="salaryHistoryList" style="max-height:300px;overflow-y:auto"></div>
+                    <div id="salaryStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
+                </div>
+
+                <!-- Separation Tab -->
+                <div id="staffTabSeparation" style="display:none;padding:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div class="form-section-title">🚪 Separation</div>
+                        <button class="btn-sm btn-red" onclick="openSeparationModal()">🚪 Initiate Separation</button>
+                    </div>
+                    <div style="background:var(--surface2);padding:16px;border-radius:8px;margin-bottom:16px">
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Notice Period Policy</div>
+                        <div style="font-size:13px">Default: <strong>30 days</strong> notice period required for resignation</div>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">Separation History</div>
+                    <div id="separationHistoryList" style="max-height:250px;overflow-y:auto"></div>
+                </div>
+
+                <!-- Settlement Tab -->
+                <div id="staffTabSettlement" style="display:none;padding:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div class="form-section-title">📝 Full & Final Settlement</div>
+                        <button class="btn-sm btn-teal" onclick="openSettlementModal()">📝 Process Settlement</button>
+                    </div>
+                    <div id="settlementInfo" style="background:var(--surface2);padding:16px;border-radius:8px;margin-bottom:16px">
+                        <div style="font-size:13px;color:var(--text-muted);text-align:center">No settlement pending</div>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">Settlement History</div>
+                    <div id="settlementHistoryList" style="max-height:250px;overflow-y:auto"></div>
+                </div>
+
+                <!-- Appraisal Tab -->
+                <div id="staffTabAppraisal" style="display:none;padding:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div class="form-section-title">⭐ Performance Appraisal</div>
+                        <button class="btn-sm btn-teal" onclick="openAppraisalCycleModal()">➕ New Cycle</button>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">Active Appraisal Cycle</div>
+                    <div id="activeCycleInfo" style="background:var(--teal-pale);padding:12px;border-radius:8px;margin-bottom:16px">
+                        <div style="font-size:13px">No active cycle</div>
+                    </div>
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px">My Appraisal History</div>
+                    <div id="appraisalHistoryList" style="max-height:250px;overflow-y:auto"></div>
+                    <div id="pendingAppraisalsSection" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                        <div style="font-weight:600;font-size:13px;margin-bottom:8px">Pending Reviews (Manager View)</div>
+                        <div id="pendingAppraisalsList"></div>
+                    </div>
+                </div>
+
                 <div id="staffTabAudit" style="display:none;max-height:55vh;overflow-y:auto">
                     <div id="auditLogContent" style="padding:0"></div>
                 </div>

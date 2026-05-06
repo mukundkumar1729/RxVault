@@ -342,17 +342,24 @@ function openStaffModal() {
 }
 
 function showStaffTab(tab) {
-  ['list','add','audit'].forEach(function(t) {
+  var tabs = ['list', 'add', 'leave', 'salary', 'separation', 'settlement', 'appraisal', 'audit'];
+  tabs.forEach(function(t) {
     var btn = document.getElementById('tabStaff' + capitalize(t));
-    var pnl = document.getElementById('staffTab'  + capitalize(t));
+    var pnl = document.getElementById('staffTab' + capitalize(t));
     if (btn) btn.classList.toggle('active', t === tab);
     if (pnl) pnl.style.display = t === tab ? '' : 'none';
   });
   updateCallStaffBellVisibility();
 
-  if (tab === 'audit') {
-    loadAuditLog();
-  }
+  // Load data for each tab
+  if (tab === 'list') { /* handled by loadStaffList */ }
+  if (tab === 'add') { /* nothing to load */ }
+  if (tab === 'audit') { loadAuditLog(); }
+  if (tab === 'leave') { if (typeof loadLeaveTab === 'function') loadLeaveTab(); }
+  if (tab === 'salary') { if (typeof loadSalaryTab === 'function') loadSalaryTab(); }
+  if (tab === 'separation') { if (typeof loadSeparationTab === 'function') loadSeparationTab(); }
+  if (tab === 'settlement') { if (typeof loadSettlementTab === 'function') loadSettlementTab(); }
+  if (tab === 'appraisal') { if (typeof loadAppraisalTab === 'function') loadAppraisalTab(); }
 }
 
 async function loadStaffList() {
