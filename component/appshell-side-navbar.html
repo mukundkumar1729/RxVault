@@ -32,6 +32,28 @@
 
             <div class="sidebar-divider"></div>
 
+            <!-- ── QUICK ACTIONS ── -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarQuickActions">
+                <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarQuickActions')">
+                    <span class="sidebar-active-dot" id="dotQuickActions"></span>
+                    <span class="sidebar-label">Quick Actions</span>
+                    <span class="sidebar-toggle-chevron">▼</span>
+                </div>
+                <div class="sidebar-nav-items">
+                    <button class="nav-item" onclick="openRegisterModal()">
+                        <span class="nav-icon">👤</span> New Patient
+                    </button>
+                    <button class="nav-item" onclick="window.openBookAppointment ? window.openBookAppointment() : openBookAppointment()">
+                        <span class="nav-icon">📅</span> Book Appt
+                    </button>
+                    <button class="nav-item" onclick="openPatientSelfSchedule()">
+                        <span class="nav-icon">🖥️</span> Patient Portal
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
             <!-- ── RECORDS (Doctors · Patients · Appointments · Staff) ── -->
             <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarRecords">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarRecords')">

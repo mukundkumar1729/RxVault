@@ -3600,19 +3600,23 @@ body {
 
   .topbar-clinic-btn,
   .topbar-user-menu {
-    padding: 4px 6px;
+    padding: 2px 4px;
     border-radius: 12px;
-    height: 34px;
+    height: 32px;
+    min-width: 32px;
   }
 
   .topbar-clinic-icon,
   .topbar-user-avatar {
     margin-right: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
   }
 
-  .topbar-clinic-caret {
-    margin-left: 2px;
-    font-size: 8px;
+  .topbar-clinic-caret,
+  .topbar-user-menu > span:last-child {
+    display: none;
   }
 
   .topbar-stats-trigger {
