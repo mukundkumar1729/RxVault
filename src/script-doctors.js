@@ -18,7 +18,9 @@ function openAdminPanel() {
     doctorView.style.display = '';
     renderAdminDoctorList();
     var ps = document.getElementById('adminPremiumSection');
-    if (ps && typeof renderPremiumUpgradeSection === 'function') ps.innerHTML = renderPremiumUpgradeSection();
+    if (ps && typeof window.renderPremiumUpgradeSection === 'function') {
+      window.renderPremiumUpgradeSection().then(function(html){ ps.innerHTML = html; });
+    }
     openModal('adminModal');
   } else {
     // Always ask for PIN on first open
@@ -41,7 +43,9 @@ function checkAdminPin() {
     document.getElementById('adminDoctorView').style.display = '';
     renderAdminDoctorList();
     var ps = document.getElementById('adminPremiumSection');
-    if (ps && typeof renderPremiumUpgradeSection === 'function') ps.innerHTML = renderPremiumUpgradeSection();
+    if (ps && typeof window.renderPremiumUpgradeSection === 'function') {
+      window.renderPremiumUpgradeSection().then(function(html){ ps.innerHTML = html; });
+    }
   } else {
     var err = document.getElementById('adminPinError'); if (err) err.textContent = 'Incorrect PIN. Try again.';
     var inp = document.getElementById('adminPinInput'); if (inp) { inp.value = ''; inp.focus(); }

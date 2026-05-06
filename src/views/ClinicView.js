@@ -129,14 +129,14 @@ export const renderClinicSelectionGrid = () => {
                 el('button', { 
                     className: 'clinic-edit-btn', 
                     style: { color: 'var(--teal)', borderColor: 'rgba(10,124,110,0.2)', marginRight: '6px' },
-                    attributes: { title: 'Upgrade Plan' }, 
+                    title: 'Upgrade to add more doctors & lab techs', 
                     textContent: '💎', 
                     onClick: (e) => { e.stopPropagation(); if (typeof window.openUpgradeModal === 'function') window.openUpgradeModal(c.id); } 
                 })
             ] : []),
             ...(canCreate || c.staffRole === 'admin' ? [
-                el('button', { className: 'clinic-edit-btn', attributes: { title: 'Edit' }, textContent: '✏️', onClick: (e) => { e.stopPropagation(); openEditClinicModal(c.id); } }),
-                el('button', { className: 'clinic-del-btn', attributes: { title: 'Delete' }, textContent: '🗑️', onClick: (e) => { e.stopPropagation(); triggerDeleteClinicById(c.id); } })
+                el('button', { className: 'clinic-edit-btn', title: 'Edit', textContent: '✏️', onClick: (e) => { e.stopPropagation(); openEditClinicModal(c.id); } }),
+                el('button', { className: 'clinic-del-btn', title: 'Delete', textContent: '🗑️', onClick: (e) => { e.stopPropagation(); triggerDeleteClinicById(c.id); } })
             ] : [])
         ]),
         el('div', { className: 'clinic-card-arrow', textContent: '→' })

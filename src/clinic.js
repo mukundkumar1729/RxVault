@@ -214,7 +214,7 @@ function renderClinicGate() {
     var planLabel = '<span class="clinic-type-tag" style="background:rgba(15,30,48,0.05);color:var(--text-muted);margin-left:4px;border:1px solid var(--border)">'+capitalize(c.plan||'free')+'</span>';
     var canUpgrade = (c.staffRole === 'admin' || c.staffRole === 'superadmin' || canCreate);
     var upgradeBtn = canUpgrade && (c.plan === 'free' || c.plan === 'silver')
-      ? '<button class="clinic-edit-btn" style="color:var(--teal);border-color:rgba(10,124,110,0.2)" onclick="event.stopPropagation();openUpgradeModal(\''+c.id+'\')" title="Upgrade Plan">💎</button>'
+      ? '<button class="clinic-edit-btn" style="color:var(--teal);border-color:rgba(10,124,110,0.2)" onclick="event.stopPropagation();openUpgradeModal(\''+c.id+'\')" title="Upgrade to add more doctors & lab techs">💎</button>'
       : '';
 
     return (
@@ -401,15 +401,58 @@ async function openUpgradeModal(clinicId) {
     var overlay = document.getElementById('upgradeModal');
     if (!overlay) return;
     
-    // Load content if empty
-    if (!overlay.innerHTML) {
-        const resp = await fetch('component/upgrade-plan.html');
-        overlay.innerHTML = await resp.text();
-    }
+    // Always reload content to get latest prices
+    const resp = await fetch('component/upgrade-plan.html');
+    overlay.innerHTML = await resp.text();
     
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
+    
+    // Dynamically load prices and features from PLAN_LIMITS
+    const { PLAN_LIMITS } = await import('./core/planConfig.js');
+    const plans = ['silver', 'gold', 'platinum'];
+    plans.forEach(plan => {
+        const limits = PLAN_LIMITS[plan];
+        if (!limits) return;
+        
+        const priceEl = document.getElementById('price' + plan.charAt(0).toUpperCase() + plan.slice(1));
+        if (priceEl) {
+            priceEl.innerHTML = '₹' + limits.price.toLocaleString() + ' <span>/yr</span>';
+        }
+        
+        const featEl = document.getElementById('features' + plan.charAt(0).toUpperCase() + plan.slice(1));
+        if (featEl && limits.features) {
+            featEl.innerHTML = limits.features.map(f => '<li>' + f + '</li>').join('');
+        }
+    });
 }
+
+// Bridge to window
+window.openUpgradeModal = openUpgradeModal;
+window.selectUpgradePlan = selectUpgradePlan;
+
+// Render premium upgrade section in admin panel
+window.renderPremiumUpgradeSection = async function() {
+    const { checkPlanLimit } = await import('./services/limitService.js');
+    
+    const docCheck = checkPlanLimit('doctor');
+    const labCheck = checkPlanLimit('labTech');
+    
+    // Check if any limit is reached
+    if ((docCheck && !docCheck.canAdd) || (labCheck && !labCheck.canAdd)) {
+        let limitDetails = [];
+        if (docCheck && !docCheck.canAdd) limitDetails.push(docCheck.limit + ' doctors');
+        if (labCheck && !labCheck.canAdd) limitDetails.push(labCheck.limit + ' lab techs');
+        
+        return '<div style="padding:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:10px;border:1px solid #f59e0b">' +
+            '<div style="font-weight:700;color:#92400e;margin-bottom:4px">⚠️ Limit Reached</div>' +
+            '<div style="font-size:13px;color:#b45309;margin-bottom:10px">Your ' + (docCheck?.planLabel || 'plan') + ' allows ' + limitDetails.join(' & ') + '. Upgrade to add more.</div>' +
+            '<button onclick="openUpgradeModal(currentUpgradeClinicId || activeClinicId)" style="background:#f59e0b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer">💎 Upgrade Plan</button>' +
+        '</div>';
+    }
+    
+    return '';
+};
 
 async function selectUpgradePlan(plan) {
     if (!currentUpgradeClinicId) return;
