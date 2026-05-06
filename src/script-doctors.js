@@ -81,20 +81,11 @@ function renderAdminDoctorList() {
 
 // ─── Doctor form ──────────────────────────────────────────
 function openAddDoctorForm() {
-  if (typeof getLimitFeedback === 'function') {
-    var feedback = getLimitFeedback('doctor');
-    if (feedback) {
-      var msg = feedback.message + ' <a href="#" onclick="openUpgradeModal(activeClinicId);return false;" style="color:var(--teal);font-weight:700;text-decoration:underline;margin-left:8px">Upgrade Now</a>';
-      showToast(msg, 'error');
-      return;
-    }
-  }
-  
   editingDoctorIdx = null;
   document.getElementById('doctorFormTitle').textContent = '➕ Add Doctor';
   ['dfRegNo','dfName','dfQualification','dfSpecialization','dfPhone','dfEmail','dfAddress'].forEach(function(id){ setVal(id,''); });
   document.getElementById('dfType').value        = 'allopathy';
-  document.getElementById('dfUnavailable').checked = false;
+  document.getElementById('dfUnavailable').checked = true; // Default: available
   document.getElementById('availEditor').innerHTML = '';
   var errEl = document.getElementById('dfError'); if (errEl) errEl.textContent = '';
   populateHospitalDropdown('dfHospital', '');
@@ -121,6 +112,7 @@ async function saveDoctor() {
 
   if (!regNo) { if (errEl) errEl.textContent = 'Reg. Number is required.'; return; }
   if (!name)  { if (errEl) errEl.textContent = 'Doctor name is required.';  return; }
+  if (!phone) { if (errEl) errEl.textContent = 'Phone number is required.'; return; }
   if (!phone) { if (errEl) errEl.textContent = 'Phone number is required.'; return; }
 
   // Phone Validation: Numeric/Format check (10-15 chars, digits/spaces/hyphens)
@@ -311,9 +303,11 @@ function renderDoctorsPage(list) {
     return '<div class="dr-card' + (availToday && !isUnavail ? ' dr-card-available' : '') + (isUnavail ? ' dr-card-unavailable' : '') + '">' +
       '<div class="dr-card-header">' +
         '<div class="dr-avatar" style="background:' + (typeBg[d.type]||'#eee') + ';color:' + (typeClr[d.type]||'#333') + '">' + (typeIcon[d.type]||'🩺') + '</div>' +
-        '<div class="dr-info"><div class="dr-name">Dr. ' + escHtml(d.name) + 
-          (d.status && d.status !== 'available' ? ' <small class="status-badge status-'+d.status.split('_')[0]+'" style="font-size:9px;vertical-align:middle;margin-left:4px">'+formatStatusLabel(d.status)+'</small>' : '') +
-          '</div><div class="dr-spec">' + escHtml(d.specialization||'') + '</div><div class="dr-reg-badge">' + escHtml(d.regNo) + '</div></div>' +
+        '<div class="dr-info">' +
+          '<div class="dr-name"><strong>Dr. ' + escHtml(d.name) + '</strong></div>' +
+          '<div class="dr-reg-badge">Reg: ' + escHtml(d.regNo) + '</div>' +
+          '<div class="dr-spec">' + escHtml(d.specialization||'') + '</div>' +
+        '</div>' +
         (isUnavail ? '<div class="dr-unavail-badge">🔴 Not Available</div>' : (availToday ? '<div class="dr-today-badge">Today ✓<br><small>' + escHtml(availToday.time) + '</small></div>' : '')) +
       '</div>' +
       '<div class="dr-card-body">' +

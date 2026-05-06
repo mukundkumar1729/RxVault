@@ -79,24 +79,18 @@ export const renderDoctorsGrid = (list = store.doctors) => {
                     textContent: typeIcon[d.type] || '🩺' 
                 }),
                 el('div', { className: 'dr-info' }, [
-                    el('div', { className: 'dr-name' }, [
-                        document.createTextNode(`Dr. ${d.name}`),
-                        d.status && d.status !== 'available' ? el('small', { 
-                            className: `status-badge status-${d.status.split('_')[0]}`,
-                            style: { fontSize: '9px', verticalAlign: 'middle', marginLeft: '4px' },
-                            textContent: formatStatusLabel(d.status)
-                        }) : null
-                    ]),
+                    el('div', { className: 'dr-name', textContent: 'Dr. ' + (d.name || 'Unknown') }),
+                    d.status && d.status !== 'available' ? el('small', { 
+                        className: 'status-badge status-' + d.status.split('_')[0],
+                        style: { fontSize: '9px', verticalAlign: 'middle', marginLeft: '4px' },
+                        textContent: formatStatusLabel(d.status)
+                    }) : null,
                     el('div', { className: 'dr-spec', textContent: d.specialization || '' }),
-                    el('div', { className: 'dr-reg-badge', textContent: d.regNo })
+                    el('div', { className: 'dr-reg-badge', textContent: d.regNo || '' }),
+                    isUnavail 
+                        ? el('div', { className: 'dr-unavail-badge', textContent: '🔴 Not Available' })
+                        : (availToday ? el('div', { className: 'dr-today-badge', textContent: 'Today ✓ ' + availToday.time }) : null)
                 ]),
-                isUnavail 
-                    ? el('div', { className: 'dr-unavail-badge', textContent: '🔴 Not Available' }) 
-                    : (availToday ? el('div', { className: 'dr-today-badge' }, [
-                        document.createTextNode('Today ✓'),
-                        el('br'),
-                        el('small', { textContent: availToday.time })
-                    ]) : null)
             ]),
             
             // Card Body

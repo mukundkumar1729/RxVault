@@ -229,9 +229,11 @@ function renderQuickChips(filter) {
 // ─── Doctor availability panel ────────────────────────────
 function renderDoctorAvailPanel(d) {
   var panel = document.getElementById('doctorAvailPanel');
+  var section = document.getElementById('availInlineSection');
   var slotsEl = document.getElementById('availInlineSlots');
   var nameEl = document.getElementById('availInlineDoctorName');
   if (!panel) return;
+  if (section) section.classList.remove('collapsed');
   if (nameEl) nameEl.textContent = 'Dr. ' + d.name;
   var slotsHtml = '';
   if (d.unavailable) {
@@ -251,7 +253,9 @@ function renderDoctorAvailPanel(d) {
 }
 function clearDoctorAvailPanel() {
   var panel = document.getElementById('doctorAvailPanel');
+  var section = document.getElementById('availInlineSection');
   if (panel) panel.classList.add('hidden');
+  if (section) section.classList.add('collapsed');
 }
 
 // ─── Sidebar toggle ───────────────────────────────────────

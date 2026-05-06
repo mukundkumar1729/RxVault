@@ -9,19 +9,16 @@
             <div class="modal-body">
 
                 <!-- Medicine Type -->
-                <div class="form-section">
+                <div class="form-section" style="margin-bottom:10px;display:grid;grid-template-columns:0.2fr 0.8fr;gap:6px">
                     <div class="form-section-title">🏥 Medicine System</div>
-                    <div class="type-selector">
+                    <div class="type-selector" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px">
                         <div class="type-option allo">
-                            <input type="radio" name="medType" id="typeAllo" value="allopathy" checked>
-                            <label for="typeAllo"><span class="type-option-icon">💉</span>Allopathy</label>
+                             <label for="typeAllo"><span class="type-option-icon">💉</span>Allopathy</label>
                         </div>
                         <div class="type-option homo">
-                            <input type="radio" name="medType" id="typeHomo" value="homeopathy">
                             <label for="typeHomo"><span class="type-option-icon">🌿</span>Homeopathy</label>
                         </div>
                         <div class="type-option ayur">
-                            <input type="radio" name="medType" id="typeAyur" value="ayurveda">
                             <label for="typeAyur"><span class="type-option-icon">🌱</span>Ayurveda</label>
                         </div>
                     </div>
@@ -99,7 +96,7 @@
                         <div class="form-row" style="margin-top:12px">
                             <div class="field">
                                 <label>Doctor Name <span>*</span></label>
-                                <input type="text" id="fDoctorName" placeholder="Dr. Full Name">
+                                <input type="text" id="fDoctorName" placeholder="Dr. Full Name" onchange="onDoctorChange()">
                             </div>
                             <div class="field">
                                 <label>Specialization</label>
@@ -120,13 +117,21 @@
                 </div>
 
                 <!-- Inline Doctor Availability -->
-                <div id="doctorAvailPanel" class="doctor-avail-inline hidden">
-                    <div class="avail-inline-header">
-                        <span class="avail-inline-icon">📅</span>
-                        <span class="avail-inline-title">Availability Schedule</span>
-                        <span id="availInlineDoctorName" class="avail-inline-name"></span>
+                <div class="form-section collapsible-section collapsed" id="availInlineSection">
+                    <div class="collapsible-header" onclick="toggleSection('availInlineSection')">
+                        <span>📅 Availability Schedule</span>
+                        <span class="collapse-chevron">▼</span>
                     </div>
-                    <div class="avail-inline-slots" id="availInlineSlots"></div>
+                    <div class="collapsible-body">
+                        <div id="doctorAvailPanel" class="doctor-avail-inline">
+                            <div class="avail-inline-header">
+                                <span class="avail-inline-icon">📅</span>
+                                <span class="avail-inline-title">Availability Schedule</span>
+                                <span id="availInlineDoctorName" class="avail-inline-name"></span>
+                            </div>
+                            <div class="avail-inline-slots" id="availInlineSlots"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Prescription Details -->

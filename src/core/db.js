@@ -157,20 +157,21 @@ export const doctorToDb = function(d, clinicId) {
     qualification: d.qualification||'', specialization: d.specialization||'',
     hospital: d.hospital||'', phone: d.phone||'', email: d.email||'',
     address: d.address||'', type: d.type||'allopathy',
-    availability: d.availability||[], unavailable: d.unavailable||false
+    availability: d.availability||[], isavailable: d.isavailable !== undefined ? d.isavailable : !d.unavailable
   };
 }
 export const dbToDoctor = function(r) {
+  const isAvail = r.isavailable !== undefined ? r.isavailable : (r.unavailable !== undefined ? !r.unavailable : true);
   return {
-    id: r.id, clinicId: r.clinic_id, regNo: r.reg_no||'', name: r.name,
+    id: r.id, clinicId: r.clinic_id, regNo: r.reg_no||'', name: (r.name && r.name.trim()) ? r.name : 'Unknown Doctor',
     qualification: r.qualification||'', specialization: r.specialization||'',
     hospital: r.hospital||'', phone: r.phone||'', email: r.email||'',
     address: r.address||'', type: r.type||'allopathy',
-    availability: r.availability||[], unavailable: r.unavailable||false
+    availability: r.availability||[], unavailable: !isAvail
   };
 }
 
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
 //  PATIENTS
 // ════════════════════════════════════════════════════════════
 export const dbGetPatients = async function(clinicId) {
@@ -239,9 +240,18 @@ export const dbLogin = async function(email, password) {
   return (data && data.length > 0) ? data[0] : null;
 }
 export const dbGetUserClinics = async function(userId) {
-  const { data, error } = await db.rpc('get_user_clinics', { p_user_id: userId });
-  if (error) { dbErr('getUserClinics', error); return []; }
-  return data || [];
+  try {
+    const { data, error } = await db.rpc('get_user_clinics', { p_user_id: userId });
+    if (error) { 
+      console.error('getUserClinics RPC error:', error);
+      dbErr('getUserClinics', error); 
+      return []; 
+    }
+    return data || [];
+  } catch(e) {
+    console.error('getUserClinics exception:', e);
+    return [];
+  }
 }
 export const dbGetClinicStaff = async function(clinicId) {
   const { data, error } = await db.rpc('get_clinic_staff', { p_clinic_id: clinicId });

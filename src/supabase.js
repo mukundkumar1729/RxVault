@@ -176,8 +176,11 @@ async function dbGetDoctors(clinicId) {
 }
 async function dbUpsertDoctor(doctor, clinicId) {
   const row = doctorToDb(doctor, clinicId);
-  const { error } = await db.from('doctors').upsert(row, { onConflict: 'id' });
-  if (error) { dbErr('upsertDoctor', error); return false; }
+  const { error, data } = await db.from('doctors').upsert(row, { onConflict: 'id' }).select();
+  if (error) { 
+    dbErr('upsertDoctor', error); 
+    return false; 
+  }
   return true;
 }
 async function dbDeleteDoctor(id) {
@@ -192,21 +195,22 @@ function doctorToDb(d, clinicId) {
     qualification: d.qualification||'', specialization: d.specialization||'',
     hospital: d.hospital||'', phone: d.phone||'', email: d.email||'',
     address: d.address||'', type: d.type||'allopathy',
-    availability: d.availability||[], unavailable: d.unavailable||false
+    availability: d.availability||[], isavailable: d.isavailable !== undefined ? d.isavailable : !d.unavailable
   };
 }
 function dbToDoctor(r) {
+  const isAvail = r.isavailable !== undefined ? r.isavailable : (r.unavailable !== undefined ? !r.unavailable : true);
   return {
-    id: r.id, clinicId: r.clinic_id, regNo: r.reg_no||'', name: r.name,
+    id: r.id, clinicId: r.clinic_id, regNo: r.reg_no||'', name: (r.name && r.name.trim()) ? r.name : 'Unknown Doctor',
     qualification: r.qualification||'', specialization: r.specialization||'',
     hospital: r.hospital||'', phone: r.phone||'', email: r.email||'',
     address: r.address||'', type: r.type||'allopathy',
-    availability: r.availability||[], unavailable: r.unavailable||false
+    availability: r.availability||[], unavailable: !isAvail
   };
 }
 
 // ════════════════════════════════════════════════════════════
-//  PATIENTS
+ //  PATIENTS
 // ════════════════════════════════════════════════════════════
 async function dbGetPatients(clinicId) {
   const { data, error } = await db.from('patients').select('*').eq('clinic_id', clinicId).order('registered_at', { ascending: false });
@@ -274,9 +278,18 @@ async function dbLogin(email, password) {
   return (data && data.length > 0) ? data[0] : null;
 }
 async function dbGetUserClinics(userId) {
-  const { data, error } = await db.rpc('get_user_clinics', { p_user_id: userId });
-  if (error) { dbErr('getUserClinics', error); return []; }
-  return data || [];
+  try {
+    const { data, error } = await db.rpc('get_user_clinics', { p_user_id: userId });
+    if (error) { 
+      console.error('getUserClinics RPC error:', error);
+      dbErr('getUserClinics', error); 
+      return []; 
+    }
+    return data || [];
+  } catch(e) {
+    console.error('getUserClinics exception:', e);
+    return [];
+  }
 }
 async function dbGetClinicStaff(clinicId) {
   const { data, error } = await db.rpc('get_clinic_staff', { p_clinic_id: clinicId });

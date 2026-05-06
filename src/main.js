@@ -155,7 +155,11 @@ const finalizeApplicationMount = async () => {
     // Fetch base records to populate badges and dashboard counts
     try {
         if (typeof window.dbGetPrescriptions === 'function') store.prescriptions = await window.dbGetPrescriptions(activeClinic.id);
-        if (typeof window.dbGetDoctors === 'function') store.doctors = await window.dbGetDoctors(activeClinic.id);
+        if (typeof window.dbGetDoctors === 'function') {
+            console.log('Loading doctors from DB...');
+            store.doctors = await window.dbGetDoctors(activeClinic.id);
+            console.log('Loaded doctors:', store.doctors);
+        }
         if (typeof window.dbGetPatients === 'function') store.patients = await window.dbGetPatients(activeClinic.id);
         if (typeof window.dbGetAppointments === 'function') store.appointments = await window.dbGetAppointments(activeClinic.id);
         if (typeof window.dbGetInvoices === 'function') store.invoices = await window.dbGetInvoices(activeClinic.id);

@@ -42,19 +42,24 @@
                         <div class="premium-field" style="grid-column:1/-1"><label>Address</label><input type="text" id="dfAddress" class="premium-input" placeholder="Clinic / hospital address"></div>
                     </div>
                 </div>
-                <div class="form-section" style="margin-bottom:0">
-                    <div class="form-section-title">📅 Availability Schedule</div>
-                    <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
-                    <div id="availEditor"></div>
-                    <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
-                    <div class="unavail-toggle-row">
-                        <label class="unavail-toggle-label">
-                            <input type="checkbox" id="dfUnavailable">
-                            <span class="unavail-toggle-text">🔴 Mark Doctor as Currently Unavailable</span>
-                        </label>
-                        <div class="unavail-toggle-hint">When checked, doctor will be shown as unavailable in the Doctors view.</div>
+                <div class="form-section collapsible-section collapsed" id="availSection">
+                    <div class="collapsible-header" onclick="toggleSection('availSection')">
+                        <span>📅 Availability Schedule</span>
+                        <span class="collapse-chevron">▼</span>
                     </div>
-                    <div id="dfError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:12px"></div>
+                    <div class="collapsible-body">
+                        <div class="avail-col-labels"><span>Day</span><span>Timing</span><span></span></div>
+                        <div id="availEditor"></div>
+                        <button class="btn-add-medicine" style="margin-top:8px" onclick="addAvailRow()">＋ Add Time Slot</button>
+                        <div class="unavail-toggle-row">
+                            <label class="unavail-toggle-label">
+                                <input type="checkbox" id="dfUnavailable" checked>
+                                <span class="unavail-toggle-text">🟢 Mark Doctor as Currently Available</span>
+                            </label>
+                            <div class="unavail-toggle-hint">When checked, doctor will be shown as available in the Doctors view.</div>
+                        </div>
+                        <div id="dfError" style="color:var(--red);font-size:12.5px;min-height:18px;margin-top:12px"></div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
