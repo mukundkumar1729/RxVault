@@ -12,7 +12,20 @@ function toggleSidebarSection(sectionId) {
   var section = document.getElementById(sectionId);
   if (!section) return;
 
-  var isCollapsed = section.classList.toggle('collapsed');
+  var isCollapsed = section.classList.contains('collapsed');
+
+  // Close all other sections first (accordion behavior)
+  document.querySelectorAll('.sidebar-collapsible').forEach(function(sec) {
+    if (sec.id !== sectionId && !sec.classList.contains('collapsed')) {
+      sec.classList.add('collapsed');
+      saveSidebarState(sec.id, true);
+      updateSectionDot(sec);
+    }
+  });
+
+  // Toggle this section
+  section.classList.toggle('collapsed');
+  isCollapsed = section.classList.contains('collapsed');
 
   // Persist state
   saveSidebarState(sectionId, isCollapsed);
@@ -107,6 +120,13 @@ function expandActiveSection() {
 // ─── Init on DOM ready ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   restoreSidebarState();
+
+  // Ensure Navigation section is always expanded by default
+  var navSection = document.getElementById('sidebarNav');
+  if (navSection && navSection.classList.contains('collapsed')) {
+    navSection.classList.remove('collapsed');
+    saveSidebarState('sidebarNav', false);
+  }
 
   // Patch setNavActive (defined in features.js) to also refresh dots
   if (typeof setNavActive === 'function') {

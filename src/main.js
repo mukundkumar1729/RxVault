@@ -346,6 +346,11 @@ window.setView = setView;
 window.filterByType = filterByType;
 window.hideAllViews = hideAllViews;
 window.refreshGlobalCounts = refreshGlobalCounts;
+window.setNavActive = function(navId) {
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var nb = document.getElementById(navId);
+  if (nb) nb.classList.add('active');
+};
 
 if (typeof window.openAddModal !== 'function') {
     window.openAddModal = () => {

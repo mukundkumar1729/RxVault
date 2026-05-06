@@ -20,6 +20,7 @@ function setNavActive(navId) {
   var nb = document.getElementById(navId);
   if (nb) nb.classList.add('active');
 }
+window.setNavActive = setNavActive;
 
 // ════════════════════════════════════════════════════════════
 //  1. APPOINTMENTS / QUEUE MANAGEMENT

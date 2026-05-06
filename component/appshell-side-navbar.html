@@ -33,20 +33,20 @@
             <div class="sidebar-divider"></div>
 
             <!-- ── QUICK ACTIONS ── -->
-            <div class="sidebar-section sidebar-collapsible" id="sidebarQuickActions">
+            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarQuickActions">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarQuickActions')">
                     <span class="sidebar-active-dot" id="dotQuickActions"></span>
                     <span class="sidebar-label">Quick Actions</span>
                     <span class="sidebar-toggle-chevron">▼</span>
                 </div>
                 <div class="sidebar-nav-items">
-                    <button class="nav-item" onclick="openRegisterModal()">
+                    <button class="nav-item" id="navNewPatient" onclick="setNavActive('navNewPatient'); openRegisterModal()">
                         <span class="nav-icon">👤</span> New Patient
                     </button>
-                    <button class="nav-item" onclick="window.openBookAppointment ? window.openBookAppointment() : openBookAppointment()">
+                    <button class="nav-item" id="navBookAppt" onclick="setNavActive('navBookAppt'); window.openBookAppointment ? window.openBookAppointment() : openBookAppointment()">
                         <span class="nav-icon">📅</span> Book Appt
                     </button>
-                    <button class="nav-item" onclick="openPatientSelfSchedule()">
+                    <button class="nav-item" id="navPatientPortal" onclick="setNavActive('navPatientPortal'); openPatientSelfSchedule()">
                         <span class="nav-icon">🖥️</span> Patient Portal
                     </button>
                 </div>
