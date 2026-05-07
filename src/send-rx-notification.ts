@@ -90,9 +90,10 @@ serve(async (req: Request) => {
     )
 
   } catch (err) {
-    console.error('[send-rx-notification] Unexpected error:', err)
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('[send-rx-notification] Unexpected error:', errorMessage);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     )
   }
