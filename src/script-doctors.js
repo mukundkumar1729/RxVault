@@ -335,7 +335,7 @@ function filterDoctors() {
   var avail = document.getElementById('doctorAvailFilter')?.value || '';
   var list  = [...doctorRegistry];
   if (q)     list = list.filter(function(d){ return d.name.toLowerCase().includes(q) || d.regNo.toLowerCase().includes(q) || (d.specialization||'').toLowerCase().includes(q) || (d.hospital||'').toLowerCase().includes(q); });
-  if (type)  list = list.filter(function(d){ return d.type === type; });
+  if (type)  list = list.filter(function(d){ return d.type === type || !d.type; }); // Include doctors without type set
   if (avail) list = list.filter(function(d){ return d.availability?.some(function(s){ return s.day === avail; }); });
   renderDoctorsPage(list);
 }

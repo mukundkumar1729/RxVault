@@ -43,7 +43,7 @@ function openEditModal(id) {
   var typeEl = document.querySelector('input[name="medType"][value="' + p.type + '"]');
   if (typeEl) typeEl.checked = true;
   var MAP = {
-    fPatientName:'patientName', fAge:'age', fGender:'gender', fBloodGroup:'bloodGroup',
+    fPatientName:'patientName', fAge:'age', fDob:'dob', fGender:'gender', fBloodGroup:'bloodGroup',
     fPhone:'phone', fEmail:'email', fDoctorName:'doctorName', fSpecialization:'specialization',
     fHospital:'hospital', fRegNo:'regNo', fDoctorPhone:'doctorPhone',
     fDate:'date', fValidUntil:'validUntil', fDiagnosis:'diagnosis', fStatus:'status', fNotes:'notes'
@@ -75,7 +75,7 @@ async function savePrescription() {
   var rx = {
     id: editingId || genId(), type: document.querySelector('input[name="medType"]:checked')?.value || 'allopathy',
     clinicId: activeClinicId,
-    patientName, age: getVal('fAge'), gender: getVal('fGender'), bloodGroup: getVal('fBloodGroup'),
+    patientName, age: getVal('fAge'), dob: getVal('fDob'), gender: getVal('fGender'), bloodGroup: getVal('fBloodGroup'),
     phone: getVal('fPhone'), email: getVal('fEmail'), doctorName,
     specialization: getVal('fSpecialization'), hospital: getVal('fHospital'),
     regNo: getVal('fRegNo'), doctorPhone: getVal('fDoctorPhone'),
@@ -215,19 +215,29 @@ function showRegSuggestions(val) {
   var dropdown = document.getElementById('regNoDropdown');
   if (!val || val.length < 2) { dropdown.classList.remove('open'); return; }
   var seen = new Map();
+  var currentType = document.querySelector('input[name="medType"]:checked')?.value || 'allopathy';
+  // Filter by current medicine type
   doctorRegistry.forEach(function(d) {
-    seen.set(d.regNo.toLowerCase(), {regNo:d.regNo, doctorName:d.name, specialization:d.specialization||'', hospital:d.hospital||'', doctorPhone:d.phone||''});
+    if (!currentType || d.type === currentType) {
+      seen.set(d.regNo.toLowerCase(), {regNo:d.regNo, doctorName:d.name, specialization:d.specialization||'', hospital:d.hospital||'', doctorPhone:d.phone||'', type:d.type||''});
+    }
   });
   prescriptions.forEach(function(p) {
     if (!p.regNo || !p.doctorName) return;
     var key = p.regNo.toLowerCase();
-    if (!seen.has(key)) seen.set(key, {regNo:p.regNo, doctorName:p.doctorName, specialization:p.specialization||'', hospital:p.hospital||'', doctorPhone:p.doctorPhone||''});
+    if (!seen.has(key)) {
+      var drFromReg = doctorRegistry ? doctorRegistry.find(function(dr){ return dr.regNo === p.regNo; }) : null;
+      var drType = drFromReg ? drFromReg.type : null;
+      if (!currentType || drType === currentType || drType === 'allopathy' || !drType) {
+        seen.set(key, {regNo:p.regNo, doctorName:p.doctorName, specialization:p.specialization||'', hospital:p.hospital||'', doctorPhone:p.doctorPhone||'', type:drType||''});
+      }
+    }
   });
   var matches = [...seen.values()].filter(function(d){
     return d.regNo.toLowerCase().includes(val.toLowerCase()) || d.doctorName.toLowerCase().includes(val.toLowerCase());
   });
   if (!matches.length) {
-    dropdown.innerHTML = '<div class="reg-no-results">No saved doctors found for "<strong>' + escHtml(val) + '</strong>"</div>';
+    dropdown.innerHTML = '<div class="reg-no-results">No ' + currentType + ' doctors found for "<strong>' + escHtml(val) + '</strong>"</div>';
     dropdown.classList.add('open'); return;
   }
   dropdown.innerHTML = matches.map(function(d, i) {
@@ -248,13 +258,12 @@ function autoFillDoctor(idx) {
   document.getElementById('doctorAutoMsg').textContent = 'Filled: Dr. ' + d.doctorName;
   document.getElementById('doctorAutoStatus').classList.remove('hidden');
   var fullDoc = doctorRegistry.find(function(dr){ return dr.regNo === d.regNo; });
-  if (fullDoc) {
-    renderDoctorAvailPanel(fullDoc);
-    if (fullDoc.type) {
-      var typeRadio = document.querySelector('input[name="medType"][value="' + fullDoc.type + '"]');
-      if (typeRadio) typeRadio.checked = true;
-    }
+  var docType = d.type || (fullDoc ? fullDoc.type : null);
+  if (docType) {
+    var typeRadio = document.querySelector('input[name="medType"][value="' + docType + '"]');
+    if (typeRadio) typeRadio.checked = true;
   }
+  if (fullDoc) renderDoctorAvailPanel(fullDoc);
 }
 function onDoctorChange() {
   var docName = getVal('fDoctorName');
@@ -272,7 +281,24 @@ function clearDoctorFields() {
   ['fRegNo','fDoctorName','fSpecialization','fHospital','fDoctorPhone'].forEach(function(id){ setVal(id,''); });
   document.getElementById('doctorAutoStatus').classList.add('hidden');
   document.getElementById('regNoDropdown').classList.remove('open');
-  clearDoctorAvailPanel(); focusEl('fRegNo');
+  clearDoctorAvailPanel();
+}
+
+function filterDoctorsByType(selectedType) {
+  var currentType = window._lastSelectedType || 'allopathy';
+  if (selectedType !== currentType) {
+    ['fRegNo','fDoctorName','fSpecialization','fHospital','fDoctorPhone'].forEach(function(id){ setVal(id,''); });
+    document.getElementById('doctorAutoStatus').classList.add('hidden');
+    document.getElementById('regNoDropdown').classList.remove('open');
+    window._lastSelectedType = selectedType;
+  }
+}
+
+function clearDoctorFields() {
+  ['fRegNo','fDoctorName','fSpecialization','fHospital','fDoctorPhone'].forEach(function(id){ setVal(id,''); });
+  document.getElementById('doctorAutoStatus').classList.add('hidden');
+  document.getElementById('regNoDropdown').classList.remove('open');
+  clearDoctorAvailPanel();
 }
 
 // ─── Open Rx modal pre-filled with patient data ───────────

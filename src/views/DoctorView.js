@@ -86,6 +86,7 @@ export const renderDoctorsGrid = (list = store.doctors) => {
                         textContent: formatStatusLabel(d.status)
                     }) : null,
                     el('div', { className: 'dr-spec', textContent: d.specialization || '' }),
+                    el('div', { className: 'dr-type', textContent: (d.type || 'allopathy').charAt(0).toUpperCase() + (d.type || 'allopathy').slice(1), style: { fontSize: '10px', fontWeight: '600', color: typeClr[d.type] || '#666' } }),
                     el('div', { className: 'dr-reg-badge', textContent: d.regNo || '' }),
                     isUnavail 
                         ? el('div', { className: 'dr-unavail-badge', textContent: '🔴 Not Available' })

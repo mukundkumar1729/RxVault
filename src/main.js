@@ -156,9 +156,7 @@ const finalizeApplicationMount = async () => {
     try {
         if (typeof window.dbGetPrescriptions === 'function') store.prescriptions = await window.dbGetPrescriptions(activeClinic.id);
         if (typeof window.dbGetDoctors === 'function') {
-            console.log('Loading doctors from DB...');
             store.doctors = await window.dbGetDoctors(activeClinic.id);
-            console.log('Loaded doctors:', store.doctors);
         }
         if (typeof window.dbGetPatients === 'function') store.patients = await window.dbGetPatients(activeClinic.id);
         if (typeof window.dbGetAppointments === 'function') store.appointments = await window.dbGetAppointments(activeClinic.id);
@@ -367,7 +365,6 @@ if (typeof window.openAddModal !== 'function') {
 // Legacy Patient/Rx Bridges
 window.openRegisterModal = window.openRegisterModal || (typeof openRegisterModal === 'function' ? openRegisterModal : null);
 window.openPrescriptionForPatient = window.openPrescriptionForPatient || (typeof openPrescriptionForPatient === 'function' ? openPrescriptionForPatient : null);
-window.openAddModalForPatient = window.openAddModalForPatient || (typeof openAddModalForPatient === 'function' ? openAddModalForPatient : null);
 
 window.authLogout = authLogout;
 
