@@ -364,26 +364,23 @@ async function unmarkSelfHandled(rxId) {
 }
 
 function showPharmacyView() {
-  currentView = 'pharmacy';
-  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
-  var nb = document.getElementById('navPharmacy'); if (nb) nb.classList.add('active');
-  ['statsRow','controlsBar','prescriptionsList','aiSearchPanel',
-   'doctorsView','patientsView',
-   'stockView','analyticsView','outbreakView'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
-  var pv = document.getElementById('pharmacyView'); if (pv) pv.style.display = '';
-  document.getElementById('pageTitle').textContent    = '💊 Pharmacy';
-  document.getElementById('pageSubtitle').textContent = 'Prescribed medicines queue for dispensing';
-
-  // Auto-mark self-handled silently, re-render if any changed
-  autoMarkSelfHandled().then(function(count) {
-    if (count > 0) renderPharmacyList();
-  });
-
-  renderPharmacyList();
-  if (typeof refreshSidebarDots === 'function') setTimeout(refreshSidebarDots, 20);
+    currentView = 'pharmacy';
+    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+    var nb = document.getElementById('navPharmacy'); if (nb) nb.classList.add('active');
+    ['statsRow','controlsBar','prescriptionsList','aiSearchPanel',
+     'doctorsView','patientsView',
+     'stockView','analyticsView','outbreakView'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
+    var pv = document.getElementById('pharmacyView'); if (pv) pv.style.display = '';
+    document.getElementById('pageTitle').textContent    = '💊 Pharmacy';
+    document.getElementById('pageSubtitle').textContent = 'Pharmacy Management';
+    
+    // Load pharmacy dashboard
+    if (typeof window.initPharmacyView === 'function') {
+        window.initPharmacyView();
+    }
 }
 
 function filterPharmacy() { renderPharmacyList(); }

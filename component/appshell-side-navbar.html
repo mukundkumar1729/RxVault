@@ -83,17 +83,25 @@
 
             <div class="sidebar-divider"></div>
 
-            <!-- ── PHARMACY (Dispensing · Stock) ── -->
-            <div class="sidebar-section sidebar-collapsible collapsed" id="sidebarPharmacy">
+            <!-- ── PHARMACY MANAGEMENT ── -->
+            <div class="sidebar-section sidebar-collapsible" id="sidebarPharmacy">
                 <div class="sidebar-section-toggle" onclick="toggleSidebarSection('sidebarPharmacy')">
                     <span class="sidebar-active-dot" id="dotPharmacy"></span>
-                    <span class="sidebar-label">Pharmacy</span>
+                    <span class="sidebar-label">💊 Pharmacy</span>
                     <span class="sidebar-toggle-chevron">▼</span>
                 </div>
                 <div class="sidebar-nav-items">
-                    <button class="nav-item" id="navPharmacy" data-perm="viewPharmacy" onclick="showPharmacyView()">
-                        <span class="nav-icon">💊</span> Dispensing Queue
-                        <span class="nav-badge" id="badgePharmacy">0</span>
+                    <button class="nav-item" id="navPharmacy" onclick="showPharmacyView()">
+                        <span class="nav-icon">📊</span> Dashboard
+                    </button>
+                    <button class="nav-item" id="navPharmacyCustomers" onclick="window.currentPharmacyView='customers';showPharmacyView()">
+                        <span class="nav-icon">👥</span> Customers
+                    </button>
+                    <button class="nav-item" id="navPharmacyVisits" onclick="window.currentPharmacyView='visits';showPharmacyView()">
+                        <span class="nav-icon">📝</span> Visit Log
+                    </button>
+                    <button class="nav-item" id="navPharmacyMR" onclick="window.currentPharmacyView='mr-verify';showPharmacyView()">
+                        <span class="nav-icon">📋</span> MR Verification
                     </button>
                     <button class="nav-item" id="navStock" onclick="showStockView()">
                         <span class="nav-icon">📦</span> Stock &amp; Inventory
