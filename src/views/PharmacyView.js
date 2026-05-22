@@ -106,7 +106,7 @@ const renderDashboard = async (container) => {
     
     const stats = await dbGetPharmacyDashboardStats(currentPharmacyOrg?.id);
     
-    container.appendChild(el('div', { className: 'stats-grid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }, [
+    container.appendChild(el('div', { className: 'stats-grid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' } }, [
         createStatCard('Total Customers', stats.totalCustomers || 0, '👥'),
         createStatCard('Medical Reps', stats.mrCount || 0, '💊'),
         createStatCard('Walk-in Customers', stats.walkinCount || 0, '🚶'),
@@ -135,9 +135,9 @@ const createStatCard = (label, value, icon) => {
         className: 'stat-card',
         style: { background: 'var(--surface)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' },
         children: [
-            el('div', { style: { fontSize: '24px', marginBottom: '8px', textContent: icon }),
-            el('div', { style: { fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)', textContent: value }),
-            el('div', { style: { fontSize: '13px', color: 'var(--text-muted)', textContent: label })
+            el('div', { style: { fontSize: '24px', marginBottom: '8px' }, textContent: icon }),
+            el('div', { style: { fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }, textContent: value }),
+            el('div', { style: { fontSize: '13px', color: 'var(--text-muted)' }, textContent: label })
         ]
     });
 };
@@ -186,9 +186,9 @@ const createCustomerCard = (customer) => {
         style: { background: 'var(--surface)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
         children: [
             el('div', { children: [
-                el('div', { style: { fontWeight: '600', fontSize: '15px', textContent: customer.name }),
-                el('div', { style: { fontSize: '12px', color: 'var(--text-muted)', textContent: `${typeIcon} ${customer.customer_id} · ${typeLabel}` }),
-                customer.phone ? el('div', { style: { fontSize: '12px', color: 'var(--text-muted)', textContent: `📞 ${customer.phone}` }) : null
+                el('div', { style: { fontWeight: '600', fontSize: '15px' }, textContent: customer.name }),
+                el('div', { style: { fontSize: '12px', color: 'var(--text-muted)' }, textContent: `${typeIcon} ${customer.customer_id} · ${typeLabel}` }),
+                customer.phone ? el('div', { style: { fontSize: '12px', color: 'var(--text-muted)' }, textContent: `📞 ${customer.phone}` }) : null
             ].filter(Boolean) }),
             el('div', { children: [
                 el('button', {
@@ -246,7 +246,7 @@ const renderVisits = async (container) => {
         container.appendChild(el('div', {
             style: { background: 'var(--surface)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '10px' },
             children: [
-                el('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }, [
+                el('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' } }, [
                     el('span', { style: { fontWeight: '600' }, textContent: custName }),
                     el('span', { style: { fontSize: '12px', color: 'var(--text-muted)' }, textContent: v.visit_id })
                 ]),
@@ -287,11 +287,11 @@ const renderMrVerify = async (container) => {
         container.appendChild(el('div', {
             style: { background: 'var(--surface)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '12px' },
             children: [
-                el('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }, [
+                el('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } }, [
                     el('span', { style: { fontWeight: '600' }, textContent: mr.name }),
                     mrDetail?.is_verified 
-                        ? el('span', { style: { background: 'var(--green)', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }, textContent: '✓ Verified')
-                        : el('span', { style: { background: 'var(--orange)', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }, textContent: 'Pending')
+                        ? el('span', { style: { background: 'var(--green)', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }, textContent: '✓ Verified' })
+                        : el('span', { style: { background: 'var(--orange)', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }, textContent: 'Pending' })
                 ]),
                 el('div', { style: { fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }, textContent: mr.customer_id }),
                 mrDetail ? el('div', { style: { fontSize: '12px', color: 'var(--text-muted)' }, 

@@ -6,6 +6,133 @@ import { db } from '../supabase.js';
 
 // ─── Pharmacy Organizations ──────────────────────────────────
 
+// ─── Pharmacy Data Export ────────────────────────────────────
+export const exportPharmacyCustomersToCSV = async (orgId) => {
+    const customers = await dbGetPharmacyCustomers(orgId);
+    
+    // CSV Header
+    let csv = 'Customer ID,Customer Name,Customer Type,Phone,Linked Patient ID,Is Active,Created At\n';
+    
+    // CSV Rows
+    customers.forEach(customer => {
+        csv += `"${customer.customer_id || ''}","${customer.name || ''}","${customer.customer_type || ''}","${customer.phone || ''}","${customer.linked_patient_id || ''}","${customer.is_active ? 'true' : 'false'}","${customer.created_at || ''}"\n`;
+    });
+    
+    // Trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pharmacy_customers_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+export const exportPharmacyVisitsToCSV = async (orgId) => {
+    const visits = await dbGetAllPharmacyVisits(orgId);
+    
+    // CSV Header
+    let csv = 'Visit ID,Visit Date,Customer ID,Customer Name,Customer Type,Symptoms,Notes,Is Active,Created At\n';
+    
+    // CSV Rows
+    visits.forEach(visit => {
+        const symptoms = visit.symptom_ids && visit.symptom_ids.length > 0 
+            ? visit.symptom_ids.map(id => {
+                const symptom = visit.pharmacy_symptom_master?.find(s => s.id === id);
+                return symptom ? symptom.name : 'Unknown';
+            }).join('; ') 
+            : visit.symptoms_free_text || '';
+            
+        csv += `"${visit.visit_id || ''}","${new Date(visit.visit_date || 0).toISOString()}","${visit.customer_id || ''}","${visit.pharmacy_customers?.name || ''}","${visit.customer_type || ''}","${symptoms.replace(/"/g, '""')}","${(visit.notes || '').replace(/"/g, '""')}","${visit.is_active ? 'true' : 'false'}","${visit.created_at || ''}"\n`;
+    });
+    
+    // Trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pharmacy_visits_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+export const exportPharmacyCustomersToExcel = async (orgId) => {
+    if (typeof XLSX === 'undefined') {
+        showToast('Excel export requires SheetJS. Please contact administrator.', 'error');
+        return;
+    }
+    
+    const customers = await dbGetPharmacyCustomers(orgId);
+    
+    // Prepare data for Excel
+    const data = [['Customer ID', 'Customer Name', 'Customer Type', 'Phone', 'Linked Patient ID', 'Is Active', 'Created At']];
+    
+    customers.forEach(customer => {
+        data.push([
+            customer.customer_id || '',
+            customer.name || '',
+            customer.customer_type || '',
+            customer.phone || '',
+            customer.linked_patient_id || '',
+            customer.is_active ? 'true' : 'false',
+            customer.created_at || ''
+        ]);
+    });
+    
+    // Create worksheet and workbook
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+    
+    // Trigger download
+    XLSX.writeFile(wb, `pharmacy_customers_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
+export const exportPharmacyVisitsToExcel = async (orgId) => {
+    if (typeof XLSX === 'undefined') {
+        showToast('Excel export requires SheetJS. Please contact administrator.', 'error');
+        return;
+    }
+    
+    const visits = await dbGetAllPharmacyVisits(orgId);
+    
+    // Prepare data for Excel
+    const data = [['Visit ID', 'Visit Date', 'Customer ID', 'Customer Name', 'Customer Type', 'Symptoms', 'Notes', 'Is Active', 'Created At']];
+    
+    visits.forEach(visit => {
+        const symptoms = visit.symptom_ids && visit.symptom_ids.length > 0 
+            ? visit.symptom_ids.map(id => {
+                const symptom = visit.pharmacy_symptom_master?.find(s => s.id === id);
+                return symptom ? symptom.name : 'Unknown';
+            }).join('; ') 
+            : visit.symptoms_free_text || '';
+            
+        data.push([
+            visit.visit_id || '',
+            new Date(visit.visit_date || 0).toISOString(),
+            visit.customer_id || '',
+            visit.pharmacy_customers?.name || '',
+            visit.customer_type || '',
+            symptoms,
+            visit.notes || '',
+            visit.is_active ? 'true' : 'false',
+            visit.created_at || ''
+        ]);
+    });
+    
+    // Create worksheet and workbook
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Visits');
+    
+    // Trigger download
+    XLSX.writeFile(wb, `pharmacy_visits_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
 export const dbGetPharmacyOrgs = async () => {
     const { data, error } = await db.from('pharmacy_orgs')
         .select('*')
@@ -157,7 +284,6 @@ export const dbUpsertPharmacySymptom = async (symptom) => {
 };
 
 // ─── Dashboard Stats ────────────────────────────────────────
-
 export const dbGetPharmacyDashboardStats = async (orgId) => {
     const { data: customers } = await db.from('pharmacy_customers')
         .select('customer_type', { count: 'exact' })
@@ -178,6 +304,89 @@ export const dbGetPharmacyDashboardStats = async (orgId) => {
         walkinCount,
         patientCount
     };
+};
+
+// ─── Analytics Data ─────────────────────────────────────────
+export const dbGetPharmacyVisitsForAnalytics = async (orgId) => {
+    try {
+        // Get visits for the last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Get daily visit counts for the last 30 days
+        const { data: dailyVisits, error: dailyError } = await db
+            .from('pharmacy_visits')
+            .select('visit_date')
+            .eq('org_id', orgId)
+            .gte('visit_date', thirtyDaysAgo.toISOString())
+            .order('visit_date', { ascending: true });
+        
+        if (dailyError) throw dailyError;
+        
+        // Process daily visits data
+        const dailyVisitMap = {};
+        dailyVisits?.forEach(visit => {
+            const date = new Date(visit.visit_date).toISOString().split('T')[0];
+            dailyVisitMap[date] = (dailyVisitMap[date] || 0) + 1;
+        });
+        
+        const dailyVisitsArray = Object.keys(dailyVisitMap)
+            .map(date => ({ date, count: dailyVisitMap[date] }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Get top symptoms
+        const { data: symptomData, error: symptomError } = await db
+            .from('pharmacy_visits')
+            .select('symptom_ids, symptoms_free_text, pharmacy_symptom_master!inner(name)')
+            .eq('org_id', orgId)
+            .not('symptom_ids', 'is', '[]')
+            .limit(1000);
+        
+        if (symptomError) throw symptomError;
+        
+        // Process symptoms data
+        const symptomCountMap = {};
+        
+        // Count from symptom_ids (predefined symptoms for MR)
+        symptomData?.forEach(visit => {
+            if (visit.symptom_ids && Array.isArray(visit.symptom_ids)) {
+                visit.symptom_ids.forEach(symptomId => {
+                    if (visit.pharmacy_symptom_master && Array.isArray(visit.pharmacy_symptom_master)) {
+                        const symptom = visit.pharmacy_symptom_master.find(s => s.id === symptomId);
+                        if (symptom) {
+                            symptomCountMap[symptom.name] = (symptomCountMap[symptom.name] || 0) + 1;
+                        }
+                    }
+                });
+            }
+            
+            // Count from symptoms_free_text (free text for walk-in/linked patient)
+            if (visit.symptoms_free_text && typeof visit.symptoms_free_text === 'string') {
+                // Simple word frequency for free text symptoms
+                const words = visit.symptoms_free_text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+                words.forEach(word => {
+                    symptomCountMap[word] = (symptomCountMap[word] || 0) + 1;
+                });
+            }
+        });
+        
+        // Get top 10 symptoms
+        const topSymptoms = Object.entries(symptomCountMap)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 10)
+            .map(([name, count]) => ({ name, count }));
+        
+        return {
+            dailyVisits: dailyVisitsArray,
+            topSymptoms: topSymptoms
+        };
+    } catch (error) {
+        console.error('dbGetPharmacyVisitsForAnalytics error:', error);
+        return {
+            dailyVisits: [],
+            topSymptoms: []
+        };
+    }
 };
 
 // ─── Patient Search for Pharmacy ───────────────────────────────

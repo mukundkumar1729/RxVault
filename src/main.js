@@ -25,6 +25,7 @@ import { openOpdBoardViewSecure, openVaccinationViewSecure, openFollowupViewSecu
 import { initPrescriptionView, applyFilters, clearFilters, setView, filterByType } from './views/PrescriptionView.js';
 import { initDoctorsView, renderDoctorsGrid } from './views/DoctorView.js';
 import { initPatientsView, renderPatientsGrid } from './views/PatientView.js';
+import { initPharmacyView } from './views/PharmacyView.js';
 import { openLabOrdersViewSecure } from './views/LabView.js';
 import { openRosterViewSecure } from './views/RosterView.js';
 import { hideAllViews } from './utils/dom.js';
@@ -266,7 +267,11 @@ window.showLocationDirectoryView = () => {
     if (typeof openLocationDirectory === 'function') openLocationDirectory();
     else if (typeof showLocationDirectoryView === 'function') showLocationDirectoryView();
 };
-window.showPharmacyView = () => setView('pharmacy');
+window.initPharmacyView = initPharmacyView;
+window.showPharmacyView = () => {
+    setView('pharmacy');
+    initPharmacyView();
+};
 window.showStockView = () => setView('stock');
 window.showBillingView = openBillingViewSecure;
 
