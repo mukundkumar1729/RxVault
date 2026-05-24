@@ -109,7 +109,17 @@ export const renderLoginFormSafe = () => {
     formWrapper.appendChild(btnSubmit);
     formWrapper.appendChild(btnForgot);
 
-    const footer = el('div', { className: 'login-footer', textContent: 'Rx Vault · Secure Medical Records' });
+    const footer = el('div', { className: 'login-footer', style: { display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', marginTop: '24px' } }, [
+        el('div', { textContent: 'Rx Vault · Secure Medical Records' }),
+        el('a', { 
+            href: 'privacy.html', 
+            target: '_blank', 
+            textContent: 'Privacy Policy & HIPAA Statement', 
+            style: { color: 'var(--teal-light)', textDecoration: 'none', fontSize: '11px', fontWeight: '600', transition: 'color 0.15s' },
+            onMouseEnter: function() { this.style.color = 'var(--teal)'; },
+            onMouseLeave: function() { this.style.color = 'var(--teal-light)'; }
+        })
+    ]);
 
     body.appendChild(logo);
     body.appendChild(brand);

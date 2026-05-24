@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privacy Policy for RxVault - Learn how we secure and protect Protected Health Information (PHI) and medical records.">
+    <title>Privacy Policy - Rx Vault</title>
+    <!-- Google Fonts: Plus Jakarta Sans for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for clinical and layout icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            --primary: #3b82f6;
+            --primary-hover: #1d4ed8;
+            --secondary: #10b981;
+            --bg-color: #0b0f19;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --font-family: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        .light-theme {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            transition: var(--transition);
+        }
+
+        /* Premium Header & Hero */
+        header {
+            background: var(--primary-gradient);
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 10%, transparent 80%);
+            pointer-events: none;
+            animation: rotateBackground 60s linear infinite;
+        }
+
+        @keyframes rotateBackground {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-badges {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Container Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 3rem;
+            position: relative;
+        }
+
+        /* Floating Navigation Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+        }
+
+        .toc-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .toc-title {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.2rem;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .toc-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-link:hover, .toc-link.active {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        /* Action Controls */
+        .controls-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background-color: rgba(10, 124, 110, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #086a5d 0%, #12a896 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(10, 124, 110, 0.3);
+        }
+
+        /* Policy Content Styling */
+        .content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .section-block {
+            margin-bottom: 3.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section-block:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 1.8rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+        }
+
+        ul, ol {
+            color: var(--text-muted);
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Callout Box / Card */
+        .highlight-card {
+            background: rgba(10, 124, 110, 0.04);
+            border-left: 4px solid var(--primary);
+            border-radius: 0 12px 12px 0;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-card p {
+            margin-bottom: 0;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        /* Feature Pillars Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-card h4 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* Declarations Table / List style */
+        .declaration-box {
+            background: rgba(6, 182, 212, 0.03);
+            border: 1px dashed var(--secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .dec-item {
+            display: grid;
+            grid-template-columns: 50px 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dec-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .dec-icon {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            text-align: center;
+            margin-top: 0.2rem;
+        }
+
+        .dec-content h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.3rem;
+        }
+
+        .dec-content p {
+            margin-bottom: 0.5rem;
+        }
+
+        .dec-tag {
+            display: inline-block;
+            background: rgba(10, 124, 110, 0.1);
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.15rem 0.6rem;
+            border-radius: 4px;
+            margin-top: 0.3rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 5rem;
+            transition: var(--transition);
+        }
+
+        footer p {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                margin: 1.5rem auto;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+
+            .controls-card {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                flex: 1;
+                min-width: 150px;
+            }
+
+            .content {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            header {
+                padding: 3rem 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .sidebar, .controls-card, header::before, .badge i, .header-logo, .theme-toggle {
+                display: none !important;
+            }
+            .main-container {
+                grid-template-columns: 1fr !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .content {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                background: none !important;
+            }
+            h1, h2, h3, h4, strong {
+                color: #000000 !important;
+            }
+            p, li {
+                color: #333333 !important;
+            }
+            header {
+                background: none !important;
+                color: #000000 !important;
+                border-bottom: 2px solid #000000 !important;
+                padding: 2rem 0 !important;
+            }
+            h1 {
+                font-size: 2.2rem !important;
+            }
+            .subtitle {
+                color: #333333 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Hero section -->
+    <header>
+        <div class="header-content">
+            <div class="header-logo">
+                <i class="fa-solid fa-prescription-bottle-medical"></i>
+            </div>
+            <h1>Rx Vault Privacy Policy</h1>
+            <p class="subtitle">Secure and HIPAA-compliant clinical records & prescription manager.</p>
+            <div class="meta-badges">
+                <div class="badge">
+                    <i class="fa-regular fa-calendar-days"></i> Effective Date: May 24, 2026
+                </div>
+                <div class="badge">
+                    <i class="fa-solid fa-shield-halved"></i> HIPAA & GDPR Compliant
+                </div>
+                <div class="badge">
+                    <i class="fa-solid fa-database"></i> Row-Level Security Active
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="toc-card">
+                <div class="toc-title">
+                    <i class="fa-solid fa-bars-staggered"></i> Navigation
+                </div>
+                <ul class="toc-list">
+                    <li><a href="#introduction" class="toc-link active"><i class="fa-solid fa-info-circle"></i> 1. Introduction</a></li>
+                    <li><a href="#compliance" class="toc-link"><i class="fa-solid fa-notes-medical"></i> 2. HIPAA Compliance</a></li>
+                    <li><a href="#information" class="toc-link"><i class="fa-solid fa-circle-info"></i> 3. Collected Data</a></li>
+                    <li><a href="#permissions" class="toc-link"><i class="fa-solid fa-key"></i> 4. Device Permissions</a></li>
+                    <li><a href="#how-we-use" class="toc-link"><i class="fa-solid fa-gears"></i> 5. Use of Information</a></li>
+                    <li><a href="#storage" class="toc-link"><i class="fa-solid fa-hard-drive"></i> 6. Storage & Security</a></li>
+                    <li><a href="#sharing" class="toc-link"><i class="fa-solid fa-handshake-angle"></i> 7. Data Sharing</a></li>
+                    <li><a href="#third-party" class="toc-link"><i class="fa-solid fa-network-wired"></i> 8. Third-Parties</a></li>
+                    <li><a href="#rights" class="toc-link"><i class="fa-solid fa-user-shield"></i> 9. Your Rights & Control</a></li>
+                    <li><a href="#contact" class="toc-link"><i class="fa-solid fa-envelope"></i> 10. Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Controls (Theme switcher, printer, etc.) -->
+            <div class="controls-card">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Print Policy
+                </button>
+                <button class="btn" id="themeBtn" onclick="toggleTheme()">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i> <span id="themeText">Light Theme</span>
+                </button>
+
+            </div>
+        </aside>
+
+        <!-- Main content area -->
+        <main class="content">
+            
+            <!-- Section 1: Introduction -->
+            <section id="introduction" class="section-block">
+                <h2><i class="fa-solid fa-info-circle" style="color: var(--primary);"></i> 1. Introduction</h2>
+                <p>Welcome to <strong>RxVault</strong> ("we," "our," or "us"). RxVault is a secure, cloud-enabled Medical Record and Prescription Management System designed for licensed clinics, healthcare practitioners, and pharmacy operators.</p>
+                <p>RxVault provides clinical tracking features to record patient prescriptions (Rx), diagnostic observations, and biometric vitals. We are committed to maintaining the highest security and compliance standards for all clinical, administrative, and employee data.</p>
+                <div class="highlight-card">
+                    <p><i class="fa-solid fa-circle-exclamation" style="color: var(--primary); margin-right: 0.5rem;"></i> By deploying, logging into, or operating the RxVault web application dashboard or companion mobile applications, you agree to the practices outlined in this Privacy Policy.</p>
+                </div>
+            </section>
+
+            <!-- Section 2: HIPAA Compliance -->
+            <section id="compliance" class="section-block">
+                <h2><i class="fa-solid fa-notes-medical" style="color: var(--primary);"></i> 2. PHI & HIPAA Compliance Statement</h2>
+                <p>Because RxVault processes Protected Health Information (PHI), we have structured our platform to fully comply with the **Health Insurance Portability and Accountability Act (HIPAA)**, GDPR, and regional medical record laws.</p>
+                
+                <div class="declaration-box">
+                    <div class="dec-item">
+                        <div class="dec-icon"><i class="fa-solid fa-hospital-user"></i></div>
+                        <div class="dec-content">
+                            <h4>Strict Multi-Tenant Separation</h4>
+                            <p><strong>Associated Features:</strong> Multi-tenant isolation at the database level.</p>
+                            <p><strong>Security Parameters:</strong> Authorized operators can only query or display medical data assigned strictly to their individual clinical tenant. Clinicians and staff of Clinic A are mathematically barred from accessing or seeing records belonging to Clinic B.</p>
+                            <span class="dec-tag">Compliance Enforced</span>
+                        </div>
+                    </div>
+                    
+                    <hr style="border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <div class="dec-item">
+                        <div class="dec-icon"><i class="fa-solid fa-user-lock"></i></div>
+                        <div class="dec-content">
+                            <h4>Role-Based Access Controls (RBAC)</h4>
+                            <p><strong>Associated Features:</strong> Staff roles (Practitioner, Receptionist, Lab Technician, Pharmacy Dispenser, Clinic Owner).</p>
+                            <p><strong>Processed Data:</strong> User role attributes govern API query parameters securely. For example, a lab technician is restricted from reviewing billing invoices, and a receptionist cannot alter diagnostic clinical notes.</p>
+                            <span class="dec-tag">Access Enforced</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Information Collected -->
+            <section id="information" class="section-block">
+                <h2><i class="fa-solid fa-circle-info" style="color: var(--primary);"></i> 3. Information We Collect</h2>
+                <p>RxVault collects only the minimum parameters necessary to operate a fully functioning clinical workspace and maintain secure tenancy configurations:</p>
+                
+                <h3><i class="fa-regular fa-circle-check" style="color: var(--secondary);"></i> A. Patient Demographic Profiles</h3>
+                <p>Collected during patient registration to create an active clinical profile:</p>
+                <ul>
+                    <li><strong>Patient Identifiers:</strong> Name, age, gender, and contact phone number.</li>
+                    <li><strong>Medical Baseline:</strong> Blood group (used during diagnostic and clinical cross-referencing).</li>
+                </ul>
+
+                <h3><i class="fa-regular fa-circle-check" style="color: var(--secondary);"></i> B. Protected Health Information (PHI) & Clinical Logs</h3>
+                <p>Generated by clinicians during active patient visits and recorded inside secure forms:</p>
+                <ul>
+                    <li><strong>Prescription Parameters:</strong> Medication names, dosages, durations, routes, and diagnostic observations.</li>
+                    <li><strong>Biometric Vitals:</strong> Recorded physical indicators (blood pressure, temperature, heart rate).</li>
+                    <li><strong>Diagnostic Orders:</strong> Clinical lab orders, observations, and follow-up alerts.</li>
+                </ul>
+
+                <h3><i class="fa-regular fa-circle-check" style="color: var(--secondary);"></i> C. Tenancy & User Accounts</h3>
+                <p>Required to secure doctor portals, pharmacy dispensing queues, and receptionist shifts:</p>
+                <ul>
+                    <li><strong>Professional Profiles:</strong> Doctor registration license numbers, staff emails, shift roster entries, and cryptographically hashed passwords.</li>
+                    <li><strong>Operational Logs:</strong> Timestamps of clinical actions (who added/edited an Rx) to satisfy local medical record audit requirements.</li>
+                </ul>
+            </section>
+
+            <!-- Section 4: Permissions -->
+            <section id="permissions" class="section-block">
+                <h2><i class="fa-solid fa-key" style="color: var(--primary);"></i> 4. Device Permissions (Companion Mobile App)</h2>
+                <p>For users utilizing the companion mobile application (<strong>RxVaultPharmacy</strong>) to coordinate pharmacy queues, the app requires consent for specific system hardware access:</p>
+                <ul>
+                    <li><strong>Camera Permission (Strictly local QR scanning):</strong> Used exclusively to initialize the optical scanner to read prescription QR codes at pharmacy counters for dispense verification. **No video streams or photographs are ever uploaded or saved.**</li>
+                    <li><strong>Local Storage Cache:</strong> Securely caches localized session tokens and offline logs to prevent patient queue delays during network dropouts.</li>
+                    <li><strong>Push Notifications:</strong> Required to notify pharmacy operators when a new prescription is queued by an OPD doctor in real-time.</li>
+                </ul>
+            </section>
+
+            <!-- Section 5: Use of Information -->
+            <section id="how-we-use" class="section-block">
+                <h2><i class="fa-solid fa-gears" style="color: var(--primary);"></i> 5. How We Use Your Information</h2>
+                <p>All collected details are utilized strictly to execute the operational logics of your clinic's tenant workspace:</p>
+                <ul>
+                    <li>To render clinical dashboards and print patient Rx cards.</li>
+                    <li>To coordinate patient appointments, waiting tokens, and arrival statuses.</li>
+                    <li>To manage the real-time pharmacy dispensing queue and inventory levels.</li>
+                    <li>To calculate shifts, generate invoices, and log system access trails.</li>
+                </ul>
+            </section>
+
+            <!-- Section 6: Storage and Security -->
+            <section id="storage" class="section-block">
+                <h2><i class="fa-solid fa-hard-drive" style="color: var(--primary);"></i> 6. Data Storage & Security</h2>
+                <p>RxVault utilizes a highly hardened technical framework to secure health information against external exfiltration threats:</p>
+                
+                <h3><i class="fa-solid fa-shield-halved" style="color: var(--secondary);"></i> A. PostgreSQL Row-Level Security (RLS)</h3>
+                <p>All database tables (prescriptions, patient registries, vital logs, and billing invoices) are governed by strict RLS policies executed natively by our Supabase cluster. This mathematically blocks any cross-tenant data requests.</p>
+
+                <h3><i class="fa-solid fa-lock" style="color: var(--secondary);"></i> B. End-to-End Cryptography</h3>
+                <p>All trans-network communications are strictly encrypted using TLS 1.3/HTTPS channels. Sensitive database backups are encrypted at rest using AES-256 standards.</p>
+            </section>
+
+            <!-- Section 7: Data Sharing -->
+            <section id="sharing" class="section-block">
+                <h2><i class="fa-solid fa-handshake-angle" style="color: var(--primary);"></i> 7. Sharing Your Information</h2>
+                <p><strong>We do not sell, trade, rent, lease, or monetize Protected Health Information (PHI), patient contacts, or clinical logs to third-party advertisement networks or brokers.</strong> All logs are private and isolated strictly to the authorized clinic tenant.</p>
+            </section>
+
+            <!-- Section 8: Third-Party Services -->
+            <section id="third-party" class="section-block">
+                <h2><i class="fa-solid fa-network-wired" style="color: var(--primary);"></i> 8. Third-Party Services</h2>
+                <p>We leverage a single trusted core database and hosting provider:</p>
+                <ul>
+                    <li><strong>Supabase Cloud:</strong> Serves as our secure, HIPAA-compliant database cluster. You can review the <a href="https://supabase.com/privacy" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">Supabase Privacy Policy</a>.</li>
+                    <li><strong>Google Charts APIs:</strong> Rendered client-side solely to generate dynamic barcode/QR codes on printed prescriptions for pharmacy terminal verification. No patient details are uploaded or stored.</li>
+                </ul>
+            </section>
+
+            <!-- Section 9: Your Rights & Control -->
+            <section id="rights" class="section-block">
+                <h2><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> 9. Your Rights & Control</h2>
+                <p>Clinic administrators have absolute control over their tenant data and operations. Via the administrative panel, you can:</p>
+                <ul>
+                    <li><strong>Data Portability:</strong> Instantly export all clinical metrics, records, and invoices in secure JSON or Microsoft Excel structures for audit logs.</li>
+                    <li><strong>Right to Rectification:</strong> Authorized practitioners can correct patient demographic cards or update vital signs.</li>
+                    <li><strong>Right to Deletion:</strong> Clinic owners can request tenant database purging, subject to local statutory medical records retention timelines (typically 3 to 7 years depending on regional law).</li>
+                </ul>
+            </section>
+
+            <!-- Section 10: Contact Us -->
+            <section id="contact" class="section-block">
+                <h2><i class="fa-solid fa-envelope" style="color: var(--primary);"></i> 10. Contact Us</h2>
+                <p>For any privacy-related inquiries, log auditing requests, or Data Protection Officer support, please contact our clinical compliance team:</p>
+                
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <p><strong><i class="fa-solid fa-envelope" style="color: var(--primary); width: 25px;"></i> Compliance Email:</strong> <span style="font-family: monospace; background: rgba(128,128,128,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">dpo@rxvault.in</span></p>
+                    <p><strong><i class="fa-solid fa-location-dot" style="color: var(--primary); width: 25px;"></i> Headquarters:</strong> RxVault Health Privacy Division, Bengaluru, India</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Rx Vault. All Rights Reserved.</p>
+        <p style="color: var(--text-muted); font-size: 0.8rem;">RxVault Secure Medical Record and Prescription Management System.</p>
+        <div class="footer-links">
+            <a href="#introduction" class="footer-link">Back to Top</a>
+            <a href="index.html" class="footer-link">Dashboard Login</a>
+        </div>
+    </footer>
+
+    <!-- Theme and Active Navigation Scripts -->
+    <script>
+        // Toggle Theme (Dark / Light)
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('light-theme');
+            
+            if (body.classList.contains('light-theme')) {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                themeText.textContent = 'Dark Theme';
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeText.textContent = 'Light Theme';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Keep local storage preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('themeIcon').classList.replace('fa-sun', 'fa-moon');
+                document.getElementById('themeText').textContent = 'Dark Theme';
+            }
+        });
+
+        // Highlight active section in Table of Contents on scroll
+        const sections = document.querySelectorAll('.section-block');
+        const navLinks = document.querySelectorAll('.toc-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
