@@ -374,8 +374,8 @@ function showPharmacyView() {
     });
     var addBtn = document.getElementById('btnAddRx'); if (addBtn) addBtn.style.display = 'none';
     var pv = document.getElementById('pharmacyView'); if (pv) pv.style.display = '';
-    document.getElementById('pageTitle').textContent    = '💊 Pharmacy';
-    document.getElementById('pageSubtitle').textContent = 'Pharmacy Management';
+    document.getElementById('pageTitle').textContent    = '🏥 Pharmacy Management';
+    document.getElementById('pageSubtitle').textContent = 'Pharmacy';
     
     // Load pharmacy dashboard
     if (typeof window.initPharmacyView === 'function') {

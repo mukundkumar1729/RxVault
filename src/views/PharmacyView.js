@@ -29,21 +29,11 @@ export const renderPharmacyView = async () => {
     
     emptyNode(pv);
     
-    // Header
-    pv.appendChild(el('div', {
-        className: 'page-header',
-        style: { marginBottom: '20px' },
-        children: [
-            el('div', { 
-                className: 'page-title', 
-                textContent: '🏥 Pharmacy Management' 
-            }),
-            el('div', { 
-                className: 'page-subtitle', 
-                textContent: currentPharmacyOrg?.name || 'Pharmacy' 
-            })
-        ]
-    }));
+    // Update global page header
+    const titleEl = document.getElementById('pageTitle');
+    const subtitleEl = document.getElementById('pageSubtitle');
+    if (titleEl) titleEl.textContent = '🏥 Pharmacy Management';
+    if (subtitleEl) subtitleEl.textContent = currentPharmacyOrg?.name || 'Pharmacy';
     
     // Navigation Tabs
     pv.appendChild(el('div', {

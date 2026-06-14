@@ -388,7 +388,7 @@ export const updateViewTitle = () => {
         patients: '👥 Patients Registry',
         appointments: '📅 Appointments & Queue',
         billing: '💰 Billing & Invoices',
-        pharmacy: '💊 Pharmacy Queue',
+        pharmacy: '🏥 Pharmacy Management',
         staff: '👥 Staff Directory',
         analytics: '📊 Clinical Analytics',
         labOrders: '🔬 Laboratory Orders',
@@ -404,7 +404,7 @@ export const updateViewTitle = () => {
         patients: 'Manage patient records and clinical history',
         appointments: 'Today\'s tokens and patient arrival status',
         billing: 'Manage patient invoices, payments and dues',
-        pharmacy: 'Dispensing queue for active prescriptions',
+        pharmacy: 'Pharmacy',
         staff: 'Internal clinic staff and management',
         analytics: 'Visual insights into clinic performance and patient data',
         labOrders: 'Manage and track clinical laboratory orders',
@@ -460,12 +460,17 @@ export const setView = (view, eventObj = null) => {
     const addBtn = document.getElementById('btnAddRx');
     if (addBtn) {
         if (view === 'appointments') {
+            addBtn.style.display = '';
             addBtn.innerHTML = '<span>➕ Book Appointment</span>';
             addBtn.onclick = () => window.openBookAppointment ? window.openBookAppointment() : null;
         } else if (view === 'billing') {
+            addBtn.style.display = '';
             addBtn.innerHTML = '<span>➕ New Invoice</span>';
             addBtn.onclick = () => window.openNewInvoice ? window.openNewInvoice() : null;
+        } else if (view === 'pharmacy') {
+            addBtn.style.display = 'none';
         } else {
+            addBtn.style.display = '';
             addBtn.innerHTML = '<span>➕ New Rx</span>';
             addBtn.onclick = () => window.openAddModal ? window.openAddModal() : null;
         }
