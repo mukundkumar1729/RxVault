@@ -60,8 +60,11 @@ async function authLogin(email, password) {
   var result = await dbLogin(email, password);
   if (!result) return { success: false, error: 'Invalid email or password.' };
   if (!result.is_active) return { success: false, error: 'Account is inactive. Contact admin.' };
+  if (result.is_totp_enabled) {
+    return { success: true, requiresTotp: true, user: result };
+  }
   saveSession(result, result.role === 'superadmin' ? 'superadmin' : null);
-  return { success: true, user: result };
+  return { success: true, requiresTotp: false, user: result };
 }
 
 async function authLogout() {
@@ -269,8 +272,78 @@ async function submitLogin() {
     return;
   }
 
+  if (result.requiresTotp) {
+    renderTotpLoginForm(result.user);
+    return;
+  }
+
   hideLoginGate();
   // clinic.js initClinicGate will handle the rest via boot
+  if (typeof initClinicGate === 'function') {
+    var gateShown = await initClinicGate();
+    if (!gateShown && typeof initAppForClinic === 'function') {
+      await initAppForClinic();
+    }
+  }
+}
+
+function renderTotpLoginForm(pendingUser) {
+  var body = document.getElementById('loginGateBody');
+  if (!body) return;
+  body.innerHTML =
+    '<div class="login-logo">🛡️</div>' +
+    '<div class="login-brand">Two-Factor Authentication</div>' +
+    '<div class="login-sub">Enter the 6-digit dynamic code from your Authenticator app</div>' +
+    '<div class="login-form">' +
+      '<div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:14px">' +
+        'Signing in as <strong>' + (pendingUser.email || pendingUser.name) + '</strong>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label style="text-align:center;display:block">Authenticator Code</label>' +
+        '<input type="text" id="loginTotpCode" placeholder="000 000" maxlength="6" autocomplete="one-time-code"' +
+          ' style="letter-spacing:0.35em;font-size:24px;text-align:center;font-weight:700;font-family:monospace;padding:10px"' +
+          ' onkeydown="if(event.key===\'Enter\')submitTotpLogin()">' +
+      '</div>' +
+      '<div id="loginTotpError" class="login-error"></div>' +
+      '<button class="login-btn" id="loginTotpBtn" onclick="submitTotpLogin()">🔓 Verify & Sign In</button>' +
+      '<button type="button" class="login-forgot-link" onclick="renderLoginForm()">← Back to Sign In</button>' +
+    '</div>' +
+    '<div class="login-footer">Rx Vault · Secure Medical Records</div>';
+  window._pendingTotpUser = pendingUser;
+  setTimeout(function(){ document.getElementById('loginTotpCode')?.focus(); }, 100);
+}
+
+async function submitTotpLogin() {
+  var code = (document.getElementById('loginTotpCode')?.value || '').trim();
+  var errEl = document.getElementById('loginTotpError');
+  var btn = document.getElementById('loginTotpBtn');
+  var user = window._pendingTotpUser;
+
+  if (!code || code.length !== 6) {
+    if (errEl) errEl.textContent = 'Please enter the 6-digit Authenticator code.';
+    return;
+  }
+  if (!user || !user.totp_secret) {
+    if (errEl) errEl.textContent = 'Session expired. Please sign in again.';
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verifying…'; }
+  if (errEl) errEl.textContent = '';
+
+  var isValid = await TotpService.verifyTotp(user.totp_secret, code);
+  if (btn) { btn.disabled = false; btn.textContent = '🔓 Verify & Sign In'; }
+
+  if (!isValid) {
+    if (errEl) errEl.textContent = 'Invalid or expired Authenticator code. Check your device time and code.';
+    return;
+  }
+
+  // Verification passed!
+  window._pendingTotpUser = null;
+  saveSession(user, user.role === 'superadmin' ? 'superadmin' : null);
+  hideLoginGate();
+
   if (typeof initClinicGate === 'function') {
     var gateShown = await initClinicGate();
     if (!gateShown && typeof initAppForClinic === 'function') {
@@ -632,48 +705,199 @@ async function loadAuditLog() {
 }
 
 // ─── Change own password ──────────────────────────────────
+// ─── Change own password & 2FA ─────────────────────────────
 function openChangePassword() {
   ['cpOldPass','cpNewPass','cpConfirmPass'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var errEl = document.getElementById('changePassError'); if (errEl) errEl.textContent = '';
   var sub = document.getElementById('changePassSubtitle');
-  if (sub && typeof currentUser !== 'undefined' && currentUser) sub.textContent = 'Signed in as ' + currentUser.name;
+  if (sub && typeof currentUser !== 'undefined' && currentUser) sub.textContent = 'Signed in as ' + (currentUser.name || currentUser.email);
 
-  // Inject token option into change password modal
-  var changePassModal = document.getElementById('changePassModal');
-  if (changePassModal && !changePassModal.querySelector('#cpTokenSection')) {
-    var body = changePassModal.querySelector('.modal-body');
-    if (body) {
-      var tokenSection = document.createElement('div');
-      tokenSection.id = 'cpTokenSection';
-      tokenSection.style.cssText = 'margin-bottom:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);';
-      tokenSection.innerHTML =
-        '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Authentication Method</div>' +
-        '<div style="display:flex;gap:10px;margin-bottom:8px">' +
-          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
-            '<input type="radio" name="cpAuthMethod" value="password" checked onchange="toggleCpAuthMethod()"> 🔑 Current Password' +
-          '</label>' +
-          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
-            '<input type="radio" name="cpAuthMethod" value="token" onchange="toggleCpAuthMethod()"> 🎫 Admin Reset Token' +
-          '</label>' +
-        '</div>' +
-        '<div id="cpTokenField" style="display:none">' +
-          '<div class="premium-field" style="margin-bottom:0"><label>Admin Token</label>' +
-            '<input type="text" id="cpAdminToken" class="premium-input" placeholder="Enter 6-digit admin token" maxlength="10" style="letter-spacing:0.2em;text-align:center;font-size:16px;font-family:monospace">' +
-          '</div>' +
-          '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">Ask your admin to generate a reset token for your account via Staff Management → 🔑 Reset.</div>' +
-        '</div>';
-      body.insertBefore(tokenSection, body.firstChild);
-    }
-  }
+  switchSecurityTab('password');
   openModal('changePassModal');
+  // Check TOTP status to show badge and prepare 2FA tab
+  loadTotpSecurityStatus();
 }
 
 function toggleCpAuthMethod() {
   var method    = document.querySelector('input[name="cpAuthMethod"]:checked')?.value || 'password';
   var tokenFld  = document.getElementById('cpTokenField');
-  var oldPassFld = document.getElementById('cpOldPass')?.closest('.premium-field');
+  var oldPassFld = document.getElementById('cpOldPassField') || document.getElementById('cpOldPass')?.closest('.premium-field');
   if (tokenFld)  tokenFld.style.display  = method === 'token'    ? '' : 'none';
   if (oldPassFld) oldPassFld.style.display = method === 'password' ? '' : 'none';
+}
+
+// ─── Security Tabs & TOTP 2FA Management ──────────────────
+var _pendingTotpSecret = '';
+
+function switchSecurityTab(tab) {
+  var pTab = document.getElementById('secTabPassword');
+  var tTab = document.getElementById('secTabTotp');
+  var pBtn = document.getElementById('tabBtnPassword');
+  var tBtn = document.getElementById('tabBtnTotp');
+
+  if (pTab) pTab.style.display = tab === 'password' ? '' : 'none';
+  if (tTab) tTab.style.display = tab === 'totp' ? '' : 'none';
+
+  if (pBtn) {
+    pBtn.style.borderBottom = tab === 'password' ? '2px solid var(--teal)' : '2px solid transparent';
+    pBtn.style.color = tab === 'password' ? 'var(--teal)' : 'var(--text-muted)';
+  }
+  if (tBtn) {
+    tBtn.style.borderBottom = tab === 'totp' ? '2px solid var(--teal)' : '2px solid transparent';
+    tBtn.style.color = tab === 'totp' ? 'var(--teal)' : 'var(--text-muted)';
+  }
+
+  if (tab === 'totp') {
+    loadTotpSecurityStatus();
+  }
+}
+
+async function loadTotpSecurityStatus() {
+  if (!currentUser || !currentUser.id) return;
+  var loadingEl = document.getElementById('totpLoading');
+  var activePanel = document.getElementById('totpActivePanel');
+  var promoPanel = document.getElementById('totpPromoPanel');
+  var setupPanel = document.getElementById('totpSetupPanel');
+  var badgeActive = document.getElementById('totpBadgeActive');
+  var enrolledTime = document.getElementById('totpEnrolledTime');
+
+  if (loadingEl) loadingEl.style.display = '';
+  if (activePanel) activePanel.style.display = 'none';
+  if (promoPanel) promoPanel.style.display = 'none';
+  if (setupPanel) setupPanel.style.display = 'none';
+
+  var status = await dbGetTotpStatus(currentUser.id);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  var isEnabled = status && status.is_totp_enabled;
+  currentUser.is_totp_enabled = isEnabled;
+  if (status && status.totp_secret) currentUser.totp_secret = status.totp_secret;
+
+  if (badgeActive) badgeActive.style.display = isEnabled ? 'inline-block' : 'none';
+
+  if (isEnabled) {
+    if (activePanel) activePanel.style.display = '';
+    if (enrolledTime && status.totp_enrolled_at) {
+      enrolledTime.textContent = 'Enrolled on ' + new Date(status.totp_enrolled_at).toLocaleString();
+    }
+  } else {
+    if (promoPanel) promoPanel.style.display = '';
+  }
+}
+
+async function startTotpSetup() {
+  var promoPanel = document.getElementById('totpPromoPanel');
+  var activePanel = document.getElementById('totpActivePanel');
+  var setupPanel = document.getElementById('totpSetupPanel');
+  var qrImg = document.getElementById('totpQrImage');
+  var keyInput = document.getElementById('totpManualKey');
+  var codeInput = document.getElementById('totpVerifyCode');
+  var errEl = document.getElementById('totpSetupError');
+
+  if (promoPanel) promoPanel.style.display = 'none';
+  if (activePanel) activePanel.style.display = 'none';
+  if (setupPanel) setupPanel.style.display = '';
+  if (codeInput) codeInput.value = '';
+  if (errEl) errEl.textContent = '';
+
+  var secret = TotpService.generateSecret(20);
+  _pendingTotpSecret = secret;
+
+  if (keyInput) keyInput.value = TotpService.formatSecret(secret);
+
+  var email = currentUser?.email || 'user@rxvault.in';
+  var uri = TotpService.getOtpAuthUri(email, secret, 'RxVault');
+
+  var qrUrl = await TotpService.generateQrCodeDataUrl(uri);
+  if (qrImg && qrUrl) {
+    qrImg.src = qrUrl;
+  }
+
+  // Save pending secret to DB
+  await dbSaveTotpSecret(currentUser.id, secret);
+  setTimeout(function () { codeInput?.focus(); }, 100);
+}
+
+function cancelTotpSetup() {
+  var setupPanel = document.getElementById('totpSetupPanel');
+  if (setupPanel) setupPanel.style.display = 'none';
+  _pendingTotpSecret = '';
+  loadTotpSecurityStatus();
+}
+
+function copyTotpKey() {
+  if (!_pendingTotpSecret) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(_pendingTotpSecret).then(function () {
+      showToast('📋 Setup key copied to clipboard!', 'success');
+    }).catch(function () {
+      showToast('Key: ' + _pendingTotpSecret, 'info');
+    });
+  } else {
+    showToast('Key: ' + _pendingTotpSecret, 'info');
+  }
+}
+
+async function verifyAndActivateTotp() {
+  var code = (document.getElementById('totpVerifyCode')?.value || '').trim();
+  var errEl = document.getElementById('totpSetupError');
+  var btn = document.getElementById('totpVerifyBtn');
+
+  if (!code || code.length !== 6) {
+    if (errEl) errEl.textContent = 'Please enter the 6-digit code from your authenticator app.';
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Verifying…'; }
+  if (errEl) errEl.textContent = '';
+
+  var isValid = await TotpService.verifyTotp(_pendingTotpSecret, code);
+  if (!isValid) {
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Verify & Enable 2FA'; }
+    if (errEl) errEl.textContent = 'Invalid verification code. Please check the code in your app.';
+    return;
+  }
+
+  var ok = await dbEnableTotp(currentUser.id);
+  if (btn) { btn.disabled = false; btn.textContent = '✅ Verify & Enable 2FA'; }
+
+  if (ok) {
+    currentUser.is_totp_enabled = true;
+    currentUser.totp_secret = _pendingTotpSecret;
+    _pendingTotpSecret = '';
+    showToast('🎉 Two-Factor Authenticator has been enabled!', 'success');
+    document.getElementById('totpSetupPanel').style.display = 'none';
+    loadTotpSecurityStatus();
+  } else {
+    if (errEl) errEl.textContent = 'Failed to enable 2FA in database. Please try again.';
+  }
+}
+
+function requestDisableTotp() {
+  var confirmBox = document.getElementById('totpDisableConfirm');
+  var actions = document.getElementById('totpActiveActions');
+  if (confirmBox) confirmBox.style.display = '';
+  if (actions) actions.style.display = 'none';
+}
+
+function cancelDisableTotp() {
+  var confirmBox = document.getElementById('totpDisableConfirm');
+  var actions = document.getElementById('totpActiveActions');
+  if (confirmBox) confirmBox.style.display = 'none';
+  if (actions) actions.style.display = 'flex';
+}
+
+async function confirmDisableTotp() {
+  var ok = await dbDisableTotp(currentUser.id);
+  if (ok) {
+    currentUser.is_totp_enabled = false;
+    currentUser.totp_secret = null;
+    showToast('Authenticator 2FA has been disabled.', 'success');
+    cancelDisableTotp();
+    loadTotpSecurityStatus();
+  } else {
+    showToast('Failed to disable Authenticator. Please try again.', 'error');
+  }
 }
 
 async function submitChangePassword() {

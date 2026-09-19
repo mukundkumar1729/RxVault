@@ -31,7 +31,8 @@ if (typeof window !== 'undefined') {
         'dbAssignStaff', 'dbRemoveStaff', 'dbAudit',
         'dbGetAppointments', 'dbUpsertAppointment', 'dbDeleteAppointment', 'dbGetNextToken',
         'dbGetInvoices', 'dbUpsertInvoice', 'dbGetNextInvoiceNo',
-        'dbGetVitals', 'dbInsertVitals'
+        'dbGetVitals', 'dbInsertVitals',
+        'dbGetTotpStatus', 'dbSaveTotpSecret', 'dbEnableTotp', 'dbDisableTotp'
     ].forEach(fnName => {
         if (typeof eval(fnName) === 'function') window[fnName] = eval(fnName);
     });
@@ -524,6 +525,68 @@ async function dbInsertVitals(record) {
   var { error } = await db.from('vitals').insert(record);
   if (error) { dbErr('insertVitals', error); return false; }
   return true;
+}
+
+// ════════════════════════════════════════════════════════════
+//  TOTP (2FA) FUNCTIONS
+// ════════════════════════════════════════════════════════════
+
+async function dbGetTotpStatus(userId) {
+  try {
+    const { data, error } = await db.from('users').select('totp_secret, is_totp_enabled, totp_enrolled_at').eq('id', userId).maybeSingle();
+    if (error) { dbErr('getTotpStatus', error); return { is_totp_enabled: false }; }
+    return data || { is_totp_enabled: false };
+  } catch(e) {
+    dbErr('getTotpStatus', e);
+    return { is_totp_enabled: false };
+  }
+}
+
+async function dbSaveTotpSecret(userId, secret) {
+  try {
+    const { error } = await db.from('users').update({
+      totp_secret: secret,
+      is_totp_enabled: false,
+      totp_enrolled_at: null,
+      updated_at: new Date().toISOString()
+    }).eq('id', userId);
+    if (error) { dbErr('saveTotpSecret', error); return false; }
+    return true;
+  } catch(e) {
+    dbErr('saveTotpSecret', e);
+    return false;
+  }
+}
+
+async function dbEnableTotp(userId) {
+  try {
+    const { error } = await db.from('users').update({
+      is_totp_enabled: true,
+      totp_enrolled_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq('id', userId);
+    if (error) { dbErr('enableTotp', error); return false; }
+    return true;
+  } catch(e) {
+    dbErr('enableTotp', e);
+    return false;
+  }
+}
+
+async function dbDisableTotp(userId) {
+  try {
+    const { error } = await db.from('users').update({
+      is_totp_enabled: false,
+      totp_secret: null,
+      totp_enrolled_at: null,
+      updated_at: new Date().toISOString()
+    }).eq('id', userId);
+    if (error) { dbErr('disableTotp', error); return false; }
+    return true;
+  } catch(e) {
+    dbErr('disableTotp', e);
+    return false;
+  }
 }
 
 export { db };
