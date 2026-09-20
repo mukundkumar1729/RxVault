@@ -1,0 +1,3 @@
+# Sitemap generation plugin
+[[plugins]]
+package = "@netlify/plugin-sitemap"
